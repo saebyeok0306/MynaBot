@@ -2,4 +2,6 @@
 DB Browser for SQLite/
 
 #data/token.json 디렉토리에 있는 파일무시
-.json
+token.json
+
+__pycache__
