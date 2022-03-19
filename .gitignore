@@ -1,0 +1,5 @@
+# DB Browser for SQLite/ 디렉토리에 있는 모든 파일을 무시
+DB Browser for SQLite/
+
+#data/token.json 디렉토리에 있는 파일무시
+.json
