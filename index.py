@@ -5,12 +5,13 @@ import random
 import datetime
 import json
 from discord.ext import commands
+from bitcoinGame import *
+from swordGame import *
+from sokobanGame import *
 # from messageBot import *
 # from autoProfile import *
 # from rtx3070ti import *
 # from edacUsemap import *
-from bitcoinGame import *
-from swordGame import *
 
 #pip3 install discord
 #pip3 install asyncio
@@ -165,6 +166,10 @@ async def 코인(ctx, *input):
 @bot.command()
 async def 강화(ctx, *input):
     await swordMessage(ctx, bot, input)
+
+@bot.command()
+async def 소코반(ctx, *input):
+    await sokobanMessage(ctx, bot, input)
 
 @bot.command()
 async def 계산(ctx, *input):
