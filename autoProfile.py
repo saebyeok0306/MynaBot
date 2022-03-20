@@ -4,24 +4,14 @@ from datetime import datetime
 
 
 user_avatar = [0,0,0,0,0,0,0,0,0,0] #아바타 url 주소가 바뀌면 프로필이미지를 바꾼걸로 간주
-user_ID     = [
-    864428155506655273, #카구팔
-    298824090171736074, #마스님
-    317960020912504832, #믹넛님
-    383483844218585108, #갈대
-    501303312029712384, #노마님
-    278461838067236864, #하늘님
-    382906504694595585, #하이루님
-    434348010974216203, #뮤님
-    351002869685551119 #로체님
-]
+user_ID     = []
 
-async def autoProfile(g, time):
+async def autoProfile(server, time):
     global user_avatar
     #타이머
     for id in range(len(user_ID)):
         try:
-            user = await g.fetch_member(user_ID[id])
+            user = await server.fetch_member(user_ID[id])
             if(user_avatar[id] == 0):
                 user_avatar[id] = user.avatar_url
             elif(user_avatar[id] != user.avatar_url):

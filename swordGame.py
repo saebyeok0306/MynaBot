@@ -94,7 +94,8 @@ async def swordMessage(message, bot, *input):
             input = input[0]
             if(input[0] == '도움말'):
                 embed = discord.Embed(title = f':video_game: {gameName2} 도움말', description = f'{message.author.mention} {gameName2} 의 명령어입니다!', color = 0x324260)
-                embed.add_field(name = f'!강화 무기소환', value = f'무기를 소환합니다. 1000원이 필요해요.')
+                embed.add_field(name = f'!강화  내정보', value = f'내가 가진 무기정보를 볼 수 있어요.')
+                embed.add_field(name = f'!강화  무기소환', value = f'무기를 소환합니다. 1000원이 필요해요.')
                 embed.set_footer(text = f"{message.author.display_name} | {gameName2}", icon_url = message.author.avatar_url)
                 await message.channel.send(embed = embed)
             elif(input[0] == '내정보'):
@@ -104,13 +105,23 @@ async def swordMessage(message, bot, *input):
                 myUser = cur.fetchone()
                 cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk, sword_PrefixAtk, sword_SuffixAtk, sword_Percent, sword_EXTRA, sword_UpCost, sword_Count FROM Sword_Info WHERE sword_UserID = ?", (id,))
                 swordInfo = cur.fetchone()
-                embed = discord.Embed(title = f'{message.author.display_name}님의 정보창', description = f'{gameName2} 에서의 본인 정보입니다.\n현금 재산은 모든 게임에서 공유됩니다.', color = 0xffc0cb)
-                embed.set_thumbnail(url=message.author.avatar_url)
-                embed.add_field(name = f'무기이름', value = f'{swordInfo[0]}+{swordInfo[1]}')
-                embed.add_field(name = f'공격력', value = f'`{swordInfo[2]}~{swordInfo[3]} Atk`')
-                embed.add_field(name = f'현재확률', value = f'{swordInfo[6]}%')
-                embed.add_field(name = f'현재비용', value = f'`{printN(swordInfo[8])}원`')
-                embed.add_field(name = f'현금재산', value = f'`{printN(myUser[1])}원`')
+                
+                if swordInfo:
+                    embed = discord.Embed(title = f'{message.author.display_name}님의 정보창', description = f'{gameName2} 에서의 본인 정보입니다.\n현금 재산은 모든 게임에서 공유됩니다.', color = 0xffc0cb)
+                    embed.set_thumbnail(url=message.author.avatar_url)
+                    embed.add_field(name = f'무기이름', value = f'{swordInfo[0]}+{swordInfo[1]}')
+                    embed.add_field(name = f'공격력', value = f'`{swordInfo[2]}~{swordInfo[3]} Atk`')
+                    embed.add_field(name = f'현재확률', value = f'{swordInfo[6]}%')
+                    embed.add_field(name = f'현재비용', value = f'`{printN(swordInfo[8])}원`')
+                    embed.add_field(name = f'현금재산', value = f'`{printN(myUser[1])}원`')
+                else:
+                    embed = discord.Embed(title = f'{message.author.display_name}님의 정보창', description = f'가지고 계신 무기가 없습니다!\n**!강화 무기소환** 을 통해, 무기를 소환해보세요.', color = 0xffc0cb)
+                    embed.set_thumbnail(url=message.author.avatar_url)
+                    embed.add_field(name = f'무기이름', value = f'무기없음')
+                    embed.add_field(name = f'공격력', value = f'`0~0 Atk`')
+                    embed.add_field(name = f'현재확률', value = f'0%')
+                    embed.add_field(name = f'현재비용', value = f'`0원`')
+                    embed.add_field(name = f'현금재산', value = f'`{printN(myUser[1])}원`')
                 await message.channel.send(embed = embed)
 
             elif(input[0] == '무기소환'):

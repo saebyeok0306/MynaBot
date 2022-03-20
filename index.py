@@ -11,10 +11,6 @@ from discord.ext import commands
 # from edacUsemap import *
 from bitcoinGame import *
 from swordGame import *
-#from urllib.request import urlopen
-#from bs4 import BeautifulSoup
-#from urllib import parse 
-#from discord.utils import get
 
 #pip3 install discord
 #pip3 install asyncio
@@ -26,10 +22,7 @@ from swordGame import *
 
 # print(os.getcwd())
 
-workHour = 0
-workMin = 0
-workSec = 0
-delay = 6
+workHour,workMin,workSec = 0,0,0
 coinDelay = 0
 
 bot = commands.Bot(command_prefix='!')
@@ -54,14 +47,14 @@ def game_check(id):
 
 def check_Discord():
     guildList = bot.guilds
-    for g in guildList:
-        if(g.id == 631471244088311840): #내 디코서버일 때
-            return g
+    for server in guildList:
+        if(server.id == 631471244088311840): #내 디코서버일 때
+            return server
 
 async def check_GuildUser(id):
     try:
-        g = check_Discord()
-        return await g.fetch_member(id)
+        server = check_Discord()
+        return await server.fetch_member(id)
     except:
         return False
 
@@ -80,11 +73,11 @@ async def on_ready():
     global workSec
     while True:
         now = datetime.datetime.today()
-        g = check_Discord()
+        server = check_Discord()
         # await autoProfile(g, now)
         if coinDelay == 0:
             coinDelay = 4
-            await bitcoinSystem(g)
+            await bitcoinSystem(server)
         else:
             coinDelay -= 1
         

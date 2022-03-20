@@ -1,7 +1,11 @@
 # DB Browser for SQLite/ 디렉토리에 있는 모든 파일을 무시
 DB Browser for SQLite/
 
-#data/token.json 디렉토리에 있는 파일무시
+# __pycache__/ 디렉토리에 있는 모든 파일을 무시
+__pycache__/
+
+# data/token.json  파일무시
 token.json
 
-__pycache__
+# DiscordDB.db 파일무시
+DiscordDB.db

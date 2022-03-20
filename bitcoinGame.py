@@ -11,6 +11,9 @@ import re
 gameName = "가상코인"
 coinList = ["도지코인", "냥냥펀치코인", "람쥐썬더코인", "벌크여우코인", "머슬고래코인", "갈대코인", "비트코인", "스팀코인", "사과코인", "삼성코인", "헬지코인", "블리자드코인", "한강코인", "용팔이코인"]
 
+chartChannel= 953919546966806548
+chatChannel = 953919871522046008
+
 def printN(num): #자리수에 콤마 넣어주는 함수
     return '{0:,}'.format(num)
 
@@ -28,37 +31,30 @@ def game_check(id):
     elif id in alr_exist :
         return True
 
-async def game_chat(g):
-    chs = g.channels
-    for ch in chs:
-        if ch.id == 953919546966806548:
-            con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-            cur = con.cursor()
-            cur.execute("SELECT chatID FROM Game_Info")
-            rows = cur.fetchone()
-            messageID = 0
-            try:
-                messageID = rows[0]
-            except:
-                print("메시지 데이터없음")
-            try:
-                msg = await ch.fetch_message(messageID)
-                con.close() #db 종료
-                return msg
-            except:
-                msg = await ch.send('차트정보가 없으므로, 새로 생성합니다.')
-                cur.execute("DELETE FROM 'Game_Info'")
-                cur.execute("INSERT INTO 'Game_Info' VALUES(?, ?)", (1, str(msg.id)))
-                con.commit()
-                con.close() #db 종료
-                print("없네요")
-                return msg
+def game_getMessageChannel(server, channel):
+    return server.get_channel(channel)
 
-def game_userMsgCH(g):
-    chs = g.channels
-    for ch in chs:
-        if ch.id == 953919871522046008:
-            return ch
+async def game_createChart(server):
+    ch = game_getMessageChannel(server, chartChannel)
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("SELECT chatID FROM Game_Info")
+    rows = cur.fetchone()
+    con.close() #db 종료
+    try:
+        messageID = rows[0]
+        message = await ch.fetch_message(messageID)
+        return message
+    except:
+        print("chart의 messageID가 없음")
+        message = await ch.send('차트정보가 없으므로, 새로 생성합니다.')
+        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+        cur = con.cursor()
+        cur.execute("DELETE FROM 'Game_Info'")
+        cur.execute("INSERT INTO 'Game_Info' VALUES(?, ?)", (1, str(message.id)))
+        con.commit()
+        con.close() #db 종료
+        return message
 
 # 내가 구매한 코인의 가치 표기
 def game_coinValue(id):
@@ -104,14 +100,15 @@ def coin_Ranking(set_):
         # 코인재산과 현금 재산 합치기
         _Value = currentValue+user[2]
         userRanking[_Name] = _Value
-    userRanking_ = sorted(userRanking.items(), reverse=True, key=lambda x:x[1])
-    return userRanking_, userNumber
+    userRanking = sorted(userRanking.items(), reverse=True, key=lambda x:x[1])
+    return userRanking, userNumber
 
+# id값의 랭킹 순위
 def coin_GetRank(id):
-    userRanking_, userNumber = coin_Ranking(0)
+    userRanking, userNumber = coin_Ranking(0)
     rankIndex = 0
     rankSameMoney = 0
-    for rank in userRanking_:
+    for rank in userRanking:
         if rankSameMoney != rank[1]:
             rankIndex += 1
         rankSameMoney = rank[1]
@@ -119,6 +116,7 @@ def coin_GetRank(id):
             return rankIndex, userNumber
     return False, False
 
+# DB에 저장된 닉네임이 현재닉네임과 일치하지 않을 때, 닉네임 갱신하기
 def setUserName(id, msg):
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
@@ -131,7 +129,7 @@ def setUserName(id, msg):
     
 #:heart:
 async def bitcoinMessage(message, *input):
-    if(message.channel.id == 953919871522046008):
+    if(message.channel.id == chatChannel):
         try:
             id = message.author.id
             check = game_check(id)
@@ -144,14 +142,14 @@ async def bitcoinMessage(message, *input):
             input = input[0]
             if(input[0] == '도움말'):
                 embed = discord.Embed(title = f':video_game: {gameName} 도움말', description = f'{message.author.mention} {gameName} 게임의 명령어입니다!', color = 0xffc0cb)
-                embed.add_field(name = f'!코인 지원금', value = f'하루에 한번 지원금으로 3000원을 드립니다!')
-                embed.add_field(name = f'!코인 내정보', value = f'보유한 재산이나 랭킹 순위를 볼 수 있어요.')
-                embed.add_field(name = f'!코인 보유', value = f'내가 소유한 코인들의 현황을 볼 수 있어요.')
-                embed.add_field(name = f'!코인 보유 `코인명`', value = f'해당 코인을 보유하고 있는 유저들을 볼 수 있어요.')
-                embed.add_field(name = f'!코인 매수│매도 `코인명` `수량`│`퍼센트%`', value = f'코인을 사고 팔 수 있습니다!\n퍼센트단위로 구매할 수도 있어요.')
-                embed.add_field(name = f'!코인 풀매수│풀매도 `코인명`', value = f'귀찮게 하나씩 언제 처리하나요. 인생은 한방!')
-                embed.add_field(name = f'!코인 순위', value = f'코인게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
-                embed.add_field(name = f'!코인 송금 `@유저명` `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
+                embed.add_field(name = f'!코인  지원금', value = f'하루에 한번 지원금으로 3000원을 드립니다!')
+                embed.add_field(name = f'!코인  내정보', value = f'보유한 재산이나 랭킹 순위를 볼 수 있어요.')
+                embed.add_field(name = f'!코인  보유', value = f'내가 소유한 코인들의 현황을 볼 수 있어요.')
+                embed.add_field(name = f'!코인  보유  `코인명`', value = f'해당 코인을 보유하고 있는 유저들을 볼 수 있어요.')
+                embed.add_field(name = f'!코인  [매수│매도]  `코인명`  [`수량`│`퍼센트%`]', value = f'코인을 사고 팔 수 있습니다!\n퍼센트단위로 구매할 수도 있어요.')
+                embed.add_field(name = f'!코인  [풀매수│풀매도]  `코인명`', value = f'귀찮게 하나씩 언제 처리하나요. 인생은 한방!')
+                embed.add_field(name = f'!코인  순위', value = f'코인게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
+                embed.add_field(name = f'!코인  송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
                 embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                 await message.channel.send(embed = embed)
             elif(input[0] == '지원금'):
@@ -236,7 +234,7 @@ async def bitcoinMessage(message, *input):
                 userInfo = cur.fetchone()
                 con.close() #db 종료
                 if not ownCoin:
-                    embed = discord.Embed(title = f':exclamation: {message.author.display_name}님의 코인현황', description = f'{message.author.mention} 거래내역이 없습니다.\n**!코인 [종목명] [매수] [수량]**을 통해, 코인을 매수해보세요.', color = 0xffc0cb)
+                    embed = discord.Embed(title = f':exclamation: {message.author.display_name}님의 코인현황', description = f'{message.author.mention} 거래내역이 없습니다.\n**!코인 [매수│매도] [코인명] [수량│퍼센트%]**을 통해, 코인을 매수해보세요.', color = 0xffc0cb)
                     embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                     await message.channel.send(embed = embed)
                     return 0
@@ -497,7 +495,7 @@ async def bitcoinMessage(message, *input):
             pass
 
 
-async def changeBitCoin(g, coin):
+async def changeBitCoin(server, coin):
     now = datetime.datetime.now()
     for c in coin:
         if c[2] == 1: #폐지여부
@@ -541,7 +539,7 @@ async def changeBitCoin(g, coin):
                     cur.execute("SELECT trade_UserName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_CoinID = ?", (c[0],))
                     lostCoin = cur.fetchall()
                     cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_CoinID = ?", (c[0],))
-                    ch = game_userMsgCH(g)
+                    ch = game_getMessageChannel(server, chatChannel)
                     embed = discord.Embed(title = f':x: {c[1]} 상장폐지', description = f"{c[1]}이 결국 상장폐지되었습니다.", color = 0xffc0cb)
                     lostSumMoney = 0
                     for lc in lostCoin:
@@ -561,6 +559,7 @@ async def changeBitCoin(g, coin):
             if(now - exittime).seconds > 60:
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
+                # 코인이름을 무작위로 가져오기
                 coinName = ''
                 while(True):
                     rand = random.randint(0,len(coinList)-1)
@@ -578,20 +577,21 @@ async def changeBitCoin(g, coin):
                 coinPrice = random.randint(200,2000)
                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                 cur.execute("UPDATE 'Coin_Info' SET coin_Name = ?, coin_Open = ?, coin_Range = ?, coin_Price1 = ?, coin_Price2 = ?, coin_Updown = ?, coin_CreateDate = ?, coin_DeleteDate = ?, coin_Exit = ? WHERE coin_ID = ?", (coinName, 1, coinRange, coinPrice, coinPrice, 1, nowDatetime, '', 0, c[0]))
-                ch = game_userMsgCH(g)
+                ch = game_getMessageChannel(server, chatChannel)
                 embed = discord.Embed(title = f':receipt: {coinName} 등장', description = f"새롭게 {coinName}이 거래소에 올라왔습니다!\n이 친구는 시작거래가가 {printN(coinPrice)}원이군요.", color = 0xffc0cb)
                 await ch.send(embed = embed)
                 con.close() #db 종료
 
-async def bitcoinSystem(g):
-    msg = await game_chat(g)
+async def bitcoinSystem(server):
+    message = await game_createChart(server)
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT coin_ID, coin_Name, coin_Open, coin_Range, coin_Price1, coin_Price2, coin_Updown, coin_CreateDate, coin_DeleteDate, coin_Exit FROM Coin_Info")
     coin = cur.fetchall()
     con.close() #db 종료
 
-    await changeBitCoin(g, coin)
+    # 비트코인 가격 변동
+    await changeBitCoin(server, coin)
 
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
@@ -600,41 +600,41 @@ async def bitcoinSystem(g):
     con.close() #db 종료
 
     coinNum = len(coin)
-    chart = "```diff\n  종목             현재가격         변동폭\n"
-    chart += "─────────────────────────────────────────\n"
+    chartText = "```diff\n  종목             현재가격         변동폭\n"
+    chartText += "─────────────────────────────────────────\n"
     for c in coin:
-        # chart += "-----------------------------------------\n"
+        # chartText += "-----------------------------------------\n"
         if c[2] == 1:
             if c[4] > c[5]:
-                chart += "+ "
+                chartText += "+ "
             elif c[4] < c[5]:
-                chart += "- "
+                chartText += "- "
             else:
-                chart += "# "
+                chartText += "# "
         else:
-            chart += "$ "
+            chartText += "$ "
         space1 = 9-len(c[1])
-        chart += c[1]
-        chart += "  "*space1
+        chartText += c[1]
+        chartText += "  "*space1
         if c[2] == 1:
             space2 = 14-len(str(c[4]))
-            chart += str(c[4]) + "원"
-            chart += " "*space2
+            chartText += str(c[4]) + "원"
+            chartText += " "*space2
         else:
             space2 = 8-len("상장폐지됨")
-            chart += "상장폐지됨 "
-            chart += "  "*space2
+            chartText += "상장폐지됨 "
+            chartText += "  "*space2
         
         if c[2] == 1:
             updown = abs(c[4]-c[5])
             if c[4] > c[5]:
-                chart += str(updown) + "▲\n"
+                chartText += str(updown) + "▲\n"
             elif c[4] < c[5]:
-                chart += str(updown) + "▼\n"
+                chartText += str(updown) + "▼\n"
             else:
-                chart += str(updown) + "#\n"
+                chartText += str(updown) + "#\n"
         else:
-            chart += "0#\n"
+            chartText += "0#\n"
         #print(c[0], c[1], c[2], c[3], c[4])
-    chart += "─────────────────────────────────────────```"
-    await msg.edit(content=chart)
+    chartText += "─────────────────────────────────────────```"
+    await message.edit(content=chartText)
