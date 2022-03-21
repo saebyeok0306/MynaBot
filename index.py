@@ -8,6 +8,7 @@ from discord.ext import commands
 from bitcoinGame import *
 from swordGame import *
 from sokobanGame import *
+import sokobanGame as soko
 # from messageBot import *
 # from autoProfile import *
 # from rtx3070ti import *
@@ -90,6 +91,13 @@ async def on_ready():
             if workMin >= 60:
                 workMin -= 60
                 workHour += 1
+        if soko.sokobanPlay:
+            soko.sokobanTimer += 1
+            if soko.sokobanTimer > 20:
+                embed = discord.Embed(title = f':video_game: {soko.gameName3} │ {soko.sokobanLevel}레벨', description = f'시간 초과로 게임을 종료합니다.', color = 0x324260)
+                await soko.sokobanMessage.edit(embed=embed)
+                await soko.sokobanMessage.clear_reactions()
+                soko.sokobanPlay = False
         #a = await check_GuildUser(383483844218585108)
         await asyncio.sleep(10)
     
@@ -249,7 +257,67 @@ async def 회원탈퇴(ctx):
             await ctx.channel.send(embed = embed)
         con.close() #db 종료
         
+@bot.command()
+async def 좌(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        await sokobanMove('Left', ctx.message.author)
+        await sokobanPrint(ctx.message.author) # 맵갱신
+    
 
+@bot.command()
+async def 우(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        await sokobanMove('Right', ctx.message.author)
+        await sokobanPrint(ctx.message.author) # 맵갱신
+    
+
+@bot.command()
+async def 상(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        await sokobanMove('Up', ctx.message.author)
+        await sokobanPrint(ctx.message.author) # 맵갱신
+
+@bot.command()
+async def 하(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        await sokobanMove('Down', ctx.message.author)
+        await sokobanPrint(ctx.message.author) # 맵갱신
+
+@bot.command()
+async def 리셋(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        soko.sokobanLog.append(f'Reset ({ctx.message.author.display_name})')
+        sokobanMapSetting() # 맵세팅
+        await sokobanPrint(ctx.message.author) # 맵갱신
+
+@bot.command()
+async def 로그(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        logText = ''
+        logLen  = len(soko.sokobanLog)
+        for log in range(logLen):
+            logText += soko.sokobanLog[log]
+            if log < logLen-1:
+                logText += ' > '
+        embed = discord.Embed(title = f':video_game: {soko.gameName3} 로그', description = f'{logText}', color = 0xff0000)
+        embed.set_footer(text = f"{ctx.author.display_name} | {gameTitle}", icon_url = ctx.author.avatar_url)
+        msg = await ctx.channel.send(embed = embed)
+        await msg.delete(delay=10)
+
+@bot.command()
+async def 종료(ctx):
+    if soko.sokobanPlay:
+        await ctx.message.delete(delay=0)
+        embed = discord.Embed(title = f':video_game: {soko.gameName3} │ {soko.sokobanLevel}레벨', description = f'게임을 종료합니다.', color = 0x324260)
+        await soko.sokobanMessage.edit(embed=embed)
+        await soko.sokobanMessage.clear_reactions()
+        soko.sokobanPlay = False
 # @client.event
 # async def on_member_join(member):
 #     await member.guild.get_channel(631477839144812586).send(member.mention + "님이 새롭게 접속했습니다. 환영해요!")
@@ -259,3 +327,4 @@ async def 회원탈퇴(ctx):
     #await member.guild.get_channel(709349938470846557).send("<@{}> 님을 호출했으니 오래 걸리진 않을거에요... 아마?".format(383483844218585108))
 
 bot.run(token)
+
