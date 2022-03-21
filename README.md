@@ -7,7 +7,14 @@
 * SQLite3 (Database)
 
 ## 1. 비트코인 게임
+![text](https://github.com/westreed/discordBot/blob/main/img/4.PNG?raw=true)
+![text](https://github.com/westreed/discordBot/blob/main/img/2.PNG?raw=true)
+![text](https://github.com/westreed/discordBot/blob/main/img/3.PNG?raw=true)
 
 ## 2. 강화 게임
+![text](https://github.com/westreed/discordBot/blob/main/img/5.PNG?raw=true)
+![text](https://github.com/westreed/discordBot/blob/main/img/6.PNG?raw=true)
 
 ## 3. 소코반 게임
+![text](https://github.com/westreed/discordBot/blob/main/img/1.PNG?raw=true)
+![text](https://github.com/westreed/discordBot/blob/main/img/7.PNG?raw=true)
