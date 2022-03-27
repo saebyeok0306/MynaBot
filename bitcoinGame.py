@@ -81,6 +81,23 @@ def game_coinValue(id):
         PM = False
     return PM, costMoney, currentValue
 
+def game_perCoinValue(id, coinId):
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("SELECT trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_UserID = ? AND trade_CoinID = ?", (id, coinId,))
+    ownCoin = cur.fetchone()
+    cur.execute("SELECT coin_ID, coin_Name, coin_Open, coin_Price1 FROM Coin_Info WHERE coin_ID = ?", (coinId,))
+    coinInfo = cur.fetchone()
+    con.close() #db 종료
+    # 해당 코인 데이터가 아무것도 없는 경우
+    if not ownCoin:
+        return 0, 0, 0
+    costMoney   = ownCoin[3]
+    coinValue   = coinInfo[3]*ownCoin[2]
+    PM          = True
+    if coinValue < costMoney: PM = False
+    return PM, costMoney, coinValue
+
 # 코인게임 랭킹 계산
 def coin_Ranking(set_):
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
@@ -130,7 +147,7 @@ def setUserName(id, msg):
 #:heart:
 async def bitcoinMessage(message, *input):
     if(message.channel.id == chatChannel):
-        try:
+        # try:
             id = message.author.id
             check = game_check(id)
             if check == 0:
@@ -150,6 +167,7 @@ async def bitcoinMessage(message, *input):
                 embed.add_field(name = f'!코인  [풀매수│풀매도]  `코인명`', value = f'귀찮게 하나씩 언제 처리하나요. 인생은 한방!')
                 embed.add_field(name = f'!코인  순위', value = f'코인게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
                 embed.add_field(name = f'!코인  송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
+                embed.add_field(name = f'꿀팁', value = f'코인이름을 쓸 땐, "코인"을 뺀 이름만 써도 되요.\n**ex.사과코인 == 사과**')
                 embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                 await message.channel.send(embed = embed)
             elif(input[0] == '지원금'):
@@ -248,13 +266,21 @@ async def bitcoinMessage(message, *input):
                     moneyPercent = 0
                     # 보유중인 코인을 표시하기
                     for own in ownCoin:
+                        perPM, perCostMoney, perCurrentValue = game_perCoinValue(id, own[0])
+                        perMoneyPM = ['-', '+']
+                        perMoneyPercent = 0
+                        if perPM:
+                            perMoneyPercent = round(((perCurrentValue-perCostMoney)/perCostMoney)*100, 2)
+                        else:
+                            perMoneyPercent = round(((perCostMoney-perCurrentValue)/perCostMoney)*100, 2)
                         costMoney += own[3] #구매비용 합
                         coinValue = 0
                         for c in coin:
                             if c[0] == own[0]:
                                 coinValue = c[3]*own[2]
                                 currentValue += coinValue
-                        embed.add_field(name = f'{own[1]}', value = f'{own[2]}개 보유 `({printN(coinValue)}원)`')
+                                break
+                        embed.add_field(name = f'{own[1]}', value = f'{own[2]}개 보유\n`{printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
                     
                     if currentValue < costMoney:
                         moneyPM = '-'
@@ -290,26 +316,19 @@ async def bitcoinMessage(message, *input):
                         await message.channel.send(embed = embed)
                         con.close() #db 종료
                         return 0
-                    targetName = targetUser[0]
-                    targetMoney = targetUser[1]
-                    chargeMoney = tradeMoney // 10
-                    if myMoney >= tradeMoney+chargeMoney:
-                        myMoney -= tradeMoney+chargeMoney
-                        targetMoney += tradeMoney
+                    targetName = targetUser[0]      # 대상 이름
+                    targetMoney = targetUser[1]     # 대상이 가지고 있는 돈
+                    chargeMoney = tradeMoney // 10  # 지불할 수수료 10%
+                    if myMoney >= tradeMoney:
+                        myMoney -= tradeMoney
+                        targetMoney += tradeMoney-chargeMoney
                         cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id,))
                         cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (targetMoney, userid,))
-                        embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{printN(tradeMoney)}원`을 송금했습니다!\n**수수료 {printN(chargeMoney)}원** (10%) │ 남은재산 `{printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+                        embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{printN(tradeMoney-chargeMoney)}원`을 송금했습니다!\n**수수료 {printN(chargeMoney)}원** (10%) │ 남은재산 `{printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
                         embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                         await message.channel.send(embed = embed)
                     else:
-                        suggestMoney = myMoney
-                        while(True):
-                            chargeTemp = suggestMoney // 10
-                            if suggestMoney+chargeTemp > myMoney:
-                                suggestMoney -= chargeTemp
-                            else:
-                                break
-                        embed = discord.Embed(title = f':exclamation: 송금 실패', description = f'{message.author.mention} 돈이 부족합니다. 보유재산 `{printN(myMoney)}원` :money_with_wings:\n수수료 {printN(chargeMoney)}원도 계산하셔야 합니다. 최대 송금금액은 `약 {printN(suggestMoney)}원`입니다!', color = 0xff0000)
+                        embed = discord.Embed(title = f':exclamation: 송금 실패', description = f'{message.author.mention} 돈이 부족합니다. 보유재산 `{printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
                         embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                         await message.channel.send(embed = embed)
                     con.close() #db 종료
@@ -327,7 +346,7 @@ async def bitcoinMessage(message, *input):
                 userInfo = cur.fetchone() #내정보
                 con.close() #db 종료
                 for c in coin:
-                    if(input[1] == c[1] and c[2] == 1): #c[2]는 활성화된 코인인지 판별여부
+                    if((input[1] == c[1] or input[1] == c[1][:-2]) and c[2] == 1): #c[2]는 활성화된 코인인지 판별여부
                         user_Money = userInfo[1]
                         if(input[0] == '매수'):
                             num = 0
@@ -454,10 +473,9 @@ async def bitcoinMessage(message, *input):
                         elif(input[0] == '보유'):
                             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                             cur = con.cursor()
-                            cur.execute("SELECT trade_UserID FROM Coin_Trade WHERE trade_CoinID = ?", (c[0],))
+                            # cur.execute("SELECT trade_UserID FROM Coin_Trade WHERE trade_CoinID = ?", (c[0],))
+                            cur.execute("SELECT trade_UserID, trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_CoinID = ?", (c[0],))
                             allCoin = cur.fetchall() #모든 유저의 해당코인 거래내역
-                            cur.execute("SELECT user_ID, user_Name, user_Money FROM User_Info")
-                            allUser = cur.fetchall() #모든 유저 정보
                             con.close() #db 종료
                             if not allCoin:
                                 embed = discord.Embed(title = f':exclamation: {c[1]} 보유현황', description = f'{message.author.mention} 해당 코인을 소유하고 있는 유저가 없습니다.', color = 0xff0000)
@@ -467,32 +485,26 @@ async def bitcoinMessage(message, *input):
                             else:
                                 embed = discord.Embed(title = f'{c[1]} 보유현황', description = f'유저들이 보유 중인 {c[1]}의 현황을 보여줍니다.', color = 0xffc0cb)
                                 embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
-                                for user in allUser:
-                                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                                    cur = con.cursor()
-                                    cur.execute("SELECT trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_UserID = ? AND trade_CoinID = ?", (user[0], c[0]))
-                                    userCoin = cur.fetchone() #단 하나뿐인 거래내역만 나옴
-                                    con.close() #db 종료
-                                    if userCoin:
-                                        costMoney = userCoin[3]
-                                        moneyPM = '+'
+                                for pcoin in allCoin:
+                                    if pcoin:
+                                        PM, costMoney, coinValue = game_perCoinValue(pcoin[0], pcoin[1])
+                                        moneyPM = ['-', '+']
                                         moneyPercent = 0
-                                        coinValue = 0
-                                        for ct in coin:
-                                            if ct[0] == userCoin[0]:
-                                                coinValue = ct[3]*userCoin[2]
-                                                break
                                         if coinValue < costMoney:
-                                            moneyPM = '-'
-                                            moneyPercent = round(((costMoney-coinValue)/coinValue)*100, 2)
+                                            moneyPercent = round(((costMoney-coinValue)/costMoney)*100, 2)
                                         else:
-                                            moneyPercent = round(((coinValue-costMoney)/coinValue)*100, 2)
-                                        embed.add_field(name = f'{user[1]}', value = f'{userCoin[2]}개 보유 `({printN(coinValue)}원 {moneyPM}{moneyPercent}%)`')
+                                            moneyPercent = round(((coinValue-costMoney)/costMoney)*100, 2)
+                                        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                                        cur = con.cursor()
+                                        cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (pcoin[0],))
+                                        pUser = cur.fetchone()
+                                        con.close() #db 종료
+                                        embed.add_field(name = f'{pUser[0]}', value = f'{pcoin[3]}개 보유\n`{printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
                                 await message.channel.send(embed = embed)
                         return 0
-        except:
-            print("코인 에러")
-            pass
+        # except:
+        #     print("코인 에러")
+        #     pass
 
 
 async def changeBitCoin(server, coin):

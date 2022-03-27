@@ -154,7 +154,7 @@ async def on_message(message):
         embed=discord.Embed(color=0xB22222, title="도움말:", description="마이나에게 있는 명령어들을 알려드려요. By.갈대", timestamp=message.created_at)
         embed.set_footer(text=message.author, icon_url=message.author.avatar_url)
         embed.add_field(name = '!주사위 `값(기본값 100)`', value = '주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
-        embed.add_field(name = '!계산 `수식`', value = '수식을 계산해줍니다.')
+        # embed.add_field(name = '!계산 `수식`', value = '수식을 계산해줍니다.')
         # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
         embed.add_field(name = '!회원가입', value = '디코게임을 이용하려면, 가입이 필요해요.')
         embed.add_field(name = '!회원탈퇴', value = '회원가입이 있으면 회원탈퇴도 있는법.')
@@ -179,16 +179,14 @@ async def 강화(ctx, *input):
 async def 소코반(ctx, *input):
     await sokobanMessage(ctx, bot, input)
 
-@bot.command()
-async def 계산(ctx, *input):
-    try:
-        value = ''
-        for i in input:
-            value += str(i)
-        text = str(eval(value))
-        await ctx.channel.send(f'{text}')
-    except:
-        await ctx.channel.send(f'수식에 오류가 있어요.')
+# @bot.command()
+# async def 계산(ctx, *input):
+#     text = " ".join(input)
+#     try:
+#         await ctx.channel.send(f'{str(eval(text))}')
+#     except:
+#         print(text)
+#         await ctx.channel.send(f'수식에 오류가 있어요.')
 
 @bot.command()
 async def 주사위(ctx, *input):
