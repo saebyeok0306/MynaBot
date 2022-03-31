@@ -245,6 +245,7 @@ async def 회원탈퇴(ctx):
             elif check == True:
                 cur.execute("DELETE FROM 'User_Info' WHERE user_ID = ?", (id,))
                 cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ?", (id,))
+                cur.execute("DELETE FROM 'Coin_NameList' WHERE user_ID = ?", (id,))
                 cur.execute("DELETE FROM 'Sword_Info' WHERE sword_UserID = ?", (id,))
                 embed = discord.Embed(title = f':heart: {gameTitle} 탈퇴', description = f'{ctx.author.mention} 성공적으로 {gameTitle}에서 탈퇴되셨습니다.', color = 0xffc0cb)
                 embed.set_footer(text = f"{ctx.author.display_name} | {gameTitle}", icon_url = ctx.author.avatar_url)

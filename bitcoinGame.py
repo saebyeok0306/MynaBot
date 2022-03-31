@@ -9,7 +9,7 @@ import re
 #re 정규식도 기본모듈임
 
 gameName = "가상코인"
-coinList = ["도지코인", "냥냥펀치코인", "람쥐썬더코인", "벌크여우코인", "머슬고래코인", "갈대코인", "비트코인", "스팀코인", "사과코인", "삼성코인", "헬지코인", "블리자드코인", "한강코인", "용팔이코인"]
+coinList = ["도지코인", "냥냥펀치코인", "람쥐썬더코인", "벌크여우코인", "머슬고래코인", "비트코인", "스팀코인", "사과코인", "삼성코인", "헬지코인"]
 
 chartChannel= 953919546966806548
 chatChannel = 953919871522046008
@@ -147,7 +147,7 @@ def setUserName(id, msg):
 #:heart:
 async def bitcoinMessage(message, *input):
     if(message.channel.id == chatChannel):
-        # try:
+        try:
             id = message.author.id
             check = game_check(id)
             if check == 0:
@@ -167,9 +167,136 @@ async def bitcoinMessage(message, *input):
                 embed.add_field(name = f'!코인  [풀매수│풀매도]  `코인명`', value = f'귀찮게 하나씩 언제 처리하나요. 인생은 한방!')
                 embed.add_field(name = f'!코인  순위', value = f'코인게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
                 embed.add_field(name = f'!코인  송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
+                embed.add_field(name = f'!코인  추천', value = f'추천까지만 쓰면, 내가 등록한 코인이름을 확인할 수 있어요.')
+                embed.add_field(name = f'!코인  추천  `코인명`', value = f'직접 코인이름을 추천해주면, 해당 코인이 차트에서 등장할 수 있어요.')
+                embed.add_field(name = f'!코인  추천삭제', value = f'내가 등록한 코인들을 전부 삭제해요.')
+                embed.add_field(name = f'!코인  추천삭제 `코인명`', value = f'내가 등록한 특정코인을 삭제해요.')
                 embed.add_field(name = f'꿀팁', value = f'코인이름을 쓸 땐, "코인"을 뺀 이름만 써도 되요.\n**ex.사과코인 == 사과**')
                 embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
                 await message.channel.send(embed = embed)
+            elif(input[0] == '추천'):
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT coin_Name, coin_Date FROM Coin_NameList WHERE user_ID = ?", (id,))
+                coinNameInfo = cur.fetchall()
+                cur.execute("SELECT coin_Name FROM Coin_NameList")
+                allCoinName = list(map(list, cur.fetchall()))
+                con.close() #db 종료
+
+                if len(input) == 1:
+                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} 님이 등록하신 코인명 리스트입니다.', color = 0xffc0cb)
+                    for name, date in coinNameInfo:
+                        embed.add_field(name = f'{name}', value = f'{date}')
+                    embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                    await message.channel.send(embed = embed)
+                    return True
+
+                # 추천한 코인 이름 갯수가 3개인 경우
+                if len(coinNameInfo) >= 3:
+                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} 코인 이름은 개인당 최대 3개까지 추천할 수 있습니다.', color = 0xffc0cb)
+                    for name, date in coinNameInfo:
+                        embed.add_field(name = f'{name}', value = f'{date}')
+                    embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                    await message.channel.send(embed = embed)
+                else:
+                    _coinName = input[1]
+                    if _coinName[-2:] == '코인':
+                        _coinName = _coinName[:-2]
+                    
+                    pre = re.compile('[^가-힣]+')
+                    NoText = pre.findall(_coinName)
+                    _coinName = f'{_coinName}코인'
+                    if NoText != []:
+                        embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}에 불가능한 글자가 포함되어 있습니다.\n**코인이름은 한글만 가능합니다.**', color = 0xffc0cb)
+                        for no in NoText:
+                            embed.add_field(name = f'{no}', value = f'불가능')
+                        embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                        msg = await message.channel.send(embed = embed)
+                        await msg.delete(delay=10)
+                        return False
+                    
+                    if len(_coinName) < 2:
+                        embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}은 글자수가 **{len(_coinName)}** 입니다.\n코인이름은 최소 3글자이상 써주셔야 합니다.', color = 0xffc0cb)
+                        embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                        msg = await message.channel.send(embed = embed)
+                        await msg.delete(delay=10)
+                        return False
+
+                    if len(_coinName) > 6:
+                        embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}은 글자수가 **{len(_coinName)}** 입니다.\n코인이름은 최대 6글자까지 가능합니다.', color = 0xffc0cb)
+                        embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                        msg = await message.channel.send(embed = embed)
+                        await msg.delete(delay=10)
+                        return False
+                    
+                    if [_coinName] in allCoinName:
+                        embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}은 이미 있는 이름입니다.', color = 0xffc0cb)
+                        embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                        msg = await message.channel.send(embed = embed)
+                        await msg.delete(delay=10)
+                        return False
+                    
+                    now = datetime.datetime.now()
+                    nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
+                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                    cur = con.cursor()
+                    cur.execute("INSERT INTO Coin_NameList VALUES(?, ?, ?, ?)", (id, message.author.display_name, _coinName, nowDatetime))
+                    con.close() #db 종료
+                    coinNameInfo.append((_coinName, nowDatetime))
+                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}이 데이터베이스에 등록됩니다.\n내가 등록한 단어는 총 {len(coinNameInfo)}개 입니다. (최대 3개까지 가능)', color = 0xffc0cb)
+                    for name, date in coinNameInfo:
+                        embed.add_field(name = f'{name}', value = f'{date}')
+                    embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                    await message.channel.send(embed = embed)
+            
+            elif(input[0] == '추천삭제'):
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT coin_Name, coin_Date FROM Coin_NameList WHERE user_ID = ?", (id,))
+                coinNameInfo = cur.fetchall()
+                con.close() #db 종료
+
+                # 전부 삭제
+                if(len(input) == 1):
+                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                    cur = con.cursor()
+                    cur.execute("DELETE FROM 'Coin_NameList' WHERE user_ID = ?", (id,))
+                    con.close() #db 종료
+                    embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{message.author.mention} 님이 등록하신 코인을 전부 삭제했습니다.', color = 0xffc0cb)
+                    for name, date in coinNameInfo:
+                        embed.add_field(name = f'{name}', value = f'{date}')
+                    embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                    await message.channel.send(embed = embed)
+                    return True
+                
+                _coinName = input[1]
+                if _coinName[-2:] != '코인':
+                    _coinName = f'{_coinName}코인'
+                
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT coin_Name FROM Coin_NameList WHERE user_ID = ? AND coin_Name = ?", (id, _coinName))
+                userCoinName = cur.fetchone()
+                con.close() #db 종료
+
+                if userCoinName == []:
+                    embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{message.author.mention} 님, {_coinName}이라는 코인은 등록된 기록이 없습니다.\n**!코인 추천** 을 입력해서 등록한 코인들을 확인해보세요.', color = 0xffc0cb)
+                    embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                    await message.channel.send(embed = embed)
+                    return False
+                
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("DELETE FROM 'Coin_NameList' WHERE user_ID = ? AND coin_Name = ?", (id, _coinName))
+                con.close() #db 종료
+
+                embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{message.author.mention} {_coinName}을 삭제했습니다.\n차트에 이미 존재하는 코인인 경우, 상폐될 때까지 남아있습니다.', color = 0xffc0cb)
+                embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
+                await message.channel.send(embed = embed)
+                return False
+
+
+                    
             elif(input[0] == '지원금'):
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
@@ -502,9 +629,9 @@ async def bitcoinMessage(message, *input):
                                         embed.add_field(name = f'{pUser[0]}', value = f'{pcoin[3]}개 보유\n`{printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
                                 await message.channel.send(embed = embed)
                         return 0
-        # except:
-        #     print("코인 에러")
-        #     pass
+        except:
+            print("코인 에러")
+            pass
 
 
 async def changeBitCoin(server, coin):
@@ -571,19 +698,24 @@ async def changeBitCoin(server, coin):
             if(now - exittime).seconds > 60:
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
+                cur.execute("SELECT coin_Name FROM Coin_NameList")
+                allCoinName = list(map(list, cur.fetchall()))
                 # 코인이름을 무작위로 가져오기
                 coinName = ''
+                coinNameList = coinList
+                for name in allCoinName:
+                    coinNameList.append(name[0])
                 while(True):
-                    rand = random.randint(0,len(coinList)-1)
+                    rand = random.randint(0,len(coinNameList)-1)
                     nonPass = 0
                     cur.execute("SELECT coin_Name FROM Coin_Info")
                     nameList = cur.fetchall()
                     for i in nameList:
-                        if i[0] == coinList[rand]:
+                        if i[0] == coinNameList[rand]:
                             nonPass = 1
                             break
                     if nonPass == 0:
-                        coinName = coinList[rand]
+                        coinName = coinNameList[rand]
                         break
                 coinRange = random.randint(110,250)/100
                 coinPrice = random.randint(200,2000)
@@ -611,6 +743,8 @@ async def bitcoinSystem(server):
     coin = cur.fetchall()
     con.close() #db 종료
 
+    now = datetime.datetime.now()
+    nowDatetime = "{}년 {:02d}월 {:02d}일 {:02d}시 {:02d}분".format(now.year, now.month, now.day, now.hour, now.minute)
     coinNum = len(coin)
     chartText = "```diff\n  종목             현재가격         변동폭\n"
     chartText += "─────────────────────────────────────────\n"
@@ -648,5 +782,6 @@ async def bitcoinSystem(server):
         else:
             chartText += "0#\n"
         #print(c[0], c[1], c[2], c[3], c[4])
-    chartText += "─────────────────────────────────────────```"
+    chartText += "─────────────────────────────────────────\n"
+    chartText += f'  LastUpdate {nowDatetime}```'
     await message.edit(content=chartText)
