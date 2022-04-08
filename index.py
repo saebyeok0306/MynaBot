@@ -7,6 +7,7 @@ import json
 from discord.ext import commands
 from bitcoinGame import *
 from swordGame import *
+from slotmachineGame import *
 from sokobanGame import *
 import sokobanGame as soko
 # from messageBot import *
@@ -160,6 +161,8 @@ async def on_message(message):
         embed.add_field(name = '!회원탈퇴', value = '회원가입이 있으면 회원탈퇴도 있는법.')
         embed.add_field(name = '!코인 도움말', value = '!코인게임\n명령어를 확인할 수 있어요.')
         embed.add_field(name = '!강화 도움말', value = '!강화게임\n명령어를 확인할 수 있어요.')
+        embed.add_field(name = '!소코반 도움말', value = '!소코반게임\n명령어를 확인할 수 있어요.')
+        embed.add_field(name = '!슬롯 도움말', value = '!슬롯게임\n명령어를 확인할 수 있어요.')
         await message.channel.send(embed=embed)
 
     if message.author.bot: return None
@@ -178,6 +181,10 @@ async def 강화(ctx, *input):
 @bot.command()
 async def 소코반(ctx, *input):
     await sokobanMessage(ctx, bot, input)
+
+@bot.command()
+async def 슬롯(ctx, *input):
+    await slotMessage(ctx, bot, input)
 
 # @bot.command()
 # async def 계산(ctx, *input):
@@ -216,7 +223,7 @@ async def 회원가입(ctx):
         nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
         if check == False:
             null = 'NULL'
-            cur.execute("INSERT INTO User_Info VALUES(?, ?, ?, ?, ?)", (id, ctx.author.display_name, nowDatetime, 0, null))
+            cur.execute("INSERT INTO User_Info VALUES(?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, nowDatetime, 0, null, 0, 0))
             embed = discord.Embed(title = f':wave: {gameTitle} 가입', description = f'{ctx.author.mention} 성공적으로 갈대의 {gameTitle}에 가입되셨습니다.', color = 0xffc0cb)
             embed.set_footer(text = f"{ctx.author.display_name} | {gameTitle}", icon_url = ctx.author.avatar_url)
             await ctx.channel.send(embed = embed)

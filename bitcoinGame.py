@@ -8,8 +8,9 @@ import re
 #sqlite3는 기본모듈
 #re 정규식도 기본모듈임
 
-gameName = "가상코인"
-coinList = ["도지코인", "냥냥펀치코인", "람쥐썬더코인", "벌크여우코인", "머슬고래코인", "비트코인", "스팀코인", "사과코인", "삼성코인", "헬지코인"]
+gameName  = "가상코인"
+coinList  = ["도지코인", "냥냥펀치코인", "람쥐썬더코인", "벌크여우코인", "머슬고래코인", "비트코인", "스팀코인", "사과코인", "삼성코인", "페페코인"]
+# coinEmoji = [':thuglifedog:', ':jjag2:', '🐿️', '🦊', '🐳', ':coin:', '🎮', '🍎', '🏢', ':Pepegood:']
 
 chartChannel= 953919546966806548
 chatChannel = 953919871522046008
@@ -191,9 +192,9 @@ async def bitcoinMessage(message, *input):
                     await message.channel.send(embed = embed)
                     return True
 
-                # 추천한 코인 이름 갯수가 3개인 경우
-                if len(coinNameInfo) >= 3:
-                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} 코인 이름은 개인당 최대 3개까지 추천할 수 있습니다.', color = 0xffc0cb)
+                # 추천한 코인 이름 갯수가 6개인 경우
+                if len(coinNameInfo) >= 6:
+                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} 코인 이름은 개인당 최대 6개까지 추천할 수 있습니다.', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
                     embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
@@ -243,7 +244,7 @@ async def bitcoinMessage(message, *input):
                     cur.execute("INSERT INTO Coin_NameList VALUES(?, ?, ?, ?)", (id, message.author.display_name, _coinName, nowDatetime))
                     con.close() #db 종료
                     coinNameInfo.append((_coinName, nowDatetime))
-                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}이 데이터베이스에 등록됩니다.\n내가 등록한 단어는 총 {len(coinNameInfo)}개 입니다. (최대 3개까지 가능)', color = 0xffc0cb)
+                    embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{message.author.mention} {_coinName}이 데이터베이스에 등록됩니다.\n내가 등록한 단어는 총 {len(coinNameInfo)}개 입니다. (최대 6개까지 가능)', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
                     embed.set_footer(text = f"{message.author.display_name} | {gameName}", icon_url = message.author.avatar_url)
