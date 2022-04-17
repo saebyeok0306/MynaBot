@@ -71,13 +71,6 @@ def drawCard(cardDeck):
     card = cardDeck.pop()
     if cardDeck == []: newShuffledDeck(cardDeck)
     return card
-
-
-async def editText(embed, msg, myHands, dealerHands, myScore, dealerScore):
-    embed.clear_fields()
-    embed.add_field(name=f'내 카드', value=f'{printCardList(myHands, True)}\n\n값 : {myScore}')
-    embed.add_field(name=f'딜러 카드', value=f'{printCardList(dealerHands, False)}\n\n값 : {dealerScore}')
-    await msg.edit(embed = embed)
     
 async def addReaction(msg):
     await msg.add_reaction('▶️')
