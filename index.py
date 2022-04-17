@@ -10,6 +10,7 @@ from swordGame import *
 from slotmachineGame import *
 from sokobanGame import *
 import sokobanGame as soko
+from blackJackGame import *
 # from messageBot import *
 # from autoProfile import *
 # from rtx3070ti import *
@@ -163,6 +164,7 @@ async def on_message(message):
         embed.add_field(name = '!강화 도움말', value = '!강화게임\n명령어를 확인할 수 있어요.')
         embed.add_field(name = '!소코반 도움말', value = '!소코반게임\n명령어를 확인할 수 있어요.')
         embed.add_field(name = '!슬롯 도움말', value = '!슬롯게임\n명령어를 확인할 수 있어요.')
+        embed.add_field(name = '!블랙잭 도움말', value = '!블랙잭\n명령어를 확인할 수 있어요.')
         await message.channel.send(embed=embed)
 
     if message.author.bot: return None
@@ -185,6 +187,10 @@ async def 소코반(ctx, *input):
 @bot.command()
 async def 슬롯(ctx, *input):
     await slotMessage(ctx, bot, input)
+
+@bot.command()
+async def 블랙잭(ctx, *input):
+    await blackJackMessage(ctx, bot, input)
 
 # @bot.command()
 # async def 계산(ctx, *input):

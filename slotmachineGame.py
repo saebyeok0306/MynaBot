@@ -9,7 +9,7 @@ gameName3 = '슬롯머신'
 
 # 럭키세븐, 도지, 냥, 페페, 제리, 머쓱
 slotList  = ['<a:lucky_seven:961840921144598548>', '<a:thuglifedog:765463003054997515>', '<:NYANG:961824297310101605>', '<:Pepegood:868064047969497129>', '<a:jerry:762198111119605770>', '<:em:672068659295813634>']
-slotRand  = [12, 14, 16, 18, 20, 20]
+slotRand  = [1, 1, 1, 1, 1, 1]
 slotRank  = {
     0 : [300, [[0,0,0]]],
     1 : [50, [[1,1,1]]],
@@ -136,7 +136,7 @@ async def slotMessage(message, bot, *input):
             con.close() #db 종료
 
             if myMoney < betting:
-                embed = discord.Embed(title = f':exclamation: {gameName3} 금액부족', description = f'{message.author.mention} 보유하고 계시는 자산이 부족합니다.\n보유재산 `{printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+                embed = discord.Embed(title = f':exclamation: {gameName3} 금액부족', description = f'{message.author.mention} 보유하고 계시는 돈이 부족합니다.\n보유재산 `{printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
                 embed.set_footer(text = f"{message.author.display_name} | {gameName3}", icon_url = message.author.avatar_url)
                 await message.channel.send(embed = embed)
                 return 0
@@ -157,7 +157,7 @@ async def slotMessage(message, bot, *input):
 
             async def openSlot(msg, index):
                 open.remove(index)
-                rand = random.randint(0,99)
+                rand = random.randint(0,sum(slotRand)-1)
                 rand2 = 0
                 for r in range(6):
                     rand2 += slotRand[r]

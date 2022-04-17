@@ -9,3 +9,6 @@ token.json
 
 # DiscordDB.db 파일무시
 DiscordDB.db
+
+# temp 디렉토리 무시
+temp/
