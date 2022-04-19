@@ -8,9 +8,8 @@ import random
 gameName3 = '슬롯머신'
 
 # 럭키세븐, 도지, 냥, 페페, 제리, 머쓱
-slotEmoji = '<a:slot:965987920504848485>'
 slotList  = ['<a:lucky_seven:961840921144598548>', '<a:thuglifedog:765463003054997515>', '<:NYANG:961824297310101605>', '<:Pepegood:868064047969497129>', '<a:jerry:762198111119605770>', '<:em:672068659295813634>']
-slotRand  = [10, 11, 12, 13, 14, 15]
+slotRand  = [1, 1, 1, 1, 1, 1]
 slotRank  = {
     0 : [300, [[0,0,0]]],
     1 : [50, [[1,1,1]]],
@@ -147,18 +146,17 @@ async def slotMessage(message, bot, *input):
             cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
             con.close() #db 종료
 
-            embed = discord.Embed(title = f':slot_machine: {message.author.display_name}님의 슬롯머신', description = f'슬롯머신을 돌립니다!', color = 0x324260)
-            embed.set_footer(text = f"{message.author.display_name} | {gameName3}", icon_url = message.author.avatar_url)
-            embed.add_field(name = f'배팅금액', value = f'{printN(betting)}원')
-            msg1 = await message.channel.send(embed = embed)
-            msg2 = await message.channel.send(f'{slotEmoji}{slotEmoji}{slotEmoji}')
-            
-            await asyncio.sleep(3)
+            await message.channel.send(f'{message.author.display_name}님,\n반응 이모지를 클릭해서 슬롯머신을 돌리세요!')
+            msg = await message.channel.send(f'❔❔❔')
+            await msg.add_reaction('1️⃣')
+            await msg.add_reaction('2️⃣')
+            await msg.add_reaction('3️⃣')
 
-            open = 0
+            open = [0,1,2]
             result = {id : 9 for id in range(3)}
 
-            async def openSlot(msg2, index):
+            async def openSlot(msg, index):
+                open.remove(index)
                 rand = random.randint(0,sum(slotRand)-1)
                 rand2 = 0
                 for r in range(6):
@@ -169,15 +167,32 @@ async def slotMessage(message, bot, *input):
                 text = ''
                 for i in range(3):
                     if result[i] == 9:
-                        text += f'{slotEmoji}'
+                        text += f'❔'
                     else:
                         text += f'{slotList[result[i]]}' 
-                await msg2.edit(content = text)
+                await msg.edit(content = text)
             
-            while open < 3:
-                await asyncio.sleep(1)
-                await openSlot(msg2, open)
-                open += 1
+            while open:
+                try:
+                    def check(reaction, user):
+                        return str(reaction) in ['1️⃣','2️⃣','3️⃣'] and \
+                        user == message.author and reaction.message.id == msg.id
+
+                    reaction, user = await bot.wait_for('reaction_add', timeout=15.0, check=check)
+                    if str(reaction) == '1️⃣' and 0 in open:
+                        await openSlot(msg, 0)
+                        continue
+                    elif str(reaction) == '2️⃣' and 1 in open:
+                        await openSlot(msg, 1)
+                        continue
+                    elif str(reaction) == '3️⃣' and 2 in open:
+                        await openSlot(msg, 2)
+                        continue
+                except asyncio.TimeoutError:
+                    for o in open:
+                        await openSlot(msg, o)
+                        continue
+            await msg.clear_reactions()
 
             _result = list(result.values())
             rank = None
@@ -216,7 +231,7 @@ async def slotMessage(message, bot, *input):
             con.close() #db 종료
 
 
-            embed = discord.Embed(title = f':slot_machine: {message.author.display_name}님의 슬롯머신', description = f'슬롯머신을 돌립니다!\n{resultText}', color = 0x324260)
+            embed = discord.Embed(title = f':slot_machine: {gameName3} 결과', description = f'{message.author.mention} {resultText}', color = 0x324260)
             embed.set_footer(text = f"{message.author.display_name} | {gameName3}", icon_url = message.author.avatar_url)
             embed.add_field(name = f'배팅금액', value = f'{printN(betting)}원')
             if rank is None:
@@ -228,7 +243,7 @@ async def slotMessage(message, bot, *input):
             embed.add_field(name = f'당첨금액', value = f'{rewardText}')
             embed.add_field(name = f'보유재산', value = f':money_with_wings:{printN(myMoney)}원')
             
-            await msg1.edit(embed = embed)
+            await message.channel.send(embed = embed)
 
         except:
             print("슬롯머신에러")
