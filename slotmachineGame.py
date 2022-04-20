@@ -10,7 +10,7 @@ gameName3 = '슬롯머신'
 # 럭키세븐, 도지, 냥, 페페, 제리, 머쓱
 slotEmoji = '<a:slot:965987920504848485>'
 slotList  = ['<a:lucky_seven:961840921144598548>', '<a:thuglifedog:765463003054997515>', '<:NYANG:961824297310101605>', '<:Pepegood:868064047969497129>', '<a:jerry:762198111119605770>', '<:em:672068659295813634>']
-slotRand  = [10, 11, 12, 13, 14, 15]
+slotRand  = [10, 10, 11, 11, 12, 12]
 slotRank  = {
     0 : [300, [[0,0,0]]],
     1 : [50, [[1,1,1]]],
@@ -153,7 +153,7 @@ async def slotMessage(message, bot, *input):
             msg1 = await message.channel.send(embed = embed)
             msg2 = await message.channel.send(f'{slotEmoji}{slotEmoji}{slotEmoji}')
             
-            await asyncio.sleep(3)
+            await asyncio.sleep(1)
 
             open = 0
             result = {id : 9 for id in range(3)}
