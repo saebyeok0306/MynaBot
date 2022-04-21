@@ -12,6 +12,3 @@ DiscordDB.db
 
 # temp 디렉토리 무시
 temp/
-
-# temp 디렉토리 무시
-core/
