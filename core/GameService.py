@@ -31,7 +31,7 @@ class GameService(commands.Cog):
 
     @commands.command()
     async def 회원탈퇴(self, ctx):
-        if(ctx.channel.id == 953919871522046008):
+        if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
             check = fun.game_check(id)
             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
@@ -61,7 +61,7 @@ class GameService(commands.Cog):
     
     @commands.command()
     async def 내정보(self, ctx):
-        if(ctx.channel.id == 953919871522046008):
+        if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
             cur = con.cursor()
@@ -107,7 +107,7 @@ class GameService(commands.Cog):
     
     @commands.command()
     async def 순위(self, ctx):
-        if(ctx.channel.id == 953919871522046008):
+        if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
             userRanking_, userNumber = fun.coin_Ranking(1)
             embed = discord.Embed(title = f'디스코드 게임 순위', description = f'가입한 모든 유저의 랭킹입니다.', color = 0xffc0cb)
@@ -122,83 +122,85 @@ class GameService(commands.Cog):
     
     @commands.command()
     async def 송금(self, ctx, *input):
-        try:
+        if(ctx.channel.id in fun.getBotChannel(ctx)):
+            try:
+                id = ctx.author.id
+                a = input[1]
+                userid = re.findall(r"[0-9]+", a)
+                userid = userid[0]
+                tradeMoney = int(input[2])
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
+                myUser = cur.fetchone()
+                myName, myMoney = myUser
+
+                cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (userid,))
+                targetUser = cur.fetchone()
+                if not targetUser:
+                    embed = discord.Embed(title = f':x: 송금 실패', description = f'입력하신 사용자는 가입하지 않은 유저입니다!', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                    con.close() #db 종료
+                    return 0
+                if targetUser[0] == ctx.author.display_name:
+                    embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 자기 자신에게 송금할 수 없습니다!', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                    con.close() #db 종료
+                    return 0
+                targetName = targetUser[0]      # 대상 이름
+                targetMoney = targetUser[1]     # 대상이 가지고 있는 돈
+                chargeMoney = tradeMoney // 10  # 지불할 수수료 10%
+                if myMoney >= tradeMoney:
+                    myMoney -= tradeMoney
+                    targetMoney += tradeMoney-chargeMoney
+                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id,))
+                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (targetMoney, userid,))
+                    embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{fun.printN(tradeMoney-chargeMoney)}원`을 송금했습니다!\n**수수료 {fun.printN(chargeMoney)}원** (10%) │ 남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                else:
+                    embed = discord.Embed(title = f':exclamation: 송금 실패', description = f'{ctx.author.mention} 돈이 부족합니다. 보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                con.close() #db 종료
+            except:
+                embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 명령어가 잘못되었습니다.\n**!코인 송금 [@유저] [금액]**의 형태로 입력해보세요.', color = 0xff0000)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                await ctx.channel.send(embed = embed)
+                return 0
+
+    @commands.command()
+    async def 지원금(self, ctx):
+        if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
-            a = input[1]
-            userid = re.findall(r"[0-9]+", a)
-            userid = userid[0]
-            tradeMoney = int(input[2])
             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
             cur = con.cursor()
-            cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
-            myUser = cur.fetchone()
-            myName, myMoney = myUser
-
-            cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (userid,))
-            targetUser = cur.fetchone()
-            if not targetUser:
-                embed = discord.Embed(title = f':x: 송금 실패', description = f'입력하신 사용자는 가입하지 않은 유저입니다!', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-                con.close() #db 종료
-                return 0
-            if targetUser[0] == ctx.author.display_name:
-                embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 자기 자신에게 송금할 수 없습니다!', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-                con.close() #db 종료
-                return 0
-            targetName = targetUser[0]      # 대상 이름
-            targetMoney = targetUser[1]     # 대상이 가지고 있는 돈
-            chargeMoney = tradeMoney // 10  # 지불할 수수료 10%
-            if myMoney >= tradeMoney:
-                myMoney -= tradeMoney
-                targetMoney += tradeMoney-chargeMoney
-                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id,))
-                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (targetMoney, userid,))
-                embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{fun.printN(tradeMoney-chargeMoney)}원`을 송금했습니다!\n**수수료 {fun.printN(chargeMoney)}원** (10%) │ 남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+            cur.execute("SELECT user_Money, user_Support FROM User_Info WHERE user_ID = ?", (id,))
+            userInfo = cur.fetchone()
+            userMoney = userInfo[0]
+            now = datetime.datetime.now()
+            passTicket = False
+            fundtime = 0
+            bonusMoney = 3000
+            if userInfo[1] == 'NULL':
+                passTicket = True
+            else:
+                fundtime = datetime.datetime.strptime(userInfo[1], '%Y-%m-%d %H:%M:%S')
+                if now.day != fundtime.day:
+                    passTicket = True
+            if passTicket:
+                nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
+                cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (userMoney+bonusMoney, nowDatetime, id))
+                embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{bonusMoney}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
             else:
-                embed = discord.Embed(title = f':exclamation: 송금 실패', description = f'{ctx.author.mention} 돈이 부족합니다. 보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+                embed = discord.Embed(title = f':watch: {self.title} 지원금', description = f'{ctx.author.mention} 지원금은 하루에 한번 씩 받을 수 있습니다.\n- {fundtime.year}년 {fundtime.month}월 {fundtime.day}일에 지원금을 받았음.', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
             con.close() #db 종료
-        except:
-            embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 명령어가 잘못되었습니다.\n**!코인 송금 [@유저] [금액]**의 형태로 입력해보세요.', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-            await ctx.channel.send(embed = embed)
-            return 0
-            
-    @commands.command()
-    async def 지원금(self, ctx):
-        id = ctx.author.id
-        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-        cur = con.cursor()
-        cur.execute("SELECT user_Money, user_Support FROM User_Info WHERE user_ID = ?", (id,))
-        userInfo = cur.fetchone()
-        userMoney = userInfo[0]
-        now = datetime.datetime.now()
-        passTicket = False
-        fundtime = 0
-        bonusMoney = 3000
-        if userInfo[1] == 'NULL':
-            passTicket = True
-        else:
-            fundtime = datetime.datetime.strptime(userInfo[1], '%Y-%m-%d %H:%M:%S')
-            if now.day != fundtime.day:
-                passTicket = True
-        if passTicket:
-            nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
-            cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (userMoney+bonusMoney, nowDatetime, id))
-            embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{bonusMoney}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-            await ctx.channel.send(embed = embed)
-        else:
-            embed = discord.Embed(title = f':watch: {self.title} 지원금', description = f'{ctx.author.mention} 지원금은 하루에 한번 씩 받을 수 있습니다.\n- {fundtime.year}년 {fundtime.month}월 {fundtime.day}일에 지원금을 받았음.', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-            await ctx.channel.send(embed = embed)
-        con.close() #db 종료
     
 def setup(bot):
     bot.add_cog(GameService(bot))
