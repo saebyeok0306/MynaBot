@@ -6,7 +6,7 @@ class Command(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command()
+    @commands.command(name="도움말", aliases=["도움", "설명"])
     async def 도움말(self, ctx, *input):
         embed=discord.Embed(color=0xB22222, title="도움말:", description="마이나에게 있는 명령어들을 알려드려요. By.갈대")
         embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
@@ -26,7 +26,7 @@ class Command(commands.Cog):
         embed.add_field(name = f'!블랙잭 도움말', value = f'!블랙잭\n명령어를 확인할 수 있어요.')
         await ctx.channel.send(embed=embed)
     
-    @commands.command()
+    @commands.command(name="주사위", aliases=["다이스"])
     async def 주사위(self, ctx, *input):
         value = 100 # input이 없는 경우
         try:

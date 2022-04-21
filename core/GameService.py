@@ -59,7 +59,7 @@ class GameService(commands.Cog):
                 await ctx.channel.send(embed = embed)
             con.close() #db 종료
     
-    @commands.command()
+    @commands.command(name="내정보", aliases=["정보창", "내정보창", "상태창"])
     async def 내정보(self, ctx):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
@@ -105,7 +105,7 @@ class GameService(commands.Cog):
                 embed.add_field(name = f'재산 랭킹', value = f':white_small_square:`{userRank}/{userNumber}위`')
             await ctx.channel.send(embed = embed)
     
-    @commands.command()
+    @commands.command(name="순위", aliases=["랭킹","랭킹순위","순위표"])
     async def 순위(self, ctx):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
@@ -171,7 +171,7 @@ class GameService(commands.Cog):
                 await ctx.channel.send(embed = embed)
                 return 0
 
-    @commands.command()
+    @commands.command(name="지원금", aliases=["지원"])
     async def 지원금(self, ctx):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
             id = ctx.author.id
