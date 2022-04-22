@@ -1,5 +1,6 @@
 import sqlite3, discord, asyncio, datetime, random, re
 import data.Functions as fun
+from collections import defaultdict
 from discord.ext import commands, tasks
 
 gameName  = "가상코인"
@@ -10,24 +11,43 @@ async def game_createChart(guild, channel):
     # ch = fun.game_getMessageChannel(server, chartChannel)
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
-    cur.execute("SELECT chatID FROM Game_Info WHERE guildID = ?", (guild.id,))
-    chatID = cur.fetchone()
-    con.close() #db 종료
-    try:
-        message = await channel.fetch_message(chatID[0])
-        return message
-    except:
-        print("chart의 chatID가 없음")
-        message = await channel.send('차트정보가 없으므로, 새로 생성합니다.')
-        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-        cur = con.cursor()
-        cur.execute("DELETE FROM 'Game_Info' WHERE  guildID = ?", (guild.id,))
-        cur.execute("INSERT INTO 'Game_Info' VALUES(?, ?)", (guild.id, str(message.id)))
-        con.commit()
-        con.close() #db 종료
-        return message
+    chatID = []
+    cur.execute("SELECT channelID, chatID FROM Game_Info WHERE guildID = ?", (guild.id,))
+    chartData = cur.fetchall()
 
-async def changeBitCoin(server, channel, coin):
+    for ch in channel:
+        temp_msgID = None
+        for d in range(len(chartData)):
+            if chartData[d][0] == ch.id:
+                temp_msgID = chartData[d][1]
+                del chartData[d]
+                break
+        chatID.append([ch, temp_msgID])
+    
+    # 사라진 채널 삭제하기
+    for rd in chartData:
+        cur.execute("DELETE FROM 'Game_Info' WHERE guildID = ? AND channelID = ?", (guild.id, rd[0],))
+
+    con.close() #db 종료
+
+    messageList = []
+    for ch, msgID in chatID:
+        try:
+            message = await ch.fetch_message(msgID)
+            messageList.append(message)
+        except BaseException as e:
+            print(f'chart message load error\n{e}')
+            message = await ch.send('차트정보가 없으므로, 새로 생성합니다.')
+            con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+            cur = con.cursor()
+            cur.execute("DELETE FROM 'Game_Info' WHERE guildID = ? AND channelID = ?", (guild.id, ch.id,))
+            cur.execute("INSERT INTO 'Game_Info' VALUES(?, ?, ?)", (guild.id, ch.id, str(message.id),))
+            con.commit()
+            con.close() #db 종료
+            messageList.append(message)
+    return messageList
+
+async def changeBitCoin(guild, coin):
     now = datetime.datetime.now()
     for c in coin:
         if c[2] == 1: #폐지여부
@@ -77,7 +97,8 @@ async def changeBitCoin(server, channel, coin):
                         lostSumMoney += lc[2]
                         embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{lc[1]}코인`')
                     embed.set_footer(text = f"총 {fun.printN(lostSumMoney)}원 규모의 돈이 사라졌습니다. | {gameName}")
-                    await channel.send(embed = embed)
+                    for channel in fun.getBotChannelGuild(guild):
+                        await channel.send(embed = embed)
                 else:
                     cur.execute("UPDATE 'Coin_Info' SET coin_Exit = ? WHERE coin_ID = ?", (exitN, c[0]))
             else:
@@ -114,11 +135,12 @@ async def changeBitCoin(server, channel, coin):
                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                 cur.execute("UPDATE 'Coin_Info' SET coin_Name = ?, coin_Open = ?, coin_Range = ?, coin_Price1 = ?, coin_Price2 = ?, coin_Updown = ?, coin_CreateDate = ?, coin_DeleteDate = ?, coin_Exit = ? WHERE coin_ID = ?", (coinName, 1, coinRange, coinPrice, coinPrice, 1, nowDatetime, '', 0, c[0]))
                 embed = discord.Embed(title = f':receipt: {coinName} 등장', description = f"새롭게 {coinName}이 거래소에 올라왔습니다!\n이 친구는 시작거래가가 {fun.printN(coinPrice)}원이군요.", color = 0xffc0cb)
-                await channel.send(embed = embed)
+                for channel in fun.getBotChannelGuild(guild):
+                    await channel.send(embed = embed)
                 con.close() #db 종료
 
-async def bitcoinSystem(guild, channel):
-    message = await game_createChart(guild, channel)
+async def bitcoinSystem(guild, channel): # channel은 리스트형태임
+    message = await game_createChart(guild, channel) # message도 리스트형태로 반환됨
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT coin_ID, coin_Name, coin_Open, coin_Range, coin_Price1, coin_Price2, coin_Updown, coin_CreateDate, coin_DeleteDate, coin_Exit FROM Coin_Info")
@@ -126,7 +148,7 @@ async def bitcoinSystem(guild, channel):
     con.close() #db 종료
 
     # 비트코인 가격 변동
-    await changeBitCoin(guild, channel, coin)
+    await changeBitCoin(guild, coin)
 
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
@@ -175,7 +197,8 @@ async def bitcoinSystem(guild, channel):
         #print(c[0], c[1], c[2], c[3], c[4])
     chartText += "─────────────────────────────────────────\n"
     chartText += f'  LastUpdate {nowDatetime}```'
-    await message.edit(content=chartText)
+    for msg in message:
+        await msg.edit(content=chartText)
 
 
 class BitcoinGame(commands.Cog):
@@ -187,9 +210,9 @@ class BitcoinGame(commands.Cog):
     @tasks.loop(seconds=60)
     async def run(self):
         if fun.guildsList != []:
-            lists = fun.getChartChannel()
-            for guild, channel in lists:
-                await bitcoinSystem(guild, channel)
+            guilds = fun.getChartChannel()
+            for guild in guilds:
+                await bitcoinSystem(guild, guilds[guild])
 
     @commands.command()
     async def 코인(self, ctx, *input):

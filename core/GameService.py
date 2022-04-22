@@ -94,9 +94,9 @@ class GameService(commands.Cog):
             embed.add_field(name = f'현금 재산', value = f':dollar:`{fun.printN(myMoney)}원`')
             embed.add_field(name = f'총 재산', value = f':money_with_wings:`{fun.printN(totalValue)}원`')
 
-            embed.add_field(name = f'총 배팅액', value = f'`{fun.printN(myBetting)}원`')
-            embed.add_field(name = f'총 당첨액', value = f'`{fun.printN(myReward)}원`')
-            embed.add_field(name = f'손익률', value = f'`{PMText[slotPM]}{fun.printN(slotDiffMoney)}원`')
+            embed.add_field(name = f'총 배팅액:slot_machine:', value = f'`{fun.printN(myBetting)}원`')
+            embed.add_field(name = f'총 당첨액:slot_machine:', value = f'`{fun.printN(myReward)}원`')
+            embed.add_field(name = f'손익률:slot_machine:', value = f'`{PMText[slotPM]}{fun.printN(slotDiffMoney)}원`')
 
             userRank, userNumber = fun.coin_GetRank(id)
             if userRank == False:

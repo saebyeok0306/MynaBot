@@ -10,7 +10,7 @@ sokobanLevel    = 0
 sokobanMessage  = 0
 sokobanTimer    = 0
 sokobanGoal     = 0
-sokobanSysTimer  = 0
+sokobanSysTimer = 0
 
 # 실제 게임이 진행될 변수
 sokobanField    = []

@@ -1,4 +1,5 @@
 import sqlite3
+from collections import defaultdict
 
 guildsList = []
 
@@ -33,18 +34,18 @@ def setUserName(id, msg):
 def game_getMessageChannel(bot, channel):
     return bot.get_channel(channel)
 
-def check_Discord(bot):
-    guildList = bot.guilds
-    for server in guildList:
-        if(server.id == 631471244088311840): #내 디코서버일 때
-            return server
+# def check_Discord(bot):
+#     guildList = bot.guilds
+#     for server in guildList:
+#         if(server.id == 631471244088311840): #내 디코서버일 때
+#             return server
 
-async def check_GuildUser(bot, id):
-    try:
-        server = check_Discord(bot)
-        return await server.fetch_member(id)
-    except:
-        return False
+# async def check_GuildUser(bot, id):
+#     try:
+#         server = check_Discord(bot)
+#         return await server.fetch_member(id)
+#     except:
+#         return False
 
 def getBotChannel(message):
     botChannel = []
@@ -54,18 +55,25 @@ def getBotChannel(message):
             botChannel.append(ch.id)
     return botChannel
 
+def getBotChannelGuild(guild):
+    botChannel = []
+    for ch in guild.text_channels:
+        if ch.topic is not None and '#마이나' in ch.topic:
+            botChannel.append(ch)
+    return botChannel
+
 def getGuilds(bot): #init
     global guildsList
     guildsList = bot.guilds
     print(guildsList)
 
 def getChartChannel():
-    chartData = []
+    chartData = defaultdict(list)
     global guildsList
     for g in guildsList:
         for ch in g.text_channels:
-            if ch.topic is not None and '#마이나차트' in ch.topic:
-                chartData.append([g,ch])
+            if ch.topic is not None and '#차트마이나' in ch.topic:
+                chartData[g].append(ch)
     return chartData
 
 # 내가 구매한 코인의 가치 표기

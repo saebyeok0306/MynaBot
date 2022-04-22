@@ -1,4 +1,4 @@
-import discord, asyncio, json, random
+import discord, asyncio, json
 import sys, os
 import data.Functions as fun
 from discord.ext import commands
@@ -8,10 +8,11 @@ from discord.ext import commands
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='!', intents=intents)
+
 token = ''
 with open("data/token.json", "r") as f:
     loaded_data = json.load(f)  # 데이터 로드하기
-    token = loaded_data['token']
+    token = loaded_data['token2']
 
 for filename in os.listdir('core'):
     if filename.endswith(".py"):
@@ -24,7 +25,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('==============================')
-    game = discord.Game("명령어는 [!도움말] 참고")
+    game = discord.Game("테스트를 위한 봇입니다.")
     await bot.change_presence(status=discord.Status.online, activity=game)
 
     fun.getGuilds(bot)
@@ -32,7 +33,6 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.content.endswith('ㅋ') and message.content.count('ㅋ') >= 3:
-        emoji = ['<a:jerry:762198111119605770>','<:dog1:647472178287214593>','<a:SpongeBob3:762542652381069352>','<a:SpongeBob2:762541940914782260>']
-        await message.add_reaction(random.choice(emoji))
+        await message.add_reaction('<a:jerry:966960330217521172>')
 
 bot.run(token)

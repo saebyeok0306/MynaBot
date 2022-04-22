@@ -36,6 +36,7 @@ class SlotmachineGame(commands.Cog):
                     embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
                     await ctx.channel.send(embed = embed)
                     return 0
+
                 fun.setUserName(id, ctx)
 
                 if(input[0] == '도움말'):

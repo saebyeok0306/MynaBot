@@ -36,6 +36,5 @@ class Command(commands.Cog):
         r = random.randint(1, value)
         await ctx.channel.send(f'주사위를 굴립니다...\n두둥! `{r}`입니다!')
 
-
 def setup(bot):
     bot.add_cog(Command(bot))
