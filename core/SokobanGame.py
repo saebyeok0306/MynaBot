@@ -184,7 +184,7 @@ class SokobanGame(commands.Cog):
         global sokobanLevel, sokobanSysTimer
         if sokobanPlay:
             sokobanSysTimer += 1
-            if sokobanSysTimer > 1:
+            if sokobanSysTimer > 11:
                 embed = discord.Embed(title = f':video_game: {gameName3} │ {sokobanLevel}레벨', description = f'시간 초과로 게임을 종료합니다.', color = 0x324260)
                 await sokobanMessage.edit(embed=embed)
                 await sokobanMessage.clear_reactions()

@@ -34,5 +34,8 @@ async def on_ready():
 async def on_message(message):
     if message.content.endswith('ㅋ') and message.content.count('ㅋ') >= 3:
         await message.add_reaction('<a:jerry:966960330217521172>')
+    
+    if message.author.bot: return None
+    await bot.process_commands(message)
 
 bot.run(token)

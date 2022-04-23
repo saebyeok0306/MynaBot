@@ -82,7 +82,7 @@ class BlackJackGame(commands.Cog):
     @commands.command()
     async def 블랙잭(self, ctx, *input):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
-            try:
+            # try:
                 id = ctx.author.id
                 if fun.game_check(id) is False: # 회원가입이 된 유저인지 체크
                     embed = discord.Embed(title = f':exclamation: {gameName4} 미가입', description = f'{ctx.author.mention} {gameName4} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
@@ -393,9 +393,9 @@ class BlackJackGame(commands.Cog):
                     blackJackUser = []
                     return 0
 
-            except BaseException as e:
-                print(f'블랙잭게임 {e}')
-                pass
+            # except BaseException as e:
+            #     print(f'블랙잭게임 {e}')
+            #     pass
 
 def setup(bot):
     bot.add_cog(BlackJackGame(bot))
