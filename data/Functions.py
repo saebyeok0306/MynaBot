@@ -1,4 +1,4 @@
-import sqlite3
+import sqlite3, datetime
 from collections import defaultdict
 
 guildsList = []
@@ -152,3 +152,58 @@ def coin_GetRank(id):
         if id == rank[0]:
             return rankIndex, userNumber
     return False, False
+
+def returnJoinDate(id):
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("SELECT user_Date FROM User_Info WHERE user_ID = ?", (id,))
+    userInfo = cur.fetchone()[0]
+    joindate = datetime.datetime.strptime(userInfo, '%Y-%m-%d %H:%M:%S')
+    con.close() #db 종료
+    return joindate
+
+def removeUserDB(id):
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("DELETE FROM 'User_Info' WHERE user_ID = ?", (id,))
+    cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ?", (id,))
+    cur.execute("DELETE FROM 'Coin_NameList' WHERE user_ID = ?", (id,))
+    cur.execute("DELETE FROM 'Sword_Info' WHERE sword_UserID = ?", (id,))
+    con.close() #db 종료
+    return True
+
+def returnRoleName(id):
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("SELECT user_Role FROM User_Info WHERE user_ID = ?", (id,))
+    userInfo = cur.fetchone()[0]
+    con.close() #db 종료
+    return userInfo
+
+def createRoleName(id, roleName):
+    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    cur = con.cursor()
+    cur.execute("UPDATE 'User_Info' SET user_Role = ? WHERE user_ID = ?", (roleName, id))
+    con.close() #db 종료
+
+async def createUserRole(guild, user):
+    roleName = user.name + '#' + user.discriminator
+    position = [ role for role in guild.roles ]
+    new_role = await guild.create_role(name=roleName, color=0x99aab5, hoist=False)
+
+    position.insert(len(position)-3, new_role)
+    position = {role : pos for pos, role in enumerate(position)}
+    await guild.edit_role_positions(positions=position)
+    await user.add_roles(new_role)
+    createRoleName(user.id, roleName)
+    return True
+
+async def deleteUserRole(guild, user):
+    roleName = returnRoleName(user.id)
+    if roleName is not None:
+        for role in guild.roles:
+            if role.name == roleName:
+                await role.delete(reason=f'{roleName}님이 회원탈퇴함.')
+                return True
+    
+    return False

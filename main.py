@@ -1,4 +1,4 @@
-import discord, asyncio, json, random
+import discord, asyncio, json, random, datetime
 import sys, os
 import data.Functions as fun
 from discord.ext import commands
@@ -83,8 +83,24 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.MissingRequiredArgument):   return
     elif isinstance(error, commands.BadArgument):               return
     else:
-        embed = discord.Embed(title='Error', description='오류가 발생했습니다.', color=0xFF0000)
-        embed.add_field(name='상세내용', value=f'```{error}```')
-        await ctx.send(embed=embed)
+        with open('log/error.txt', 'a', encoding='utf-8') as l:
+            now = datetime.datetime.now()
+            nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
+            text = f'user : {ctx.author.name}#{ctx.author.discriminator}\n'
+            text += f'cmd : {ctx.message.content}\n'
+            text += f'from : {ctx.message.guild.name}.{ctx.message.channel.name}\n'
+            text += f'error : {error}\n'
+            text += f'date : {nowDatetime}'
+            text += f'\n\n'
+            l.write(text)
+        
+        # embed = discord.Embed(title='Error', description='오류가 발생했습니다.', color=0xFF0000)
+        # embed.add_field(name='상세내용', value=f'```{error}```')
+        # await ctx.send(embed=embed)
+
+@bot.event
+async def on_member_remove(member):
+    await fun.deleteUserRole(member.guild, member) # delete role
+    fun.removeUserDB(member.id) # db에서 데이터 삭제
 
 bot.run(token)

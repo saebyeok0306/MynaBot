@@ -14,19 +14,10 @@ class Command(commands.Cog):
         embed.add_field(name = '!청소 `값(기본값 5)`', value = f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**')
         embed.add_field(name = '!골라줘 `대상1` `대상2` ...', value = f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')
         embed.add_field(name = '!계산 `수식`', value = f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!')
-        # embed.add_field(name = '!계산 `수식`', value = '수식을 계산해줍니다.')
-        # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
-        embed.add_field(name = f'!회원가입', value = f'디코게임을 이용하려면, 가입이 필요해요.')
+        embed.add_field(name = f'!회원가입', value = f'서비스를 이용하려면, 가입이 필요해요.\n최종적으로 별명과 계정ID값만 사용해요.')
         embed.add_field(name = f'!회원탈퇴', value = f'회원가입이 있으면 회원탈퇴도 있는법.')
-        embed.add_field(name = f'!지원금', value = f'하루에 한번 지원금으로 3000원을 드립니다!')
-        embed.add_field(name = f'!내정보', value = f'내가 보유한 재산이나 랭킹 순위를 볼 수 있어요.')
-        embed.add_field(name = f'!순위', value = f'디스코드게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
-        embed.add_field(name = f'!송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
-        embed.add_field(name = f'!코인 도움말', value = f'!코인게임\n명령어를 확인할 수 있어요.')
-        embed.add_field(name = f'!강화 도움말', value = f'!강화게임\n명령어를 확인할 수 있어요.')
-        embed.add_field(name = f'!소코반 도움말', value = f'!소코반게임\n명령어를 확인할 수 있어요.')
-        embed.add_field(name = f'!슬롯 도움말', value = f'!슬롯게임\n명령어를 확인할 수 있어요.')
-        embed.add_field(name = f'!블랙잭 도움말', value = f'!블랙잭\n명령어를 확인할 수 있어요.')
+        embed.add_field(name = f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
+        # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
         await ctx.channel.send(embed=embed)
     
     @commands.command(name="주사위", aliases=["다이스"])
@@ -70,7 +61,6 @@ class Command(commands.Cog):
         choice = random.choice(input)
         text = f'제 생각에는...\n**{choice}**, 이게 좋지 않을까요?!'
         await ctx.reply(content=text, mention_author=False)
-
     
     @commands.command(name="계산기", aliases=['계산', '계산해줘'])
     async def 계산(self, ctx, *input):
