@@ -6,7 +6,7 @@ from discord.ext import commands
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 token = ''
@@ -30,12 +30,46 @@ async def on_ready():
 
     fun.getGuilds(bot)
 
-@bot.event
-async def on_message(message):
-    if message.content.endswith('ㅋ') and message.content.count('ㅋ') >= 3:
-        await message.add_reaction('<a:jerry:966960330217521172>')
+
+@bot.command(name='로드', aliases=['load'])
+async def load_commands(ctx, extension):
+    if ctx.message.author.guild_permissions.administrator:
+        bot.load_extension(f'core.{extension}')
+        await ctx.send(f':white_check_mark: {extension}을(를) 로드했습니다!')
+
+@bot.command(name='언로드', aliases=['unload'])
+async def unload_commands(ctx, extension):
+    if ctx.message.author.guild_permissions.administrator:
+        bot.unload_extension(f'core.{extension}')
+        await ctx.send(f':white_check_mark: {extension}을(를) 언로드했습니다!')
+
+@bot.command(name='리로드', aliases=['reload'])
+async def reload_commands(ctx, extension=None):
+    if ctx.message.author.guild_permissions.administrator:
+        if extension is None: # extension이 None이면 (그냥 !리로드 라고 썼을 때)
+            for filename in os.listdir('core'):
+                if filename.endswith('.py'):
+                    extensionName = filename[:-3]
+                    bot.unload_extension(f'core.{extensionName}')
+                    bot.load_extension(f'core.{extensionName}')
+                    await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
+        else:
+            bot.unload_extension(f'core.{extension}')
+            bot.load_extension(f'core.{extension}')
+            await ctx.send(f':white_check_mark: {extension}을(를) 다시 불러왔습니다!')
     
-    if message.author.bot: return None
-    await bot.process_commands(message)
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):             return
+    elif isinstance(error, commands.MissingRequiredArgument):   return
+    elif isinstance(error, commands.BadArgument):               return
+    else:
+        embed = discord.Embed(title='Error', description='오류가 발생했습니다.', color=0xFF0000)
+        embed.add_field(name='상세내용', value=f'```{error}```')
+        await ctx.send(embed=embed)
+
+@bot.event
+async def on_error(event, *args, **kwargs):
+    print("error!")
 
 bot.run(token)

@@ -6,7 +6,7 @@ from discord.ext import commands
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 token = ''
@@ -40,6 +40,11 @@ async def on_message(message):
         elif '캬루' in message.content:
             emoji = ['<:jjag2:740050586828931164>', '<:cat2:745897614708441168>', '<:cat3:750001125477974106>', '<:cat4:750001279014797342>', '<:cat5:750001356709822504>', '<:cat7:750324958554751106>', '<:cat8:753133462642229248>', '<:cat9:753132725107556442>', '<:jjag:739874314324672532>', '<a:jjag3:740055407103574097>']
             await message.add_reaction(random.choice(emoji))
+        
+    if '몰?루' == message.content:
+        await message.add_reaction('<a:molu:968521092476051526>')
+    elif '아?루' == message.content or '아!루' == message.content:
+        await message.add_reaction('<a:aru:968710530376282212>')
     
     if message.author.bot: return None
     await bot.process_commands(message)
@@ -63,7 +68,8 @@ async def reload_commands(ctx, extension=None):
             for filename in os.listdir('core'):
                 if filename.endswith('.py'):
                     extensionName = filename[:-3]
-                    bot.unload_extension(f'core.{extensionName}')
+                    try: bot.unload_extension(f'core.{extensionName}')
+                    except: pass
                     bot.load_extension(f'core.{extensionName}')
                     await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
         else:

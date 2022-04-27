@@ -178,6 +178,10 @@ class SokobanGame(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
+    def cog_unload(self):
+        if self.run.is_running():
+            self.run.cancel()
+    
     @tasks.loop(seconds=10)
     async def run(self):
         global sokobanPlay, sokobanMessage
@@ -201,75 +205,75 @@ class SokobanGame(commands.Cog):
     @commands.command()
     async def 소코반(self, ctx, *input):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
-            try:
-                id = ctx.author.id
+            # try:
+            id = ctx.author.id
 
-                if(input[0] == '도움말'):
-                    embed = discord.Embed(title = f':video_game: {gameName3} 도움말', description = f'{ctx.author.mention} {gameName3} 의 명령어입니다!', color = 0x324260)
-                    embed.add_field(name = f'!소코반  시작', value = f'레벨을 지정하지 않으면, 1레벨부터 시작해요.')
-                    embed.add_field(name = f'!소코반  시작  레벨', value = f'소코반을 플레이할 수 있어요. (MAX {sokobanMAX}레벨)')
-                    # embed.add_field(name = f'!소코반  종료', value = f'소코반 게임을 종료합니다.')
+            if(input[0] == '도움말'):
+                embed = discord.Embed(title = f':video_game: {gameName3} 도움말', description = f'{ctx.author.mention} {gameName3} 의 명령어입니다!', color = 0x324260)
+                embed.add_field(name = f'!소코반  시작', value = f'레벨을 지정하지 않으면, 1레벨부터 시작해요.')
+                embed.add_field(name = f'!소코반  시작  레벨', value = f'소코반을 플레이할 수 있어요. (MAX {sokobanMAX}레벨)')
+                # embed.add_field(name = f'!소코반  종료', value = f'소코반 게임을 종료합니다.')
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                await ctx.channel.send(embed = embed)
+
+            elif(input[0] == '시작'):
+                global sokobanPlay, sokobanLoop, sokobanLevel, sokobanField
+                global sokobanMessage, sokobanTimer, sokobanLog
+                if sokobanPlay or sokobanLoop:
+                    embed = discord.Embed(title = f':video_game: {gameName3} 안내', description = f'소코반 게임이 이미 실행된 상태입니다.', color = 0x324260)
                     embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
                     await ctx.channel.send(embed = embed)
-
-                elif(input[0] == '시작'):
-                    global sokobanPlay, sokobanLoop, sokobanLevel, sokobanField
-                    global sokobanMessage, sokobanTimer, sokobanLog
-                    if sokobanPlay or sokobanLoop:
-                        embed = discord.Embed(title = f':video_game: {gameName3} 안내', description = f'소코반 게임이 이미 실행된 상태입니다.', color = 0x324260)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
-                        await ctx.channel.send(embed = embed)
-                    else:
-                        self.run.start() # sokoban System Run
-                        sokobanPlay = id
-                        sokobanLevel = 1
-                        sokobanLog = []
-                        if len(input) > 1 and checkInt(input[1]):
-                            sokobanLevel = int(input[1])
-                        sokobanMapSetting() # 맵세팅
-                        embed = discord.Embed(title = f':video_game: {gameName3} 플레이', description = f'소코반 게임을 실행합니다.\n게임을 세팅 중이니 잠시만 기다려주세요.', color = 0x324260)
-                        embed.add_field(name = f'레벨', value = f'{sokobanLevel}레벨로 진행')
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
-                        sokobanMessage = await ctx.channel.send(embed = embed)
-                        await sokobanReaction(sokobanMessage)
-                        await sokobanPrint(0)
-                        while True:
-                            sokobanLoop = True
-                            # await asyncio.sleep(0.5)
-                            # await sokobanAnswer()
-                            try:
-                                def check(reaction, user):
-                                    return str(reaction) in ['◀️','▶️','🔼','🔽'] and \
-                                    user != sokobanMessage.author and reaction.message.id == sokobanMessage.id
-                                reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=check)
-                                if str(reaction) == '◀️':
-                                    await sokobanMessage.clear_reactions()
-                                    await sokobanMove('Left', user)
-                                    await sokobanPrint(user)
-                                    await sokobanReaction(sokobanMessage)
-                                elif str(reaction) == '▶️':
-                                    await sokobanMessage.clear_reactions()
-                                    await sokobanMove('Right', user)
-                                    await sokobanPrint(user)
-                                    await sokobanReaction(sokobanMessage)
-                                elif str(reaction) == '🔼':
-                                    await sokobanMessage.clear_reactions()
-                                    await sokobanMove('Up', user)
-                                    await sokobanPrint(user)
-                                    await sokobanReaction(sokobanMessage)
-                                elif str(reaction) == '🔽':
-                                    await sokobanMessage.clear_reactions()
-                                    await sokobanMove('Down', user)
-                                    await sokobanPrint(user)
-                                    await sokobanReaction(sokobanMessage)
-                            except asyncio.TimeoutError:
-                                if not sokobanPlay and sokobanLoop:
-                                    sokobanLoop = False
-                                    await sokobanMessage.add_reaction('⏹️')
-                                    break
-            except BaseException as e:
-                print(f'소코반게임 {e}')
-                pass
+                else:
+                    self.run.start() # sokoban System Run
+                    sokobanPlay = id
+                    sokobanLevel = 1
+                    sokobanLog = []
+                    if len(input) > 1 and checkInt(input[1]):
+                        sokobanLevel = int(input[1])
+                    sokobanMapSetting() # 맵세팅
+                    embed = discord.Embed(title = f':video_game: {gameName3} 플레이', description = f'소코반 게임을 실행합니다.\n게임을 세팅 중이니 잠시만 기다려주세요.', color = 0x324260)
+                    embed.add_field(name = f'레벨', value = f'{sokobanLevel}레벨로 진행')
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                    sokobanMessage = await ctx.channel.send(embed = embed)
+                    await sokobanReaction(sokobanMessage)
+                    await sokobanPrint(0)
+                    while True:
+                        sokobanLoop = True
+                        # await asyncio.sleep(0.5)
+                        # await sokobanAnswer()
+                        try:
+                            def check(reaction, user):
+                                return str(reaction) in ['◀️','▶️','🔼','🔽'] and \
+                                user != sokobanMessage.author and reaction.message.id == sokobanMessage.id
+                            reaction, user = await self.bot.wait_for('reaction_add', timeout=20.0, check=check)
+                            if str(reaction) == '◀️':
+                                await sokobanMessage.clear_reactions()
+                                await sokobanMove('Left', user)
+                                await sokobanPrint(user)
+                                await sokobanReaction(sokobanMessage)
+                            elif str(reaction) == '▶️':
+                                await sokobanMessage.clear_reactions()
+                                await sokobanMove('Right', user)
+                                await sokobanPrint(user)
+                                await sokobanReaction(sokobanMessage)
+                            elif str(reaction) == '🔼':
+                                await sokobanMessage.clear_reactions()
+                                await sokobanMove('Up', user)
+                                await sokobanPrint(user)
+                                await sokobanReaction(sokobanMessage)
+                            elif str(reaction) == '🔽':
+                                await sokobanMessage.clear_reactions()
+                                await sokobanMove('Down', user)
+                                await sokobanPrint(user)
+                                await sokobanReaction(sokobanMessage)
+                        except asyncio.TimeoutError:
+                            if not sokobanPlay and sokobanLoop:
+                                sokobanLoop = False
+                                await sokobanMessage.add_reaction('⏹️')
+                                break
+            # except BaseException as e:
+            #     print(f'소코반게임 {e}')
+            #     pass
 
     @commands.command()
     async def 좌(self, ctx):

@@ -53,210 +53,210 @@ class SwordGame(commands.Cog):
     @commands.command()
     async def 강화(self, ctx, *input):
         if(ctx.channel.id in fun.getBotChannel(ctx)):
-            try:
-                id = ctx.author.id
-                check = fun.game_check(id)
-                if check == 0:
-                    embed = discord.Embed(title = f':exclamation: {gameName2} 미가입', description = f'{ctx.author.mention} {gameName2} 에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                    await ctx.channel.send(embed = embed)
-                    return 0
-                fun.setUserName(id, ctx)
+            # try:
+            id = ctx.author.id
+            check = fun.game_check(id)
+            if check == 0:
+                embed = discord.Embed(title = f':exclamation: {gameName2} 미가입', description = f'{ctx.author.mention} {gameName2} 에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                await ctx.channel.send(embed = embed)
+                return 0
+            fun.setUserName(id, ctx)
 
-                if(input[0] == '도움말'):
-                    embed = discord.Embed(title = f':video_game: {gameName2} 도움말', description = f'{ctx.author.mention} {gameName2} 의 명령어입니다!', color = 0x324260)
-                    embed.add_field(name = f'!강화  내정보', value = f'내가 가진 무기정보를 볼 수 있어요.')
-                    embed.add_field(name = f'!강화  무기소환', value = f'무기를 소환합니다. 1000원이 필요해요.')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                    await ctx.channel.send(embed = embed)
-                elif(input[0] == '내정보'):
-                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                    cur = con.cursor()
-                    cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
-                    myUser = cur.fetchone()
-                    cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk, sword_PrefixAtk, sword_SuffixAtk, sword_Percent, sword_EXTRA, sword_UpCost, sword_Count FROM Sword_Info WHERE sword_UserID = ?", (id,))
+            if(input[0] == '도움말'):
+                embed = discord.Embed(title = f':video_game: {gameName2} 도움말', description = f'{ctx.author.mention} {gameName2} 의 명령어입니다!', color = 0x324260)
+                embed.add_field(name = f'!강화  내정보', value = f'내가 가진 무기정보를 볼 수 있어요.')
+                embed.add_field(name = f'!강화  무기소환', value = f'무기를 소환합니다. 1000원이 필요해요.')
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                await ctx.channel.send(embed = embed)
+            elif(input[0] == '내정보'):
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
+                myUser = cur.fetchone()
+                cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk, sword_PrefixAtk, sword_SuffixAtk, sword_Percent, sword_EXTRA, sword_UpCost, sword_Count FROM Sword_Info WHERE sword_UserID = ?", (id,))
+                swordInfo = cur.fetchone()
+                
+                if swordInfo:
+                    embed = discord.Embed(title = f'{ctx.author.display_name}님의 정보창', description = f'{gameName2} 에서의 본인 정보입니다.\n현금 재산은 모든 게임에서 공유됩니다.', color = 0xffc0cb)
+                    embed.set_thumbnail(url=ctx.author.avatar_url)
+                    embed.add_field(name = f'무기이름', value = f'{swordInfo[0]}+{swordInfo[1]}')
+                    embed.add_field(name = f'공격력', value = f'`{swordInfo[2]}~{swordInfo[3]} Atk`')
+                    embed.add_field(name = f'현재확률', value = f'{swordInfo[6]}%')
+                    embed.add_field(name = f'현재비용', value = f'`{fun.printN(swordInfo[8])}원`')
+                    embed.add_field(name = f'현금재산', value = f'`{fun.printN(myUser[1])}원`')
+                else:
+                    embed = discord.Embed(title = f'{ctx.author.display_name}님의 정보창', description = f'가지고 계신 무기가 없습니다!\n**!강화 무기소환** 을 통해, 무기를 소환해보세요.', color = 0xffc0cb)
+                    embed.set_thumbnail(url=ctx.author.avatar_url)
+                    embed.add_field(name = f'무기이름', value = f'무기없음')
+                    embed.add_field(name = f'공격력', value = f'`0~0 Atk`')
+                    embed.add_field(name = f'현재확률', value = f'0%')
+                    embed.add_field(name = f'현재비용', value = f'`0원`')
+                    embed.add_field(name = f'현금재산', value = f'`{fun.printN(myUser[1])}원`')
+                await ctx.channel.send(embed = embed)
+
+            elif(input[0] == '무기소환'):
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
+                myUser = cur.fetchone()
+                myMoney = myUser[1]
+                if myMoney >= 1000:
+                    cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk FROM Sword_Info WHERE sword_UserID = ?", (id,))
                     swordInfo = cur.fetchone()
-                    
-                    if swordInfo:
-                        embed = discord.Embed(title = f'{ctx.author.display_name}님의 정보창', description = f'{gameName2} 에서의 본인 정보입니다.\n현금 재산은 모든 게임에서 공유됩니다.', color = 0xffc0cb)
+                    if not swordInfo: #생성한 무기가 없음
+                        myMoney -= 1000
+                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+                        swordName, swordAtk, minAtk, EXTRA, upCost, percent = newWeapon()
+                        cur.execute("INSERT INTO Sword_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, 0, 0, swordName, swordName, 0, minAtk, swordAtk, 0, 0, percent, EXTRA, upCost, 0))
+                        embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention}님께서 새로운 무기를 소환했습니다! `-1000원`', color = 0x324260)
                         embed.set_thumbnail(url=ctx.author.avatar_url)
-                        embed.add_field(name = f'무기이름', value = f'{swordInfo[0]}+{swordInfo[1]}')
-                        embed.add_field(name = f'공격력', value = f'`{swordInfo[2]}~{swordInfo[3]} Atk`')
-                        embed.add_field(name = f'현재확률', value = f'{swordInfo[6]}%')
-                        embed.add_field(name = f'현재비용', value = f'`{fun.printN(swordInfo[8])}원`')
-                        embed.add_field(name = f'현금재산', value = f'`{fun.printN(myUser[1])}원`')
-                    else:
-                        embed = discord.Embed(title = f'{ctx.author.display_name}님의 정보창', description = f'가지고 계신 무기가 없습니다!\n**!강화 무기소환** 을 통해, 무기를 소환해보세요.', color = 0xffc0cb)
-                        embed.set_thumbnail(url=ctx.author.avatar_url)
-                        embed.add_field(name = f'무기이름', value = f'무기없음')
-                        embed.add_field(name = f'공격력', value = f'`0~0 Atk`')
-                        embed.add_field(name = f'현재확률', value = f'0%')
-                        embed.add_field(name = f'현재비용', value = f'`0원`')
-                        embed.add_field(name = f'현금재산', value = f'`{fun.printN(myUser[1])}원`')
-                    await ctx.channel.send(embed = embed)
+                        embed.add_field(name = f'무기정보', value = f'이름 `{swordName}+0`\n공격력 `{minAtk}~{swordAtk} Atk`')
+                        embed.add_field(name = f'보유재산', value = f'`{fun.printN(myMoney)}원`')
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                        await ctx.channel.send(embed = embed)
+                        
+                    else: #생성한 무기가 이미 존재함
+                        embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 이미 무기가 존재합니다.\n기존 무기를 지우고 새롭게 소환하시려면, 반응아이콘을 선택하세요.', color = 0x324260)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                        msg = await ctx.channel.send(embed = embed)
+                        await msg.add_reaction('🔴')
+                        await msg.add_reaction('❌')
+                        try:
+                            def check(reaction, user):
+                                return str(reaction) in ['🔴', '❌'] and \
+                                user == ctx.author and reaction.message.id == msg.id
 
-                elif(input[0] == '무기소환'):
-                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                    cur = con.cursor()
-                    cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
-                    myUser = cur.fetchone()
-                    myMoney = myUser[1]
-                    if myMoney >= 1000:
-                        cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk FROM Sword_Info WHERE sword_UserID = ?", (id,))
-                        swordInfo = cur.fetchone()
-                        if not swordInfo: #생성한 무기가 없음
-                            myMoney -= 1000
-                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
-                            swordName, swordAtk, minAtk, EXTRA, upCost, percent = newWeapon()
-                            cur.execute("INSERT INTO Sword_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, 0, 0, swordName, swordName, 0, minAtk, swordAtk, 0, 0, percent, EXTRA, upCost, 0))
-                            embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention}님께서 새로운 무기를 소환했습니다! `-1000원`', color = 0x324260)
-                            embed.set_thumbnail(url=ctx.author.avatar_url)
-                            embed.add_field(name = f'무기정보', value = f'이름 `{swordName}+0`\n공격력 `{minAtk}~{swordAtk} Atk`')
-                            embed.add_field(name = f'보유재산', value = f'`{fun.printN(myMoney)}원`')
-                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                            await ctx.channel.send(embed = embed)
-                            
-                        else: #생성한 무기가 이미 존재함
-                            embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 이미 무기가 존재합니다.\n기존 무기를 지우고 새롭게 소환하시려면, 반응아이콘을 선택하세요.', color = 0x324260)
-                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                            msg = await ctx.channel.send(embed = embed)
-                            await msg.add_reaction('🔴')
-                            await msg.add_reaction('❌')
-                            try:
-                                def check(reaction, user):
-                                    return str(reaction) in ['🔴', '❌'] and \
-                                    user == ctx.author and reaction.message.id == msg.id
-
-                                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
-                                if str(reaction) == '🔴':
-                                    myMoney -= 1000
-                                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
-                                    swordName, swordAtk, minAtk, EXTRA, upCost, percent = newWeapon()
-                                    cur.execute("DELETE FROM 'Sword_Info' WHERE sword_UserID = ?", (id,))
-                                    cur.execute("INSERT INTO Sword_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, 0, 0, swordName, swordName, 0, minAtk, swordAtk, 0, 0, percent, EXTRA, upCost, 0))
-                                    embed = discord.Embed(title = f':trident: {gameName2} 무기재소환', description = f'{ctx.author.mention}님께서 새로운 무기를 소환했습니다! `-1000원`', color = 0x324260)
-                                    embed.set_thumbnail(url=ctx.author.avatar_url)
-                                    embed.add_field(name = f'이전무기', value = f'이름 `{swordInfo[0]}+{swordInfo[1]}`\n공격력 `{swordInfo[2]}~{swordInfo[3]} Atk`')
-                                    embed.add_field(name = f'신규무기', value = f'이름 `{swordName}+0`\n공격력 `{minAtk}~{swordAtk} Atk`')
-                                    embed.add_field(name = f'보유재산', value = f'`{fun.printN(myMoney)}원`')
-                                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                                    await msg.clear_reactions()
-                                    await msg.edit(embed=embed)
-                                elif str(reaction) == '❌':
-                                    embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 무기소환을 취소합니다.', color = 0x324260)
-                                    await msg.clear_reactions()
-                                    await msg.add_reaction('❌')
-                                    await msg.edit(embed=embed)
-                            except asyncio.TimeoutError:
-                                embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 시간초과로 무기소환을 취소합니다.', color = 0x324260)
+                            reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
+                            if str(reaction) == '🔴':
+                                myMoney -= 1000
+                                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+                                swordName, swordAtk, minAtk, EXTRA, upCost, percent = newWeapon()
+                                cur.execute("DELETE FROM 'Sword_Info' WHERE sword_UserID = ?", (id,))
+                                cur.execute("INSERT INTO Sword_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, 0, 0, swordName, swordName, 0, minAtk, swordAtk, 0, 0, percent, EXTRA, upCost, 0))
+                                embed = discord.Embed(title = f':trident: {gameName2} 무기재소환', description = f'{ctx.author.mention}님께서 새로운 무기를 소환했습니다! `-1000원`', color = 0x324260)
+                                embed.set_thumbnail(url=ctx.author.avatar_url)
+                                embed.add_field(name = f'이전무기', value = f'이름 `{swordInfo[0]}+{swordInfo[1]}`\n공격력 `{swordInfo[2]}~{swordInfo[3]} Atk`')
+                                embed.add_field(name = f'신규무기', value = f'이름 `{swordName}+0`\n공격력 `{minAtk}~{swordAtk} Atk`')
+                                embed.add_field(name = f'보유재산', value = f'`{fun.printN(myMoney)}원`')
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                                await msg.clear_reactions()
+                                await msg.edit(embed=embed)
+                            elif str(reaction) == '❌':
+                                embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 무기소환을 취소합니다.', color = 0x324260)
                                 await msg.clear_reactions()
                                 await msg.add_reaction('❌')
                                 await msg.edit(embed=embed)
-                    else:
-                        embed = discord.Embed(title = f':exclamation: {gameName2} 소환실패', description = f'{ctx.author.mention} 무기를 소환하려면 1000원이 필요합니다.\n보유재산 `{fun.printN(myMoney)}원`', color = 0xff0000)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                        await ctx.channel.send(embed = embed)
-                    con.close() #db 종료
-                
-                if(input[0] == '무기'):
-                    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                    cur = con.cursor()
-                    cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
-                    myUser = cur.fetchone()
-                    myMoney = myUser[1]
-                    cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk, sword_PrefixAtk, sword_SuffixAtk, sword_Percent, sword_EXTRA, sword_UpCost, sword_Count FROM Sword_Info WHERE sword_UserID = ?", (id,))
-                    swordInfo = cur.fetchone()
-                    if not swordInfo: #생성한 무기가 없음
-                        embed = discord.Embed(title = f':exclamation: 강화실패', description = f'{ctx.author.mention} 소유하고 있는 무기가 없습니다!\n`!강화 무기소환`을 통해, 무기를 소환해보세요!', color = 0xff0000)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                        await ctx.channel.send(embed = embed)
-                    else: #무기가 있을 때
-                        sword_FullName  = swordInfo[0]
-                        sword_Upgrade   = swordInfo[1]
-                        sword_MinAtk    = swordInfo[2]
-                        sword_MaxAtk    = swordInfo[3]
-                        sword_PrefixAtk = swordInfo[4]
-                        sword_SuffixAtk = swordInfo[5]
-                        sword_Percent   = swordInfo[6]
-                        sword_EXTRA     = swordInfo[7]
-                        sword_UpCost    = swordInfo[8]
-                        sword_Count     = swordInfo[9]
-                        enchantAtk      = sword_PrefixAtk+sword_SuffixAtk
-                        if myMoney >= sword_UpCost:
-                            if sword_Upgrade < 100:
-                                myMoney -= sword_UpCost
-                                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
-                                upRand = random.randint(0,99)
-                                if upRand < sword_Percent: #성공
-                                    sword_Upgrade += 1
-                                    newAtk = int(round((sword_MaxAtk**sword_EXTRA + we_N**sword_Upgrade + sword_Upgrade),0))
-                                    increaeAtk = newAtk-sword_MaxAtk
-                                    sword_MaxAtk = newAtk
-                                    sword_MinAtk = sword_MaxAtk-random.randint(1,int(newAtk/5)) #sword_MinAtk = sword_MinAtk + increaeAtk
-                                    newCost = int(round(newAtk+(math.log(newAtk**3, up_N)),0))
-                                    newPercent = round(math.log(101-sword_Upgrade, pe_N),0)
-                                    newEXTRA = 1+random.randint(10,99)/100000
-                                    cur.execute("UPDATE 'Sword_Info' SET sword_Upgrade = ?, sword_MinAtk = ?, sword_MaxAtk = ?, sword_Percent = ?, sword_EXTRA = ?, sword_UpCost = ?, sword_Count = ? WHERE sword_UserID = ?", (sword_Upgrade, sword_MinAtk, sword_MaxAtk, newPercent, newEXTRA, newCost, 0, id))
-                                    embed = discord.Embed(title = f':hammer_pick: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화성공', description = f'강화에 성공했습니다!', color = 0x324260)
-                                    embed.set_thumbnail(url='https://i.imgur.com/FgubKQd.png')
-                                    embed.add_field(name = f'{sword_FullName}+{sword_Upgrade}', value = f'공격력 {sword_MinAtk+enchantAtk}~{sword_MaxAtk+enchantAtk} (+{increaeAtk})')
-                                    embed.add_field(name = f'강화확률', value = f'{sword_Percent}% 확률로 성공!')
-                                    embed.add_field(name = f'다음강화', value = f'성공률 {newPercent}%')
-                                    embed.add_field(name = f'다음비용', value = f'비용 {fun.printN(newCost)}원')
-                                    embed.add_field(name = f'보유재산', value = f'{fun.printN(myMoney)}원')
-                                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                                    await ctx.channel.send(embed = embed)
-                                else: #실패
-                                    textR = random.randint(0,len(failText));
-                                    tempR = round((random.randint(1,9))/10, 1)
-                                    newPercent = round(sword_Percent+tempR, 1) if (sword_Percent+tempR <= 100.0) else 100
-                                    newCost = sword_UpCost + int(round((math.log(sword_MaxAtk, up_N)),0))
-                                    cur.execute("UPDATE 'Sword_Info' SET sword_Percent = ?, sword_UpCost = ? WHERE sword_UserID = ?", (newPercent, newCost, id))
-                                    embed = discord.Embed(title = f':hammer_pick: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화실패', description = f'{failText[textR]}', color = 0x324260)
-                                    embed.set_thumbnail(url='https://i.imgur.com/tj2xDpe.png')
-                                    embed.add_field(name = f'강화확률', value = f'{newPercent}% 확률 (+{round(newPercent-sword_Percent, 1)})')
-                                    embed.add_field(name = f'강화비용', value = f'{fun.printN(newCost)}원 (+{fun.printN(newCost-sword_UpCost)})')
-                                    embed.add_field(name = f'보유재산', value = f'{fun.printN(myMoney)}원')
-                                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                                    await ctx.channel.send(embed = embed)
-                            else:
-                                embed = discord.Embed(title = f':exclamation: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화실패', description = f'{ctx.author.mention} 가지고 계신 무기는 더이상 강화할 수 없습니다!', color = 0xff0000)
+                        except asyncio.TimeoutError:
+                            embed = discord.Embed(title = f':trident: {gameName2} 무기소환', description = f'{ctx.author.mention} 시간초과로 무기소환을 취소합니다.', color = 0x324260)
+                            await msg.clear_reactions()
+                            await msg.add_reaction('❌')
+                            await msg.edit(embed=embed)
+                else:
+                    embed = discord.Embed(title = f':exclamation: {gameName2} 소환실패', description = f'{ctx.author.mention} 무기를 소환하려면 1000원이 필요합니다.\n보유재산 `{fun.printN(myMoney)}원`', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                con.close() #db 종료
+            
+            if(input[0] == '무기'):
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
+                myUser = cur.fetchone()
+                myMoney = myUser[1]
+                cur.execute("SELECT sword_FullName, sword_Upgrade, sword_MinAtk, sword_MaxAtk, sword_PrefixAtk, sword_SuffixAtk, sword_Percent, sword_EXTRA, sword_UpCost, sword_Count FROM Sword_Info WHERE sword_UserID = ?", (id,))
+                swordInfo = cur.fetchone()
+                if not swordInfo: #생성한 무기가 없음
+                    embed = discord.Embed(title = f':exclamation: 강화실패', description = f'{ctx.author.mention} 소유하고 있는 무기가 없습니다!\n`!강화 무기소환`을 통해, 무기를 소환해보세요!', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                else: #무기가 있을 때
+                    sword_FullName  = swordInfo[0]
+                    sword_Upgrade   = swordInfo[1]
+                    sword_MinAtk    = swordInfo[2]
+                    sword_MaxAtk    = swordInfo[3]
+                    sword_PrefixAtk = swordInfo[4]
+                    sword_SuffixAtk = swordInfo[5]
+                    sword_Percent   = swordInfo[6]
+                    sword_EXTRA     = swordInfo[7]
+                    sword_UpCost    = swordInfo[8]
+                    sword_Count     = swordInfo[9]
+                    enchantAtk      = sword_PrefixAtk+sword_SuffixAtk
+                    if myMoney >= sword_UpCost:
+                        if sword_Upgrade < 100:
+                            myMoney -= sword_UpCost
+                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+                            upRand = random.randint(0,99)
+                            if upRand < sword_Percent: #성공
+                                sword_Upgrade += 1
+                                newAtk = int(round((sword_MaxAtk**sword_EXTRA + we_N**sword_Upgrade + sword_Upgrade),0))
+                                increaeAtk = newAtk-sword_MaxAtk
+                                sword_MaxAtk = newAtk
+                                sword_MinAtk = sword_MaxAtk-random.randint(1,int(newAtk/5)) #sword_MinAtk = sword_MinAtk + increaeAtk
+                                newCost = int(round(newAtk+(math.log(newAtk**3, up_N)),0))
+                                newPercent = round(math.log(101-sword_Upgrade, pe_N),0)
+                                newEXTRA = 1+random.randint(10,99)/100000
+                                cur.execute("UPDATE 'Sword_Info' SET sword_Upgrade = ?, sword_MinAtk = ?, sword_MaxAtk = ?, sword_Percent = ?, sword_EXTRA = ?, sword_UpCost = ?, sword_Count = ? WHERE sword_UserID = ?", (sword_Upgrade, sword_MinAtk, sword_MaxAtk, newPercent, newEXTRA, newCost, 0, id))
+                                embed = discord.Embed(title = f':hammer_pick: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화성공', description = f'강화에 성공했습니다!', color = 0x324260)
+                                embed.set_thumbnail(url='https://i.imgur.com/FgubKQd.png')
+                                embed.add_field(name = f'{sword_FullName}+{sword_Upgrade}', value = f'공격력 {sword_MinAtk+enchantAtk}~{sword_MaxAtk+enchantAtk} (+{increaeAtk})')
+                                embed.add_field(name = f'강화확률', value = f'{sword_Percent}% 확률로 성공!')
+                                embed.add_field(name = f'다음강화', value = f'성공률 {newPercent}%')
+                                embed.add_field(name = f'다음비용', value = f'비용 {fun.printN(newCost)}원')
+                                embed.add_field(name = f'보유재산', value = f'{fun.printN(myMoney)}원')
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                                await ctx.channel.send(embed = embed)
+                            else: #실패
+                                textR = random.randint(0,len(failText));
+                                tempR = round((random.randint(1,9))/10, 1)
+                                newPercent = round(sword_Percent+tempR, 1) if (sword_Percent+tempR <= 100.0) else 100
+                                newCost = sword_UpCost + int(round((math.log(sword_MaxAtk, up_N)),0))
+                                cur.execute("UPDATE 'Sword_Info' SET sword_Percent = ?, sword_UpCost = ? WHERE sword_UserID = ?", (newPercent, newCost, id))
+                                embed = discord.Embed(title = f':hammer_pick: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화실패', description = f'{failText[textR]}', color = 0x324260)
+                                embed.set_thumbnail(url='https://i.imgur.com/tj2xDpe.png')
+                                embed.add_field(name = f'강화확률', value = f'{newPercent}% 확률 (+{round(newPercent-sword_Percent, 1)})')
+                                embed.add_field(name = f'강화비용', value = f'{fun.printN(newCost)}원 (+{fun.printN(newCost-sword_UpCost)})')
+                                embed.add_field(name = f'보유재산', value = f'{fun.printN(myMoney)}원')
                                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
                                 await ctx.channel.send(embed = embed)
                         else:
-                            embed = discord.Embed(title = f':exclamation: {ctx.author.display_name}님의{sword_FullName}+{sword_Upgrade} 강화실패', description = f'{ctx.author.mention} 무기를 강화하려면 {fun.printN(sword_UpCost)}원이 필요합니다.\n보유재산 `{fun.printN(myMoney)}원`', color = 0xff0000)
+                            embed = discord.Embed(title = f':exclamation: {ctx.author.display_name}님의 {sword_FullName}+{sword_Upgrade} 강화실패', description = f'{ctx.author.mention} 가지고 계신 무기는 더이상 강화할 수 없습니다!', color = 0xff0000)
                             embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
                             await ctx.channel.send(embed = embed)
-                    con.close() #db 종료
-                
-                if(input[0] == '전투'):
-                    embed = discord.Embed(title = f':video_game: 전투로그다옹', description = f'{ctx.author.mention} 전투 시작!', color = 0x324260)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
-                    msg = await ctx.channel.send(embed = embed)
-                    turn        = 0
-                    bossTimer   = 60
-                    attack      = 0
-                    curHP       = 5000000
-                    bossHP      = 5000000
-                    while bossTimer:
-                        if turn == 0:
-                            attack += 1000
-                            embed.add_field(name = f'{ctx.author.display_name}의 턴', value = f'갈대의 무기로 1000데미지!')
-                            await msg.edit(embed = embed)
-                            turn += 1
-                        else:
-                            curHP -= attack
-                            embed.add_field(name = f'보스의 턴', value = f'보스는 {attack}데미지를 받았습니다!\n보스체력 : `{fun.printN(curHP)}/{fun.printN(bossHP)}`')
-                            await msg.edit(embed = embed)
-                            attack = 0
-                            turn = 0
-                        await asyncio.sleep(1)
-                        if turn == 0: embed.clear_fields()
-                        bossTimer -= 1
+                    else:
+                        embed = discord.Embed(title = f':exclamation: {ctx.author.display_name}님의{sword_FullName}+{sword_Upgrade} 강화실패', description = f'{ctx.author.mention} 무기를 강화하려면 {fun.printN(sword_UpCost)}원이 필요합니다.\n보유재산 `{fun.printN(myMoney)}원`', color = 0xff0000)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                        await ctx.channel.send(embed = embed)
+                con.close() #db 종료
+            
+            if(input[0] == '전투'):
+                embed = discord.Embed(title = f':video_game: 전투로그다옹', description = f'{ctx.author.mention} 전투 시작!', color = 0x324260)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName2}", icon_url = ctx.author.avatar_url)
+                msg = await ctx.channel.send(embed = embed)
+                turn        = 0
+                bossTimer   = 60
+                attack      = 0
+                curHP       = 5000000
+                bossHP      = 5000000
+                while bossTimer:
+                    if turn == 0:
+                        attack += 1000
+                        embed.add_field(name = f'{ctx.author.display_name}의 턴', value = f'갈대의 무기로 1000데미지!')
+                        await msg.edit(embed = embed)
+                        turn += 1
+                    else:
+                        curHP -= attack
+                        embed.add_field(name = f'보스의 턴', value = f'보스는 {attack}데미지를 받았습니다!\n보스체력 : `{fun.printN(curHP)}/{fun.printN(bossHP)}`')
+                        await msg.edit(embed = embed)
+                        attack = 0
+                        turn = 0
+                    await asyncio.sleep(1)
+                    if turn == 0: embed.clear_fields()
+                    bossTimer -= 1
 
-            except BaseException as e:
-                print(f'강화게임 {e}')
-                pass
+            # except BaseException as e:
+            #     print(f'강화게임 {e}')
+            #     pass
 
 def setup(bot):
     bot.add_cog(SwordGame(bot))
