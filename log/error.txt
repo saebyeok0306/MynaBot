@@ -1,5 +1,0 @@
-user : 갈대#2519
-cmd : !코인 from 데이터베이스.채팅
-error : Command raised an exception: IndexError: tuple index out of range
-date : 2022-04-27 23:39
-
