@@ -69,7 +69,7 @@ class Command(commands.Cog):
 
         @timeout(1)
         def Calculate(text):
-            if 'self' in text: return False
+            if 'self' in text or 'import' in text or 'print' in text: return False
             return str(eval(text))
         
         try: result = Calculate(text)
