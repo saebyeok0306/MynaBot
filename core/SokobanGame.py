@@ -31,12 +31,8 @@ def checkInt(str):
     return False
 
 def sokobanMapSetting():
-    global sokobanField
-    global sokobanUnit
-    global sokobanLevel
-    global sokobanList
-    global sokobanTimer
-    global sokobanGoal
+    global sokobanField, sokobanUnit, sokobanLevel
+    global sokobanList, sokobanTimer, sokobanGoal
     sokobanTimer = 0
     sokobanGoal  = 0
     sokobanField = copy.deepcopy(sokobanList[sokobanLevel])
@@ -150,11 +146,8 @@ async def sokobanAnswer(message):
     return False
 
 async def sokobanNextLevel():
-    global sokobanMAX
-    global sokobanLevel
-    global sokobanPlay
-    global sokobanMessage
-    global sokobanLog
+    global sokobanMAX, sokobanLevel, sokobanPlay
+    global sokobanMessage, sokobanLog
     if sokobanLevel < sokobanMAX:
         await asyncio.sleep(1)
         sokobanLevel += 1
