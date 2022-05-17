@@ -70,19 +70,25 @@ class Administrator(commands.Cog):
         if ctx.message.author.guild_permissions.administrator:
             text = " ".join(input)
 
-            @timeout(1)
+            @timeout(2, error_message='TimeoutError')
             def Calculate(self, ctx, text):
                 return str(eval(text))
             
+            result = False
             try: result = Calculate(self, ctx, text)
             except Exception as e:
-                if e == 'Timer expired': await ctx.channel.send(f'타임아웃이에요. \n입력값 : {text}')
-                else: await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
+                if type(e).__name__ == 'TimeoutError':
+                    await ctx.channel.send(f'연산시간이 2초를 넘겨서 정지시켰어요.\n입력값 : {text}')
+                else:
+                    await ctx.channel.send(f'수식에 오류가 있어요.\n에러 : {e}')
                 return 0
+            
             if result is False:
                 await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
             else:
+                # 결과 보내기
                 if len(result) <= 1500: await ctx.channel.send(f'```{result}```')
+                # 메시지의 길이가 1500을 넘기는 경우
                 else:
                     with open('text.txt', 'w', encoding='utf-8') as l:
                         l.write(result)

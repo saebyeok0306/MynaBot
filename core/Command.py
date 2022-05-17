@@ -77,22 +77,32 @@ class Command(commands.Cog):
 
         @timeout(1)
         def Calculate(text):
-            if 'self' in text or 'import' in text or 'print' in text: return False
+            checkList = ['self', 'import', 'print']
+            for check in checkList:
+                if check in text:
+                    return False
             return str(eval(text))
         
+        result = False
         try: result = Calculate(text)
         except Exception as e:
-            if e == 'Timer expired': await ctx.channel.send(f'너무 `무리한 연산`을 요구하지 말아주세요..!!\n입력값 : {text}')
-            else: await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
+            if type(e).__name__ == 'TimeoutError':
+                await ctx.channel.send(f'연산시간이 1초를 넘겨서 정지시켰어요.\n입력값 : {text}')
+            else:
+                await ctx.channel.send(f'수식에 오류가 있어요.\n에러 : {e}')
+            return 0
+        
         if result is False:
             await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
         else:
+            # 결과 보내기
             if len(result) <= 1500: await ctx.channel.send(f'```{result}```')
+            # 메시지의 길이가 1500을 넘기는 경우
             else:
                 with open('text.txt', 'w', encoding='utf-8') as l:
                     l.write(result)
                 file = discord.File("text.txt")
-                await ctx.channel.send(f'계산결과가 너무 길어서 파일로 출력했어요.')
+                await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
                 await ctx.channel.send(file=file)
         
 
