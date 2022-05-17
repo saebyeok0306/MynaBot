@@ -78,6 +78,7 @@ class SlotmachineGame(commands.Cog):
                 betting = int(input[0])
                 
             except:
+                slotPlay.remove(id)
                 embed = discord.Embed(title = f':exclamation: {gameName3} 오류', description = f'{ctx.author.mention} 배팅하실 금액을 입력하셔야 합니다.\n!슬롯 [배팅금액]', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
@@ -91,6 +92,7 @@ class SlotmachineGame(commands.Cog):
             con.close() #db 종료
 
             if myMoney < betting:
+                slotPlay.remove(id)
                 embed = discord.Embed(title = f':exclamation: {gameName3} 금액부족', description = f'{ctx.author.mention} 보유하고 계시는 돈이 부족합니다.\n보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
@@ -160,11 +162,15 @@ class SlotmachineGame(commands.Cog):
                 myMoney += userBetting
                 total_Betting = total_Betting - userBetting
             
+            resultText = ''
             if rank is None:
                 total_Betting += betting
                 resultText = f'아무것도 해당하지 않았습니다...'
             else:
-                resultText = f'{rank+1}등 당첨! {fun.printN(money)}원이 지급됩니다!'
+                if rank == 0:
+                    resultText = f'{rank+1}등 당첨! {fun.printN(money+userBetting)}원이 지급됩니다!'
+                else:
+                    resultText = f'{rank+1}등 당첨! {fun.printN(money)}원이 지급됩니다!'
             
             cur.execute("UPDATE 'User_Info' SET user_Money = ?, slot_Betting = ?, slot_Reward = ? WHERE user_ID = ?", (myMoney, myBetting, myReward, id))
             cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))

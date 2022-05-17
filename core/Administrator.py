@@ -1,5 +1,6 @@
 import discord, asyncio, random, math
 import data.Functions as fun
+from data.Timeout import timeout
 from discord.ext import commands
 
 class Administrator(commands.Cog):
@@ -63,6 +64,31 @@ class Administrator(commands.Cog):
         with open('log/error.txt', 'w', encoding='utf-8') as l:
             l.write('')
         await ctx.channel.send(f'로그를 전부 지웠어요!')
+    
+    @commands.command(name="코드")
+    async def 코드(self, ctx, *input):
+        if ctx.message.author.guild_permissions.administrator:
+            text = " ".join(input)
+
+            @timeout(1)
+            def Calculate(self, ctx, text):
+                return str(eval(text))
+            
+            try: result = Calculate(self, ctx, text)
+            except Exception as e:
+                if e == 'Timer expired': await ctx.channel.send(f'타임아웃이에요. \n입력값 : {text}')
+                else: await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
+                return 0
+            if result is False:
+                await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
+            else:
+                if len(result) <= 1500: await ctx.channel.send(f'```{result}```')
+                else:
+                    with open('text.txt', 'w', encoding='utf-8') as l:
+                        l.write(result)
+                    file = discord.File("text.txt")
+                    await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
+                    await ctx.channel.send(file=file)
 
 def setup(bot):
     bot.add_cog(Administrator(bot))

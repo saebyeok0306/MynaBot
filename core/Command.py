@@ -33,19 +33,27 @@ class Command(commands.Cog):
     
     @commands.command(name="청소", aliases=["메시지청소","삭제","메시지삭제","제거","메시지제거","지우기","메시지지우기"])
     async def 청소(self, ctx, *input):
-        remove = 5
+        remove = 6
         if len(input) >= 1 and input[0].isdigit():
-            remove = int(input[0])
+            remove = int(input[0])+1
         
         text = ''
-        if remove > 20:
-            remove = 20
+        if remove > 21:
+            remove = 21
             text += f'메시지는 최대 20개까지만 지울 수 있어요.\n'
 
-        text += f'**{remove}개**의 메시지를 삭제했어요!'
+        text += f'**{remove-1}개**의 메시지를 삭제했어요!'
 
-        def is_me(message): return message.author == ctx.author
-        await ctx.channel.purge(limit=remove+1, check=is_me)
+        async for message in ctx.channel.history(limit=None):
+            if remove:
+                if message.author == ctx.author:
+                    await message.delete()
+                    remove -= 1
+            else:
+                break
+
+        # def is_me(message): return message.author == ctx.author
+        # await ctx.channel.purge(limit=remove+1, check=is_me)
         msg = await ctx.channel.send(content = text)
         await msg.delete(delay=2)
     
