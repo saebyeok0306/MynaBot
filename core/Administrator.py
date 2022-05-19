@@ -6,6 +6,7 @@ from discord.ext import commands
 class Administrator(commands.Cog):
 
     def __init__(self, bot):
+        print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
     
     @commands.command(name="관리자청소", aliases=["관리자삭제","관리자제거","관리자지우기"])

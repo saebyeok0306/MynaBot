@@ -5,6 +5,7 @@ from discord.ext import commands, tasks
 class GameService(commands.Cog):
 
     def __init__(self, bot):
+        print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
         self.title = '게임서비스'
     

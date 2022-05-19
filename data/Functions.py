@@ -67,14 +67,14 @@ def getGuilds(bot): #init
     guildsList = bot.guilds
     print(guildsList)
 
-def getChartChannel():
-    chartData = defaultdict(list)
+def getTopicChannel(Topic):
+    data = defaultdict(list)
     global guildsList
-    for g in guildsList:
-        for ch in g.text_channels:
-            if ch.topic is not None and '#차트마이나' in ch.topic:
-                chartData[g].append(ch)
-    return chartData
+    for guild in guildsList:
+        for ch in guild.text_channels:
+            if ch.topic is not None and Topic in ch.topic:
+                data[guild].append(ch)
+    return data
 
 # 내가 구매한 코인의 가치 표기
 def game_coinValue(id):

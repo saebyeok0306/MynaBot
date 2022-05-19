@@ -184,6 +184,7 @@ async def bitcoinSystem(bot, guild, channels): # channel은 리스트형태임
 class BitcoinGame(commands.Cog):
 
     def __init__(self, bot):
+        print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
         self.run.start()
     
@@ -193,7 +194,7 @@ class BitcoinGame(commands.Cog):
     @tasks.loop(seconds=60)
     async def run(self):
         if fun.guildsList != []:
-            guilds = fun.getChartChannel()
+            guilds = fun.getTopicChannel('#차트마이나')
             for guild in guilds:
                 await bitcoinSystem(self.bot, guild, guilds[guild])
 

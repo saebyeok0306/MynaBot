@@ -48,6 +48,7 @@ def newWeapon():
 class SwordGame(commands.Cog):
 
     def __init__(self, bot):
+        print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
    
     @commands.command()

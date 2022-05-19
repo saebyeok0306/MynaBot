@@ -5,6 +5,8 @@ from discord.ext import commands
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+# screen -S dc python3 main.py
+# screen -S dc -X quit
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -17,7 +19,7 @@ with open('data/token.json', 'r') as f:
 for filename in os.listdir('core'):
     if filename.endswith('.py'):
         bot.load_extension(f'core.{filename[:-3]}')
-        print(f'{filename[:-3]}가 로드되었습니다.')
+        # print(f'{filename[:-3]}가 로드되었습니다.')
 
 @bot.event
 async def on_ready():
