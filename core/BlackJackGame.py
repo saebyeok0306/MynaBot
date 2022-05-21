@@ -82,7 +82,7 @@ class BlackJackGame(commands.Cog):
 
     @commands.command()
     async def 블랙잭(self, ctx, *input):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             # try:
             id = ctx.author.id
             if fun.game_check(id) is False: # 회원가입이 된 유저인지 체크

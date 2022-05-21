@@ -28,7 +28,7 @@ class GameService(commands.Cog):
     
     @commands.command()
     async def 회원가입(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             id = ctx.author.id
             if fun.game_check(id) is False:
                 now = datetime.datetime.now()
@@ -48,7 +48,7 @@ class GameService(commands.Cog):
 
     @commands.command()
     async def 회원탈퇴(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             id = ctx.author.id
             if fun.game_check(id) is False:
                 embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 갈대의 {self.title}에 가입되어 있지 않습니다.', color = 0xff0000)
@@ -71,7 +71,7 @@ class GameService(commands.Cog):
     
     @commands.command(name="내정보", aliases=["정보창", "내정보창", "상태창"])
     async def 내정보(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
@@ -123,7 +123,7 @@ class GameService(commands.Cog):
     
     @commands.command(name="순위", aliases=["랭킹","랭킹순위","순위표"])
     async def 순위(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             userRanking_, userNumber = fun.coin_Ranking(1)
             embed = discord.Embed(title = f'디스코드 게임 순위', description = f'가입한 모든 유저의 랭킹입니다.', color = 0xffc0cb)
             rankIndex,rankSameMoney = 0,0
@@ -137,7 +137,7 @@ class GameService(commands.Cog):
     
     @commands.command()
     async def 송금(self, ctx, *input):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
@@ -193,7 +193,7 @@ class GameService(commands.Cog):
 
     @commands.command(name="지원금", aliases=["지원"])
     async def 지원금(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)

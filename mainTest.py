@@ -22,7 +22,8 @@ with open("data/token.json", "r") as f:
 #         print(f"{filename[:-3]}가 로드되었습니다.")
 
 bot.load_extension(f"core.Administrator")
-bot.load_extension(f"core.MusicPlay")
+# bot.load_extension(f"core.MusicPlay")
+
 
 @bot.event
 async def on_ready():

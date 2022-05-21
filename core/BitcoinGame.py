@@ -27,7 +27,7 @@ async def game_createChart(bot, channels):
     
     return chartList
 
-async def changeBitCoin(guild, coin):
+async def changeBitCoin(bot, guild, coin):
     now = datetime.datetime.now()
     for c in coin:
         if c[2] == 1: #폐지여부
@@ -75,9 +75,9 @@ async def changeBitCoin(guild, coin):
                     lostSumMoney = 0
                     for lc in lostCoin:
                         lostSumMoney += lc[2]
-                        embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{lc[1]}코인`')
+                        embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{fun.printN(lc[1])}코인`')
                     embed.set_footer(text = f"총 {fun.printN(lostSumMoney)}원 규모의 돈이 사라졌습니다. | {gameName}")
-                    for channel in fun.getBotChannelGuild(guild):
+                    for channel in fun.getBotChannelGuild(bot, guild):
                         await channel.send(embed = embed)
                 else:
                     cur.execute("UPDATE 'Coin_Info' SET coin_Exit = ? WHERE coin_ID = ?", (exitN, c[0]))
@@ -115,7 +115,7 @@ async def changeBitCoin(guild, coin):
                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                 cur.execute("UPDATE 'Coin_Info' SET coin_Name = ?, coin_Open = ?, coin_Range = ?, coin_Price1 = ?, coin_Price2 = ?, coin_Updown = ?, coin_CreateDate = ?, coin_DeleteDate = ?, coin_Exit = ? WHERE coin_ID = ?", (coinName, 1, coinRange, coinPrice, coinPrice, 1, nowDatetime, '', 0, c[0]))
                 embed = discord.Embed(title = f':receipt: {coinName} 등장', description = f"새롭게 {coinName}이 거래소에 올라왔습니다!\n이 친구는 시작거래가가 {fun.printN(coinPrice)}원이군요.", color = 0xffc0cb)
-                for channel in fun.getBotChannelGuild(guild):
+                for channel in fun.getBotChannelGuild(bot, guild):
                     await channel.send(embed = embed)
                 con.close() #db 종료
 
@@ -128,7 +128,7 @@ async def bitcoinSystem(bot, guild, channels): # channel은 리스트형태임
     con.close() #db 종료
 
     # 비트코인 가격 변동
-    await changeBitCoin(guild, coin)
+    await changeBitCoin(bot, guild, coin)
 
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
@@ -194,13 +194,13 @@ class BitcoinGame(commands.Cog):
     @tasks.loop(seconds=60)
     async def run(self):
         if fun.guildsList != []:
-            guilds = fun.getTopicChannel('#차트마이나')
+            guilds = fun.getTopicChannel(f'#차트{self.bot.user.name}')
             for guild in guilds:
                 await bitcoinSystem(self.bot, guild, guilds[guild])
 
     @commands.command()
     async def 코인(self, ctx, *input):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             input_length = len(input)
             id = ctx.author.id
             check = fun.game_check(id)
@@ -395,14 +395,14 @@ class BitcoinGame(commands.Cog):
                                 coinValue = c[3]*own[2]
                                 currentValue += coinValue
                                 break
-                        embed.add_field(name = f'{own[1]}', value = f'{own[2]}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
+                        embed.add_field(name = f'{own[1]}', value = f'{fun.printN(own[2])}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
                     
                     if currentValue < costMoney:
                         moneyPM = '-'
                         moneyPercent = round(((costMoney-currentValue)/costMoney)*100, 2)
                     else:
                         moneyPercent = round(((currentValue-costMoney)/costMoney)*100, 2)
-                    embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원 `{moneyPM}{moneyPercent}%`')
+                    embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원\n`({moneyPM}{moneyPercent}%)`')
                     embed.add_field(name = f'보유재산', value = f'{fun.printN(userInfo[1])}원')
                     await ctx.channel.send(embed = embed)
 
@@ -450,14 +450,14 @@ class BitcoinGame(commands.Cog):
                                             coinValue = c[3]*own[2]
                                             currentValue += coinValue
                                             break
-                                    embed.add_field(name = f'{own[1]}', value = f'{own[2]}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
+                                    embed.add_field(name = f'{own[1]}', value = f'{fun.printN(own[2])}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
                                 
                                 if currentValue < costMoney:
                                     moneyPM = '-'
                                     moneyPercent = round(((costMoney-currentValue)/costMoney)*100, 2)
                                 else:
                                     moneyPercent = round(((currentValue-costMoney)/costMoney)*100, 2)
-                                embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원 `{moneyPM}{moneyPercent}%`')
+                                embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원\n`({moneyPM}{moneyPercent}%)`')
                                 embed.add_field(name = f'보유재산', value = f'{fun.printN(userInfo[1])}원')
                                 await ctx.channel.send(embed = embed)
                                 return 0
@@ -505,7 +505,10 @@ class BitcoinGame(commands.Cog):
                                     ownCoinN = ownCoin[0]+num
                                     cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (ownCoinN, coinCost+ownCoin[1], nowDatetime, id, c[0]))
                                 con.close() #db 종료
-                                embed = discord.Embed(title = f'{c[1]} 매수', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 구매│`총 {ownCoinN}코인` 보유│잔액 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
+                                embed = discord.Embed(title = f'{c[1]} 매수 ({fun.printN(c[3])}원)', color = 0xffc0cb)
+                                embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 구매')
+                                embed.add_field(name=f'코인보유', value=f'`총 {fun.printN(ownCoinN)}코인` 보유')
+                                embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
                                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                                 await ctx.channel.send(embed = embed)
                             else:
@@ -535,7 +538,11 @@ class BitcoinGame(commands.Cog):
                                     ownCoinN = ownCoin[0]+num
                                     cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (ownCoinN, coinCost+ownCoin[1], nowDatetime, id, c[0]))
                                 con.close() #db 종료
-                                embed = discord.Embed(title = f'{c[1]} 풀매수', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 구매│`총 {ownCoinN}코인` 보유│잔액 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
+                                # embed = discord.Embed(title = f'{c[1]} 풀매수', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 구매│`총 {ownCoinN}코인` 보유│잔액 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
+                                embed = discord.Embed(title = f'{c[1]} 풀매수 ({fun.printN(c[3])}원)', color = 0xffc0cb)
+                                embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 구매')
+                                embed.add_field(name=f'코인보유', value=f'`총 {fun.printN(ownCoinN)}코인` 보유')
+                                embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
                                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                                 await ctx.channel.send(embed = embed)
                             return 0
@@ -572,7 +579,10 @@ class BitcoinGame(commands.Cog):
                             user_Money += coinCost #매도금액 추가
                             cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (user_Money, id))
                             con.close() #db 종료
-                            embed = discord.Embed(title = f'{c[1]} 매도', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 판매│`총 {fun.printN(coinCost)}원` 획득│보유재산 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
+                            embed = discord.Embed(title = f'{c[1]} 매도 ({fun.printN(c[3])}원)', color = 0xffc0cb)
+                            embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
+                            embed.add_field(name=f'코인금액', value=f'`총 {fun.printN(coinCost)}원` 획득')
+                            embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
                             embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                             await ctx.channel.send(embed = embed)
                             # else:
@@ -605,7 +615,10 @@ class BitcoinGame(commands.Cog):
                             user_Money += coinCost #매도금액 추가
                             cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (user_Money, id))
                             con.close() #db 종료
-                            embed = discord.Embed(title = f'{c[1]} 풀매도', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 판매│`총 {fun.printN(coinCost)}원` 획득│보유재산 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
+                            embed = discord.Embed(title = f'{c[1]} 풀매도 ({fun.printN(c[3])}원)', color = 0xffc0cb)
+                            embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
+                            embed.add_field(name=f'코인금액', value=f'`총 {fun.printN(coinCost)}원` 획득')
+                            embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
                             embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                             await ctx.channel.send(embed = embed)
                             # else:
@@ -644,7 +657,7 @@ class BitcoinGame(commands.Cog):
                                         cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (pcoin[0],))
                                         pUser = cur.fetchone()
                                         con.close() #db 종료
-                                        embed.add_field(name = f'{pUser[0]}', value = f'{pcoin[3]}개 보유\n`{fun.printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
+                                        embed.add_field(name = f'{pUser[0]}', value = f'{fun.printN(pcoin[3])}개 보유\n`{fun.printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
                                 await ctx.channel.send(embed = embed)
                                 return 0
 

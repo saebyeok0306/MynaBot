@@ -32,7 +32,7 @@ class SlotmachineGame(commands.Cog):
     
     @commands.command()
     async def 슬롯(self, ctx, *input):
-        if(ctx.channel.id in fun.getBotChannel(ctx)):
+        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             # try:
             id = ctx.author.id
             check = fun.game_check(id)

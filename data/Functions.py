@@ -4,7 +4,24 @@ from collections import defaultdict
 guildsList = []
 
 def printN(num): #자리수에 콤마 넣어주는 함수
-    return '{0:,}'.format(num)
+    goldUnit = ["","만","억","조","경","해","자","양","가","구","간"]
+    _num = str(num)[::-1]
+    text = ''
+
+    length = len(_num)
+    index = 0
+    units = 0
+
+    while index < length:
+        temp = _num[index:index+4][::-1]
+        unit = goldUnit[units]
+        if temp != '0000':
+            temp = str(int(temp))
+            text = temp + unit + text
+        index += 4
+        units += 1
+    return text
+    # return '{0:,}'.format(num)
 
 def game_check(id):
     alr_exist = []
@@ -47,18 +64,18 @@ def game_getMessageChannel(bot, channel):
 #     except:
 #         return False
 
-def getBotChannel(message):
+def getBotChannel(bot, message):
     botChannel = []
     channels = message.guild.text_channels
     for ch in channels:
-        if ch.topic is not None and '#마이나' in ch.topic:
+        if ch.topic is not None and f'#{bot.user.name}' in ch.topic:
             botChannel.append(ch.id)
     return botChannel
 
-def getBotChannelGuild(guild):
+def getBotChannelGuild(bot, guild):
     botChannel = []
     for ch in guild.text_channels:
-        if ch.topic is not None and '#마이나' in ch.topic:
+        if ch.topic is not None and f'#{bot.user.name}' in ch.topic:
             botChannel.append(ch)
     return botChannel
 
