@@ -1,4 +1,4 @@
-import sqlite3, discord, asyncio, datetime, re
+import sqlite3, discord, asyncio, datetime, re, random
 import data.Functions as fun
 from discord.ext import commands, tasks
 
@@ -7,14 +7,15 @@ class GameService(commands.Cog):
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
-        self.title = '게임서비스'
+        self.title = '디코게임'
+        self.supply = 1000000
     
     @commands.command()
     async def 서비스(self, ctx, *input):
         if len(input) == 1 and input[0] == '도움말':
-            embed=discord.Embed(color=0xB22222, title="서비스 도움말", description=f'서비스에 가입해야만 쓸 수 있는 명령어들입니다.')
+            embed=discord.Embed(color=0xB22222, title="서비스 도움말", description=f'{self.title}에 가입해야만 쓸 수 있는 명령어들입니다.')
             embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
-            embed.add_field(name = f'!지원금', value = f'하루에 한번 지원금으로 3000원을 드립니다!')
+            embed.add_field(name = f'!지원금', value = f'하루에 한번 지원금으로 1~{fun.printN(self.supply)}원을 드립니다!\n오늘은 얼마를 줄까..?')
             embed.add_field(name = f'!내정보', value = f'내가 보유한 재산이나 랭킹 순위를 볼 수 있어요.')
             embed.add_field(name = f'!순위', value = f'디스코드게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
             embed.add_field(name = f'!송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
@@ -208,7 +209,7 @@ class GameService(commands.Cog):
             now = datetime.datetime.now()
             passTicket = False
             fundtime = 0
-            bonusMoney = 3000
+            bonusMoney = random.randint(1, self.supply)
             if userInfo[1] == 'NULL':
                 passTicket = True
             else:
@@ -218,7 +219,7 @@ class GameService(commands.Cog):
             if passTicket:
                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                 cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (userMoney+bonusMoney, nowDatetime, id))
-                embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{bonusMoney}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
+                embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{fun.printN(bonusMoney)}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
             else:

@@ -77,6 +77,13 @@ async def changeBitCoin(bot, guild, coin):
                         lostSumMoney += lc[2]
                         embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{fun.printN(lc[1])}코인`')
                     embed.set_footer(text = f"총 {fun.printN(lostSumMoney)}원 규모의 돈이 사라졌습니다. | {gameName}")
+
+                    # 코인배팅금을 저장
+                    cur.execute("SELECT total_Betting FROM Slot_Info")
+                    total_Betting = cur.fetchone()[0]
+                    total_Betting += lostSumMoney
+                    cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
+
                     for channel in fun.getBotChannelGuild(bot, guild):
                         await channel.send(embed = embed)
                 else:

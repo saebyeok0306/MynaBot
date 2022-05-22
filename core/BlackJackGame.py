@@ -83,7 +83,6 @@ class BlackJackGame(commands.Cog):
     @commands.command()
     async def 블랙잭(self, ctx, *input):
         if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
-            # try:
             id = ctx.author.id
             if fun.game_check(id) is False: # 회원가입이 된 유저인지 체크
                 embed = discord.Embed(title = f':exclamation: {gameName4} 미가입', description = f'{ctx.author.mention} {gameName4} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
@@ -141,11 +140,11 @@ class BlackJackGame(commands.Cog):
 
                     blackJackJoin.append(id)
                     blackJackUser.append([ctx.author.display_name, betting, ctx.author])
-                    await ctx.delete(delay=1)
+                    await ctx.message.delete(delay=1)
                 else:
                     author = await ctx.author.create_dm()
                     await author.send("이미 블랙잭게임에 참여하신 상태입니다.")
-                    await ctx.delete(delay=1)
+                    await ctx.message.delete(delay=1)
             
             elif blackJackPlay == 0:
                 
@@ -220,7 +219,6 @@ class BlackJackGame(commands.Cog):
                     return embed
 
                 newShuffledDeck(cardDeck)
-                print(cardDeck)
                 
                 titleText = f':black_joker: 블랙잭 참여인원({joinNum}명)'
                 logText   = f'- 딜러와 유저들의 카드를 분배합니다.'
@@ -367,28 +365,32 @@ class BlackJackGame(commands.Cog):
                             await msg.edit(embed = embed)
 
                 await msg.add_reaction('⏹️')
+                
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+
+                # 배팅금을 저장
+                cur.execute("SELECT total_Betting FROM Slot_Info")
+                total_Betting = cur.fetchone()[0]
 
                 for i in range(joinNum):
+                    userBetting = blackJackUser[i][1]
                     if stopSign[i] == 2 or stopSign[i] == 4:
-                        userBetting = blackJackUser[i][1]
-                        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                        cur = con.cursor()
                         cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (blackJackJoin[i],))
                         myMoney = cur.fetchone()[0]
                         myMoney += userBetting + int(userBetting*wdRate[stopSign[i]])
                         cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, blackJackJoin[i]))
-                        con.close() #db 종료
+                    else: # 패배한 경우 해당 유저의 배팅금을 더함
+                        total_Betting += userBetting
 
+                cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
+                con.close() #db 종료
                         
                 # 초기화
                 blackJackPlay = 0
                 blackJackJoin = []
                 blackJackUser = []
                 return 0
-
-            # except BaseException as e:
-            #     print(f'블랙잭게임 {e}')
-            #     pass
 
 def setup(bot):
     bot.add_cog(BlackJackGame(bot))
