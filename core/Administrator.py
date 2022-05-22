@@ -96,6 +96,48 @@ class Administrator(commands.Cog):
                     file = discord.File("text.txt")
                     await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
                     await ctx.channel.send(file=file)
+    
+    @commands.command(name="SQL")
+    async def SQL(self, ctx, *input):
+        if ctx.message.author.guild_permissions.administrator:
+            text = " ".join(input)
+
+            # @timeout(2, error_message='TimeoutError')
+            def Calculate(self, ctx, text):
+                import sqlite3
+                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                cur = con.cursor()
+                cur.execute(text)
+                
+                if text.startswith('select') or text.startswith('SELECT'):
+                    data = cur.fetchall()
+                    con.close() #db 종료
+                    return data
+                else:
+                    con.close() #db 종료
+                    return text
+            
+            result = False
+            try: result = Calculate(self, ctx, text)
+            except Exception as e:
+                if type(e).__name__ == 'TimeoutError':
+                    await ctx.channel.send(f'연산시간이 2초를 넘겨서 정지시켰어요.\n입력값 : {text}')
+                else:
+                    await ctx.channel.send(f'SQL에 오류가 있어요.\n에러 : {e}')
+                return 0
+            
+            if result is False:
+                await ctx.channel.send(f'SQL에 오류가 있어요.\n입력값 : {text}')
+            else:
+                # 결과 보내기
+                if len(result) <= 1500: await ctx.channel.send(f'```{result}```')
+                # 메시지의 길이가 1500을 넘기는 경우
+                else:
+                    with open('text.txt', 'w', encoding='utf-8') as l:
+                        l.write(result)
+                    file = discord.File("text.txt")
+                    await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
+                    await ctx.channel.send(file=file)
 
 def setup(bot):
     bot.add_cog(Administrator(bot))
