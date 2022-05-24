@@ -102,7 +102,13 @@ class BlackJackGame(commands.Cog):
                 return 0
             
             betting = 0
-            try: betting = int(input[0])
+            try: 
+                betting = fun.returnNumber(input[0])
+                if betting is False:
+                    embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                    return False
             except: # 입력한 값이 숫자가 아닐 때
                 embed = discord.Embed(title = f':exclamation: {gameName4} 오류', description = f'{ctx.author.mention} 배팅하실 금액을 입력하셔야 합니다.\n!블랙잭 [배팅금액]', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)

@@ -149,7 +149,12 @@ class GameService(commands.Cog):
                 _tempID = input[0]
                 userid = re.findall(r"[0-9]+", _tempID)
                 userid = userid[0]
-                tradeMoney = int(input[1])
+                tradeMoney = fun.returnNumber(input[1])
+                if tradeMoney is False:
+                    embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                    return False
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
                 cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))

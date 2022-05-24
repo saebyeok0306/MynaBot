@@ -493,7 +493,12 @@ class BitcoinGame(commands.Cog):
                             if(input[2][-1] == '%'):
                                 num = ((userInfo[1]//c[3])*int(input[2][0:-1])) // 100
                             else:
-                                num = int(input[2])
+                                num = fun.returnNumber(input[2])
+                                if num is False:
+                                    embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
+                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                                    await ctx.channel.send(embed = embed)
+                                    return False
                             coinCost = c[3]*num
                             if(num > 0 and user_Money > coinCost):
                                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
@@ -519,7 +524,7 @@ class BitcoinGame(commands.Cog):
                                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                                 await ctx.channel.send(embed = embed)
                             else:
-                                embed = discord.Embed(title = f'{c[1]} 매수실패', description = f'{c[1]}을 {num}개를 매수하는데 필요한 돈이 부족합니다.\n부족한 금액 : {fun.printN(coinCost-user_Money)}원', color = 0xff0000)
+                                embed = discord.Embed(title = f'{c[1]} 매수실패', description = f'{c[1]}을 {fun.printN(num)}개를 매수하는데 필요한 돈이 부족합니다.\n부족한 금액 : {fun.printN(coinCost-user_Money)}원', color = 0xff0000)
                                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
                                 await ctx.channel.send(embed = embed)
                             return 0
@@ -576,7 +581,12 @@ class BitcoinGame(commands.Cog):
                             if(input[2][-1] == '%'):
                                 num = (coinNum*int(input[2][0:-1])) // 100
                             else:
-                                num = int(input[2])
+                                num = fun.returnNumber(input[2])
+                                if num is False:
+                                    embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
+                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                                    await ctx.channel.send(embed = embed)
+                                    return False
                             if coinNum <= num:
                                 num = coinNum
                                 cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ? AND trade_CoinID = ?", (id, c[0]))

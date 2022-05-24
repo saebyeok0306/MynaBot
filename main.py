@@ -5,6 +5,8 @@ from discord.ext import commands
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+# jupyter notebook --ip=0.0.0.0 --port=8888 --allow-root
 # screen -S dc python3 main.py
 # screen -S dc -X quit
 

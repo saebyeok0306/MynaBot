@@ -76,7 +76,13 @@ class SlotmachineGame(commands.Cog):
             slotPlay.append(id)
             betting = 0
             try:
-                betting = int(input[0])
+                betting = fun.returnNumber(input[0])
+                if betting is False:
+                    slotPlay.remove(id)
+                    embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    await ctx.channel.send(embed = embed)
+                    return False
                 
             except:
                 slotPlay.remove(id)
