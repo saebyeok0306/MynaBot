@@ -56,8 +56,7 @@ def returnNumber(text:str) -> int:
             
         if _temp != '':
             number += int(_temp)
-        return number
-                            
+        return number    
 
 def game_check(id):
     alr_exist = []
@@ -142,11 +141,11 @@ def game_coinValue(id):
     currentValue = 0    # 현재 코인의 가치
     PM = True           # 구입한 코인의 가치가 마이너스인지 플러스인지
     for own in ownCoin:
-        costMoney += own[3] #구매비용 합
+        costMoney += int(own[3]) #구매비용 합
         coinValue = 0
         for c in coin:
             if c[0] == own[0]:
-                coinValue = c[3]*own[2]
+                coinValue = c[3]*int(own[2])
                 currentValue += coinValue
                 break
     # 결국 내가 구매한 코인의 가치가 비용보다 낮은 경우
@@ -165,8 +164,8 @@ def game_perCoinValue(id, coinId):
     # 해당 코인 데이터가 아무것도 없는 경우
     if not ownCoin:
         return 0, 0, 0
-    costMoney   = ownCoin[3]
-    coinValue   = coinInfo[3]*ownCoin[2]
+    costMoney   = int(ownCoin[3])
+    coinValue   = coinInfo[3]*int(ownCoin[2])
     PM          = True
     if coinValue < costMoney: PM = False
     return PM, costMoney, coinValue
@@ -188,7 +187,7 @@ def coin_Ranking(set_):
         # 해당 유저의 재산 현황 가져오기
         PM,constMmoney,currentValue = game_coinValue(user[0])
         # 코인재산과 현금 재산 합치기
-        _Value = currentValue+user[2]
+        _Value = currentValue+int(user[2])
         userRanking[_Name] = _Value
     userRanking = sorted(userRanking.items(), reverse=True, key=lambda x:x[1])
     return userRanking, userNumber

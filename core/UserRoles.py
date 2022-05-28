@@ -23,7 +23,7 @@ class UserRoles(commands.Cog):
         con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
         cur = con.cursor()
         cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (user.id,))
-        myMoney = cur.fetchone()[0]
+        myMoney = int(cur.fetchone()[0])
         con.close() #db 종료
 
         if myMoney < 1000000:
@@ -65,7 +65,7 @@ class UserRoles(commands.Cog):
                         myMoney -= 1000000
                         con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                         cur = con.cursor()
-                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, user.id))
+                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), user.id))
                         con.close() #db 종료
 
                         embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!\n남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = colors)

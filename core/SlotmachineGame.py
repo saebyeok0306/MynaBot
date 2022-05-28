@@ -48,13 +48,8 @@ class SlotmachineGame(commands.Cog):
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
                 cur.execute("SELECT total_Betting FROM Slot_Info")
-                total_Betting = cur.fetchone()[0]
+                total_Betting = int(cur.fetchone()[0])
                 con.close() #db 종료
-
-                if total_Betting >= 10:
-                    total_Betting //= 2
-                else:
-                    total_Betting = 0
 
                 embed = discord.Embed(title = f':video_game: {gameName3} 도움말', description = f'{ctx.author.mention} {gameName3} 의 명령어입니다!', color = 0x324260)
                 embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
@@ -95,7 +90,7 @@ class SlotmachineGame(commands.Cog):
             cur = con.cursor()
             cur.execute("SELECT user_Money, slot_Betting, slot_Reward FROM User_Info WHERE user_ID = ?", (id,))
             userInfo = cur.fetchone()
-            myMoney,myBetting,myReward = userInfo[0],userInfo[1],userInfo[2]
+            myMoney,myBetting,myReward = int(userInfo[0]),int(userInfo[1]),int(userInfo[2])
             con.close() #db 종료
 
             if myMoney < betting:
@@ -107,7 +102,7 @@ class SlotmachineGame(commands.Cog):
             myMoney -= betting
             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
             cur = con.cursor()
-            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), id))
             con.close() #db 종료
 
 
@@ -163,10 +158,11 @@ class SlotmachineGame(commands.Cog):
             cur = con.cursor()
 
             cur.execute("SELECT total_Betting FROM Slot_Info")
-            total_Betting = cur.fetchone()[0]
-            if rank == 0 and total_Betting >= 10:
+            total_Betting = int(cur.fetchone()[0])
+            if rank == 0:
                 userBetting = total_Betting // 2
                 myMoney += userBetting
+                myReward += userBetting
                 total_Betting = total_Betting - userBetting
             
             resultText = ''
@@ -179,8 +175,8 @@ class SlotmachineGame(commands.Cog):
                 else:
                     resultText = f'{rank+1}등 당첨! {fun.printN(money)}원이 지급됩니다!'
             
-            cur.execute("UPDATE 'User_Info' SET user_Money = ?, slot_Betting = ?, slot_Reward = ? WHERE user_ID = ?", (myMoney, myBetting, myReward, id))
-            cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
+            cur.execute("UPDATE 'User_Info' SET user_Money = ?, slot_Betting = ?, slot_Reward = ? WHERE user_ID = ?", (str(myMoney), str(myBetting), str(myReward), id))
+            cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (str(total_Betting),))
             con.close() #db 종료
 
 

@@ -17,16 +17,9 @@ with open("data/token.json", "r") as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token2']
 
-# for filename in os.listdir('core'):
-#     if filename.endswith(".py"):
-#         bot.load_extension(f"core.{filename[:-3]}")
-#         print(f"{filename[:-3]}가 로드되었습니다.")
-
-bot.load_extension(f"core.Administrator")
-bot.load_extension(f"core.Command")
-bot.load_extension(f"core.GameService")
-bot.load_extension(f"core.CatGame")
-# bot.load_extension(f"core.MusicPlay")
+for filename in os.listdir('core'):
+    if filename.endswith('.py'):
+        bot.load_extension(f'core.{filename[:-3]}')
 
 
 @bot.event

@@ -74,13 +74,13 @@ async def changeBitCoin(bot, guild, coin):
                     embed = discord.Embed(title = f':x: {c[1]} 상장폐지', description = f"{c[1]}이 결국 상장폐지되었습니다.", color = 0xffc0cb)
                     lostSumMoney = 0
                     for lc in lostCoin:
-                        lostSumMoney += lc[2]
-                        embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{fun.printN(lc[1])}코인`')
+                        lostSumMoney += int(lc[2])
+                        embed.add_field(name = f'- {lc[0]}님', value = f'허공으로 증발한 `{fun.printN(int(lc[1]))}코인`')
                     embed.set_footer(text = f"총 {fun.printN(lostSumMoney)}원 규모의 돈이 사라졌습니다. | {gameName}")
 
                     # 코인배팅금을 저장
                     cur.execute("SELECT total_Betting FROM Slot_Info")
-                    total_Betting = cur.fetchone()[0]
+                    total_Betting = int(cur.fetchone()[0])
                     total_Betting += lostSumMoney
                     cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
 
@@ -387,7 +387,7 @@ class BitcoinGame(commands.Cog):
                     moneyPM = '+'
                     moneyPercent = 0
                     # 보유중인 코인을 표시하기
-                    for own in ownCoin:
+                    for own in ownCoin: # trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost
                         perPM, perCostMoney, perCurrentValue = fun.game_perCoinValue(id, own[0])
                         perMoneyPM = ['-', '+']
                         perMoneyPercent = 0
@@ -395,14 +395,14 @@ class BitcoinGame(commands.Cog):
                             perMoneyPercent = round(((perCurrentValue-perCostMoney)/perCostMoney)*100, 2)
                         else:
                             perMoneyPercent = round(((perCostMoney-perCurrentValue)/perCostMoney)*100, 2)
-                        costMoney += own[3] #구매비용 합
+                        costMoney += int(own[3]) #구매비용 합
                         coinValue = 0
                         for c in coin:
                             if c[0] == own[0]:
-                                coinValue = c[3]*own[2]
+                                coinValue = c[3]*int(own[2])
                                 currentValue += coinValue
                                 break
-                        embed.add_field(name = f'{own[1]}', value = f'{fun.printN(own[2])}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
+                        embed.add_field(name = f'{own[1]}', value = f'{fun.printN(int(own[2]))}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
                     
                     if currentValue < costMoney:
                         moneyPM = '-'
@@ -410,7 +410,7 @@ class BitcoinGame(commands.Cog):
                     else:
                         moneyPercent = round(((currentValue-costMoney)/costMoney)*100, 2)
                     embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원\n`({moneyPM}{moneyPercent}%)`')
-                    embed.add_field(name = f'보유재산', value = f'{fun.printN(userInfo[1])}원')
+                    embed.add_field(name = f'보유재산', value = f'{fun.printN(int(userInfo[1]))}원')
                     await ctx.channel.send(embed = embed)
 
             else:
@@ -450,14 +450,14 @@ class BitcoinGame(commands.Cog):
                                         perMoneyPercent = round(((perCurrentValue-perCostMoney)/perCostMoney)*100, 2)
                                     else:
                                         perMoneyPercent = round(((perCostMoney-perCurrentValue)/perCostMoney)*100, 2)
-                                    costMoney += own[3] #구매비용 합
+                                    costMoney += int(own[3]) #구매비용 합
                                     coinValue = 0
                                     for c in coin:
                                         if c[0] == own[0]:
-                                            coinValue = c[3]*own[2]
+                                            coinValue = c[3]*int(own[2])
                                             currentValue += coinValue
                                             break
-                                    embed.add_field(name = f'{own[1]}', value = f'{fun.printN(own[2])}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
+                                    embed.add_field(name = f'{own[1]}', value = f'{fun.printN(int(own[2]))}개 보유\n`{fun.printN(coinValue)}원` `({perMoneyPM[perPM]}{perMoneyPercent}%)`')
                                 
                                 if currentValue < costMoney:
                                     moneyPM = '-'
@@ -465,7 +465,7 @@ class BitcoinGame(commands.Cog):
                                 else:
                                     moneyPercent = round(((currentValue-costMoney)/costMoney)*100, 2)
                                 embed.add_field(name = f'코인재산', value = f'{fun.printN(currentValue)}원\n`({moneyPM}{moneyPercent}%)`')
-                                embed.add_field(name = f'보유재산', value = f'{fun.printN(userInfo[1])}원')
+                                embed.add_field(name = f'보유재산', value = f'{fun.printN(int(userInfo[1]))}원')
                                 await ctx.channel.send(embed = embed)
                                 return 0
                         else:
@@ -485,13 +485,13 @@ class BitcoinGame(commands.Cog):
                 
                 for c in coin:
                     if((input[1] == c[1] or input[1] == c[1][:-2]) and c[2] == 1): #c[2]는 활성화된 코인인지 판별여부
-                        user_Money = userInfo[1]
+                        user_Money = int(userInfo[1])
 
                         # !코인 매수 [코인이름] [갯수]
                         if(input[0] == '매수'):
                             num = 0
                             if(input[2][-1] == '%'):
-                                num = ((userInfo[1]//c[3])*int(input[2][0:-1])) // 100
+                                num = int(((user_Money//c[3])*float(input[2][0:-1])) // 100)
                             else:
                                 num = fun.returnNumber(input[2])
                                 if num is False:
@@ -504,7 +504,7 @@ class BitcoinGame(commands.Cog):
                                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                                 cur = con.cursor()
                                 user_Money = user_Money - coinCost
-                                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (user_Money, id))
+                                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(user_Money), id))
                                 cur.execute("SELECT trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_UserID = ? AND trade_CoinID = ?", (id, c[0]))
                                 ownCoin = cur.fetchone()
                                 ownCoinN = 0
@@ -512,10 +512,11 @@ class BitcoinGame(commands.Cog):
                                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                                 if not ownCoin:
                                     ownCoinN = num
-                                    cur.execute("INSERT INTO Coin_Trade VALUES(?, ?, ?, ?, ?, ?, ?)", (id, c[0], ctx.author.display_name, c[1], num, coinCost, nowDatetime))
+                                    cur.execute("INSERT INTO Coin_Trade VALUES(?, ?, ?, ?, ?, ?, ?)", (id, c[0], ctx.author.display_name, c[1], str(num), str(coinCost), nowDatetime))
                                 else:
-                                    ownCoinN = ownCoin[0]+num
-                                    cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (ownCoinN, coinCost+ownCoin[1], nowDatetime, id, c[0]))
+                                    ownCoinN = int(ownCoin[0])+num
+                                    ownCostN = int(ownCoin[1])+coinCost
+                                    cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (str(ownCoinN), str(ownCostN), nowDatetime, id, c[0]))
                                 con.close() #db 종료
                                 embed = discord.Embed(title = f'{c[1]} 매수 ({fun.printN(c[3])}원)', color = 0xffc0cb)
                                 embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 구매')
@@ -545,10 +546,11 @@ class BitcoinGame(commands.Cog):
                                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
                                 if not ownCoin:
                                     ownCoinN = num
-                                    cur.execute("INSERT INTO Coin_Trade VALUES(?, ?, ?, ?, ?, ?, ?)", (id, c[0], ctx.author.display_name, c[1], num, coinCost, nowDatetime))
+                                    cur.execute("INSERT INTO Coin_Trade VALUES(?, ?, ?, ?, ?, ?, ?)", (id, c[0], ctx.author.display_name, c[1], str(num), str(coinCost), nowDatetime))
                                 else:
-                                    ownCoinN = ownCoin[0]+num
-                                    cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (ownCoinN, coinCost+ownCoin[1], nowDatetime, id, c[0]))
+                                    ownCoinN = int(ownCoin[0])+num
+                                    ownCostN = int(ownCoin[1])+coinCost
+                                    cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ?, trade_CoinCost = ?, trade_Date = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (str(ownCoinN), str(ownCostN), nowDatetime, id, c[0]))
                                 con.close() #db 종료
                                 # embed = discord.Embed(title = f'{c[1]} 풀매수', description = f"코인가격 `{fun.printN(c[3])}원`│`{num}개` 구매│`총 {ownCoinN}코인` 보유│잔액 `{fun.printN(user_Money)}원`", color = 0xffc0cb)
                                 embed = discord.Embed(title = f'{c[1]} 풀매수 ({fun.printN(c[3])}원)', color = 0xffc0cb)
@@ -579,7 +581,7 @@ class BitcoinGame(commands.Cog):
                             cur = con.cursor()
                             num = 0
                             if(input[2][-1] == '%'):
-                                num = (coinNum*int(input[2][0:-1])) // 100
+                                num = int((coinNum*float(input[2][0:-1])) // 100)
                             else:
                                 num = fun.returnNumber(input[2])
                                 if num is False:
@@ -591,10 +593,10 @@ class BitcoinGame(commands.Cog):
                                 num = coinNum
                                 cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ? AND trade_CoinID = ?", (id, c[0]))
                             else:
-                                cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (coinNum-num, id, c[0]))
+                                cur.execute("UPDATE 'Coin_Trade' SET trade_CoinNum = ? WHERE trade_UserID = ? AND trade_CoinID = ?", (str(coinNum-num), id, c[0]))
                             coinCost = c[3]*num #매도금액
                             user_Money += coinCost #매도금액 추가
-                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (user_Money, id))
+                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(user_Money), id))
                             con.close() #db 종료
                             embed = discord.Embed(title = f'{c[1]} 매도 ({fun.printN(c[3])}원)', color = 0xffc0cb)
                             embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
@@ -630,7 +632,7 @@ class BitcoinGame(commands.Cog):
                             cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ? AND trade_CoinID = ?", (id, c[0]))
                             coinCost = c[3]*num #매도금액
                             user_Money += coinCost #매도금액 추가
-                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (user_Money, id))
+                            cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(user_Money), id))
                             con.close() #db 종료
                             embed = discord.Embed(title = f'{c[1]} 풀매도 ({fun.printN(c[3])}원)', color = 0xffc0cb)
                             embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
@@ -674,7 +676,7 @@ class BitcoinGame(commands.Cog):
                                         cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (pcoin[0],))
                                         pUser = cur.fetchone()
                                         con.close() #db 종료
-                                        embed.add_field(name = f'{pUser[0]}', value = f'{fun.printN(pcoin[3])}개 보유\n`{fun.printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
+                                        embed.add_field(name = f'{pUser[0]}', value = f'{fun.printN(int(pcoin[3]))}개 보유\n`{fun.printN(coinValue)}원` (`{moneyPM[PM]}{moneyPercent}%)`')
                                 await ctx.channel.send(embed = embed)
                                 return 0
 

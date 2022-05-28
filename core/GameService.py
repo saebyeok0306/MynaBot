@@ -86,6 +86,7 @@ class GameService(commands.Cog):
             userInfo = cur.fetchone()
             con.close() #db 종료
             myName, myMoney, myBetting, myReward = userInfo
+            myMoney, myBetting, myReward = int(myMoney), int(myBetting), int(myReward)
             PMText = ['-', '+']
             moneyPercent = 0
             moneyPM, costMoney, currentValue = fun.game_coinValue(id)
@@ -159,7 +160,7 @@ class GameService(commands.Cog):
                 cur = con.cursor()
                 cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (id,))
                 myUser = cur.fetchone()
-                myName, myMoney = myUser
+                myName, myMoney = myUser[0], int(myUser[1])
 
                 cur.execute("SELECT user_Name, user_Money FROM User_Info WHERE user_ID = ?", (userid,))
                 targetUser = cur.fetchone()
@@ -176,13 +177,13 @@ class GameService(commands.Cog):
                     con.close() #db 종료
                     return 0
                 targetName = targetUser[0]      # 대상 이름
-                targetMoney = targetUser[1]     # 대상이 가지고 있는 돈
+                targetMoney = int(targetUser[1])     # 대상이 가지고 있는 돈
                 chargeMoney = tradeMoney // 10  # 지불할 수수료 10%
                 if myMoney >= tradeMoney:
                     myMoney -= tradeMoney
                     targetMoney += tradeMoney-chargeMoney
-                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id,))
-                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (targetMoney, userid,))
+                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), id,))
+                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(targetMoney), userid,))
                     embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{fun.printN(tradeMoney-chargeMoney)}원`을 송금했습니다!\n**수수료 {fun.printN(chargeMoney)}원** (10%) │ 남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
                     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                     await ctx.channel.send(embed = embed)
@@ -191,8 +192,8 @@ class GameService(commands.Cog):
                     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                     await ctx.channel.send(embed = embed)
                 con.close() #db 종료
-            except:
-                embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 명령어가 잘못되었습니다.\n**!송금 [@유저] [금액]**의 형태로 입력해보세요.', color = 0xff0000)
+            except Exception as e:
+                embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 명령어가 잘못되었습니다.\n**!송금 [@유저] [금액]**의 형태로 입력해보세요.\n{e}', color = 0xff0000)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
                 return 0
@@ -210,7 +211,7 @@ class GameService(commands.Cog):
             cur = con.cursor()
             cur.execute("SELECT user_Money, user_Support FROM User_Info WHERE user_ID = ?", (id,))
             userInfo = cur.fetchone()
-            userMoney = userInfo[0]
+            userMoney = int(userInfo[0])
             now = datetime.datetime.now()
             passTicket = False
             fundtime = 0
@@ -223,7 +224,7 @@ class GameService(commands.Cog):
                     passTicket = True
             if passTicket:
                 nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
-                cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (userMoney+bonusMoney, nowDatetime, id))
+                cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (str(userMoney+bonusMoney), nowDatetime, id))
                 embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{fun.printN(bonusMoney)}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)

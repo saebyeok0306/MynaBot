@@ -118,7 +118,7 @@ class BlackJackGame(commands.Cog):
             con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
             cur = con.cursor()
             cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (id,))
-            myMoney = cur.fetchone()[0]
+            myMoney = int(cur.fetchone()[0])
             con.close() #db 종료
 
             global blackJackPlay, blackJackJoin, blackJackUser
@@ -141,7 +141,7 @@ class BlackJackGame(commands.Cog):
                     myMoney -= betting
                     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                     cur = con.cursor()
-                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+                    cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), id))
                     con.close() #db 종료
 
                     blackJackJoin.append(id)
@@ -165,7 +165,7 @@ class BlackJackGame(commands.Cog):
                 myMoney -= betting
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
                 cur = con.cursor()
-                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, id))
+                cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), id))
                 con.close() #db 종료
 
                 blackJackPlay = 1
@@ -381,19 +381,19 @@ class BlackJackGame(commands.Cog):
 
                 # 배팅금을 저장
                 cur.execute("SELECT total_Betting FROM Slot_Info")
-                total_Betting = cur.fetchone()[0]
+                total_Betting = int(cur.fetchone()[0])
 
                 for i in range(joinNum):
                     userBetting = blackJackUser[i][1]
                     if stopSign[i] == 2 or stopSign[i] == 4:
                         cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (blackJackJoin[i],))
-                        myMoney = cur.fetchone()[0]
+                        myMoney = int(cur.fetchone()[0])
                         myMoney += userBetting + int(userBetting*wdRate[stopSign[i]])
-                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (myMoney, blackJackJoin[i]))
+                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), blackJackJoin[i]))
                     else: # 패배한 경우 해당 유저의 배팅금을 더함
                         total_Betting += userBetting
 
-                cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
+                cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (str(total_Betting),))
                 con.close() #db 종료
                         
                 # 초기화
