@@ -1,7 +1,8 @@
 import discord, asyncio, json, random, datetime
 import sys, os
+from itertools import cycle
 import data.Functions as fun
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -29,9 +30,15 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('==============================')
-    game = discord.Game('명령어는 [!도움말] 참고')
-    await bot.change_presence(status=discord.Status.online, activity=game)
+    
+    now = datetime.datetime.now()
+    nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
+    status = cycle([f"{nowTime}에 부팅됨!", "명령어는 '!도움말'", f"{len(bot.guilds)} 서버에 마이나봇이 있음!"])
+    @tasks.loop(seconds=10)
+    async def change_status():
+        await bot.change_presence(activity=discord.Game(next(status)))
 
+    change_status.start()
     fun.getGuilds(bot)
 
 @bot.event
@@ -84,9 +91,9 @@ async def reload_commands(ctx, extension=None):
     
 @bot.event
 async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):             return
-    elif isinstance(error, commands.MissingRequiredArgument):   return
-    elif isinstance(error, commands.BadArgument):               return
+    if isinstance(error, commands.CommandNotFound):             return False
+    elif isinstance(error, commands.MissingRequiredArgument):   return False
+    elif isinstance(error, commands.BadArgument):               return False
     else:
         with open('log/error.txt', 'a', encoding='utf-8') as l:
             now = datetime.datetime.now()
@@ -98,8 +105,10 @@ async def on_command_error(ctx, error):
             text += f'date : {nowDatetime}'
             text += f'\n\n'
             l.write(text)
+        return True
         
         # embed = discord.Embed(title='Error', description='오류가 발생했습니다.', color=0xFF0000)
+        # embed.add_field(name='유저', value=f'```{ctx.author.name}#{ctx.author.discriminator}```')
         # embed.add_field(name='상세내용', value=f'```{error}```')
         # await ctx.send(embed=embed)
 

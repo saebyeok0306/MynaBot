@@ -148,8 +148,12 @@ class BlackJackGame(commands.Cog):
                     blackJackUser.append([ctx.author.display_name, betting, ctx.author])
                     await ctx.message.delete(delay=1)
                 else:
-                    author = await ctx.author.create_dm()
-                    await author.send("이미 블랙잭게임에 참여하신 상태입니다.")
+                    try:
+                        author = await ctx.author.create_dm()
+                        await author.send("이미 블랙잭게임에 참여하신 상태입니다.")
+                    except:
+                        msg = await ctx.channel.send(f'이미 블랙잭게임에 참여하신 상태입니다.')
+                        await msg.delete(delay=5)
                     await ctx.message.delete(delay=1)
             
             elif blackJackPlay == 0:

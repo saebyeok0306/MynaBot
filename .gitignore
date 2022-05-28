@@ -15,3 +15,7 @@ temp/
 
 # log 디렉토리 무시
 log/
+
+# 작업중인 파일 넘기기
+core/CatGame.py
+data/CatGame

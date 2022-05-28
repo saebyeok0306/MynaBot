@@ -1,7 +1,8 @@
 import discord, asyncio, json, datetime
 import sys, os
+from itertools import cycle
 import data.Functions as fun
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -24,6 +25,7 @@ with open("data/token.json", "r") as f:
 bot.load_extension(f"core.Administrator")
 bot.load_extension(f"core.Command")
 bot.load_extension(f"core.GameService")
+bot.load_extension(f"core.CatGame")
 # bot.load_extension(f"core.MusicPlay")
 
 
@@ -33,9 +35,15 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('==============================')
-    game = discord.Game("테스트를 위한 봇입니다.")
-    await bot.change_presence(status=discord.Status.online, activity=game)
 
+    now = datetime.datetime.now()
+    nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
+    status = cycle([f"{nowTime}에 부팅됨!", "명령어는 '!!도움말'", f"{len(bot.guilds)} 서버에 테스트봇이 있음!"])
+    @tasks.loop(seconds=10)
+    async def change_status():
+        await bot.change_presence(activity=discord.Game(next(status)))
+
+    change_status.start()
     fun.getGuilds(bot)
 
 
