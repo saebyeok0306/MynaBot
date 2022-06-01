@@ -127,7 +127,8 @@ async def changeBitCoin(bot, guild, coin):
                 con.close() #db 종료
 
 async def bitcoinSystem(bot, guild, channels): # channel은 리스트형태임
-    message = await game_createChart(bot, channels) # message도 리스트형태로 반환됨
+    try: message = await game_createChart(bot, channels) # message도 리스트형태로 반환됨
+    except Exception as e: print('game_createChart\n', e)
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT coin_ID, coin_Name, coin_Open, coin_Range, coin_Price1, coin_Price2, coin_Updown, coin_CreateDate, coin_DeleteDate, coin_Exit FROM Coin_Info")
@@ -135,7 +136,8 @@ async def bitcoinSystem(bot, guild, channels): # channel은 리스트형태임
     con.close() #db 종료
 
     # 비트코인 가격 변동
-    await changeBitCoin(bot, guild, coin)
+    try: await changeBitCoin(bot, guild, coin)
+    except Exception as e: print('changeBitCoin\n', e)
 
     con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
