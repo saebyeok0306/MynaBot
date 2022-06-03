@@ -82,7 +82,7 @@ async def changeBitCoin(bot, guild, coin):
                     cur.execute("SELECT total_Betting FROM Slot_Info")
                     total_Betting = int(cur.fetchone()[0])
                     total_Betting += lostSumMoney
-                    cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (total_Betting,))
+                    cur.execute("UPDATE 'Slot_Info' SET total_Betting = ?", (str(total_Betting),))
 
                     for channel in fun.getBotChannelGuild(bot, guild):
                         await channel.send(embed = embed)
