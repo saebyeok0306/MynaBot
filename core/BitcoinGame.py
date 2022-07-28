@@ -186,8 +186,11 @@ async def bitcoinSystem(bot, guild, channels): # channel은 리스트형태임
         #print(c[0], c[1], c[2], c[3], c[4])
     chartText += "─────────────────────────────────────────\n"
     chartText += f'  LastUpdate {nowDatetime}\n+ 마이나차트```'
-    for msg in message:
-        await msg.edit(content=chartText)
+    try:
+        for msg in message:
+            await msg.edit(content=chartText)
+    except:
+        pass
 
 
 class BitcoinGame(commands.Cog):
