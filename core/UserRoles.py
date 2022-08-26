@@ -16,21 +16,27 @@ class UserRoles(commands.Cog):
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
             await ctx.channel.send(embed = embed)
             return False
+
+        if ctx.guild.id != 631471244088311840:
+            embed = discord.Embed(title = f':exclamation: 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            await ctx.channel.send(embed = embed)
+            return False
         
         guild = ctx.guild
         user  = ctx.author
 
-        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-        cur = con.cursor()
-        cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (user.id,))
-        myMoney = int(cur.fetchone()[0])
-        con.close() #db 종료
+        # con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+        # cur = con.cursor()
+        # cur.execute("SELECT user_Money FROM User_Info WHERE user_ID = ?", (user.id,))
+        # myMoney = int(cur.fetchone()[0])
+        # con.close() #db 종료
 
-        if myMoney < 1000000:
-            embed = discord.Embed(title = f':moneybag: 돈부족', description = f'{ctx.author.mention} 닉네임 색상을 변경하시려면,\n`{fun.printN(1000000)}원`을 소지하고 계셔야 합니다.\n\n보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-            await ctx.channel.send(embed = embed)
-            return False
+        # if myMoney < 1000000:
+        #     embed = discord.Embed(title = f':moneybag: 돈부족', description = f'{ctx.author.mention} 닉네임 색상을 변경하시려면,\n`{fun.printN(1000000)}원`을 소지하고 계셔야 합니다.\n\n보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
+        #     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+        #     await ctx.channel.send(embed = embed)
+        #     return False
         
         colorLists = {
             '빨강' : 'e97d7d',
@@ -55,6 +61,12 @@ class UserRoles(commands.Cog):
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                 await ctx.channel.send(embed = embed)
                 return False
+            
+            if colors == '3553599':
+                embed = discord.Embed(title = f':tickets: 안내', description = f'{ctx.author.mention} 해당 색상은 금지된 색상입니다.', color = 0x51ffc9)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                await ctx.channel.send(embed = embed)
+                return False
 
             roleName = fun.returnRoleName(user.id)
             if roleName is not None:
@@ -62,13 +74,13 @@ class UserRoles(commands.Cog):
                     if role.name == roleName:
                         await role.edit(color=colors)
 
-                        myMoney -= 1000000
-                        con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                        cur = con.cursor()
-                        cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), user.id))
-                        con.close() #db 종료
+                        # myMoney -= 1000000
+                        # con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+                        # cur = con.cursor()
+                        # cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), user.id))
+                        # con.close() #db 종료
 
-                        embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!\n남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = colors)
+                        embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!', color = colors)
                         embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
                         await ctx.channel.send(embed = embed)
                         return True

@@ -19,7 +19,7 @@ class GameService(commands.Cog):
             embed.add_field(name = f'!내정보', value = f'내가 보유한 재산이나 랭킹 순위를 볼 수 있어요.')
             embed.add_field(name = f'!순위', value = f'디스코드게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
             embed.add_field(name = f'!송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
-            embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요! 비용은 단돈 `백만원`!')
+            embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
             embed.add_field(name = f'!코인 도움말', value = f'!코인게임\n명령어를 확인할 수 있어요.')
             embed.add_field(name = f'!강화 도움말', value = f'!강화게임\n명령어를 확인할 수 있어요.')
             embed.add_field(name = f'!소코반 도움말', value = f'!소코반게임\n명령어를 확인할 수 있어요.')
