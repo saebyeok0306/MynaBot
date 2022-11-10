@@ -119,7 +119,9 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_member_remove(member):
-    await fun.deleteUserRole(member.guild, member) # delete role
-    fun.removeUserDB(member.id) # db에서 데이터 삭제
+    Result = await fun.deleteUserRole(member.guild, member) # delete role
+    if Result: print(f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. (역할제거)")
+    else: print(f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. (역할없음)")
+    # fun.removeUserDB(member.id) # db에서 데이터 삭제
 
 bot.run(token)

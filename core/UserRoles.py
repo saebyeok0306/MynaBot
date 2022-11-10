@@ -11,7 +11,12 @@ class UserRoles(commands.Cog):
     
     @commands.command(name="색상변경", aliases=['색상수정'])
     async def 색상변경(self, ctx, *input):
-        if not ctx.channel.id in fun.getBotChannel(self.bot, ctx): return False
+        if not ctx.channel.id in fun.getBotChannel(self.bot, ctx):
+            embed = discord.Embed(title = f':exclamation: 채널 설정 안내', description = f'{ctx.author.mention} 해당서버의 관리자께서,\n채널주제에 `#{self.bot.user.name}`를 작성해주셔야 합니다.', color = 0xff0000)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            await ctx.channel.send(embed = embed)
+            return False
+        
         if fun.game_check(ctx.author.id) is False:
             embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
@@ -19,7 +24,7 @@ class UserRoles(commands.Cog):
             return False
 
         if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
-            embed = discord.Embed(title = f':exclamation: 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
+            embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
             await ctx.channel.send(embed = embed)
             return False

@@ -22,7 +22,7 @@ class Administrator(commands.Cog):
     
     @commands.command(name="로그보기", aliases=["에러로그", "에러로그보기"])
     async def 로그보기(self, ctx, *input):
-        if ctx.message.author.guild_permissions.administrator:
+        if ctx.message.author.id == 383483844218585108:
             showPage = 9
             if len(input) == 1:
                 if input[0] == 'all' or input[0] =='All':
@@ -62,13 +62,14 @@ class Administrator(commands.Cog):
     
     @commands.command(name="로그삭제", aliases=["로그지우기"])
     async def 로그삭제(self, ctx):
-        with open('log/error.txt', 'w', encoding='utf-8') as l:
-            l.write('')
-        await ctx.channel.send(f'로그를 전부 지웠어요!')
+        if ctx.message.author.id == 383483844218585108:
+            with open('log/error.txt', 'w', encoding='utf-8') as l:
+                l.write('')
+            await ctx.channel.send(f'로그를 전부 지웠어요!')
     
     @commands.command(name="코드")
     async def 코드(self, ctx, *input):
-        if ctx.message.author.guild_permissions.administrator:
+        if ctx.message.author.id == 383483844218585108:
             text = " ".join(input)
 
             @timeout(2, error_message='TimeoutError')
@@ -99,7 +100,8 @@ class Administrator(commands.Cog):
     
     @commands.command(name="SQL")
     async def SQL(self, ctx, *input):
-        if ctx.message.author.guild_permissions.administrator:
+        # if ctx.message.author.guild_permissions.administrator:
+        if ctx.message.author.id == 383483844218585108:
             text = " ".join(input)
 
             # @timeout(2, error_message='TimeoutError')

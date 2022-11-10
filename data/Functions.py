@@ -238,15 +238,30 @@ def createRoleName(id, roleName):
     cur.execute("UPDATE 'User_Info' SET user_Role = ? WHERE user_ID = ?", (roleName, id))
     con.close() #db 종료
 
+async def returnServerRole(guild, user):
+    roleName = user.name + '#' + user.discriminator
+    RoleList = [ role for role in guild.roles ]
+    for role in RoleList:
+        if role.name == roleName:
+            return role
+    return False
+
 async def createUserRole(guild, user):
     roleName = user.name + '#' + user.discriminator
-    position = [ role for role in guild.roles ]
-    new_role = await guild.create_role(name=roleName, color=0x99aab5, hoist=False)
+    serverRole = await returnServerRole(guild, user)
+    if not serverRole:
+        # 서버에 역할이 없는 경우
+        position = [ role for role in guild.roles ]
+        new_role = await guild.create_role(name=roleName, color=0x99aab5, hoist=False)
 
-    position.insert(len(position)-3, new_role)
-    position = {role : pos for pos, role in enumerate(position)}
-    await guild.edit_role_positions(positions=position)
-    await user.add_roles(new_role)
+        posIdx = len(position)-3 if len(position) > 3 else len(position)
+        position.insert(posIdx, new_role)
+        position = {role : pos for pos, role in enumerate(position)}
+        await guild.edit_role_positions(positions=position)
+        await user.add_roles(new_role)
+    else:
+        # 서버에 있지만, 등록이 안되어있을 수도 있음
+        await user.add_roles(serverRole)
     createRoleName(user.id, roleName)
     return True
 
