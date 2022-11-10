@@ -15,14 +15,17 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 token = ''
+coreList = ['Administrator', 'Command', 'UserRoles']
 with open('data/token.json', 'r') as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token']
 
 for filename in os.listdir('core'):
     if filename.endswith('.py'):
-        bot.load_extension(f'core.{filename[:-3]}')
-        # print(f'{filename[:-3]}가 로드되었습니다.')
+        extensionName = filename[:-3]
+        if extensionName in coreList:
+            bot.load_extension(f'core.{extensionName}')
+            # print(f'{extensionName}가 로드되었습니다.')
 
 @bot.event
 async def on_ready():
@@ -81,10 +84,11 @@ async def reload_commands(ctx, extension=None):
             for filename in os.listdir('core'):
                 if filename.endswith('.py'):
                     extensionName = filename[:-3]
-                    try: bot.unload_extension(f'core.{extensionName}')
-                    except: pass
-                    bot.load_extension(f'core.{extensionName}')
-                    await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
+                    if extensionName in coreList:
+                        try: bot.unload_extension(f'core.{extensionName}')
+                        except: pass
+                        bot.load_extension(f'core.{extensionName}')
+                        await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
         else:
             bot.unload_extension(f'core.{extension}')
             bot.load_extension(f'core.{extension}')

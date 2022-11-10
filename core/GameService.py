@@ -19,7 +19,7 @@ class GameService(commands.Cog):
             embed.add_field(name = f'!내정보', value = f'내가 보유한 재산이나 랭킹 순위를 볼 수 있어요.')
             embed.add_field(name = f'!순위', value = f'디스코드게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
             embed.add_field(name = f'!송금  `@유저명`  `금액`', value = f'다른 유저에게 돈을 보낼 수 있어요. **수수료 10%**')
-            embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
+            # embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
             embed.add_field(name = f'!코인 도움말', value = f'!코인게임\n명령어를 확인할 수 있어요.')
             embed.add_field(name = f'!강화 도움말', value = f'!강화게임\n명령어를 확인할 수 있어요.')
             embed.add_field(name = f'!소코반 도움말', value = f'!소코반게임\n명령어를 확인할 수 있어요.')
@@ -27,48 +27,6 @@ class GameService(commands.Cog):
             embed.add_field(name = f'!블랙잭 도움말', value = f'!블랙잭\n명령어를 확인할 수 있어요.')
             await ctx.channel.send(embed=embed)
     
-    @commands.command()
-    async def 회원가입(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
-            id = ctx.author.id
-            if fun.game_check(id) is False:
-                now = datetime.datetime.now()
-                nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
-                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                cur = con.cursor()
-                cur.execute("INSERT INTO User_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, nowDatetime, 0, 'NULL', 0, 0, 'NULL'))
-                con.close() #db 종료
-                await fun.createUserRole(ctx.guild, ctx.author)
-                embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 성공적으로 갈대의 {self.title}에 가입되셨습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-            else:
-                embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 이미 {self.title}에 가입되어 있습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-
-    @commands.command()
-    async def 회원탈퇴(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
-            id = ctx.author.id
-            if fun.game_check(id) is False:
-                embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 갈대의 {self.title}에 가입되어 있지 않습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-                return False
-
-            nowdate = datetime.datetime.now()
-            joindate = fun.returnJoinDate(id)
-            if nowdate.day != joindate.day:
-                await fun.deleteUserRole(ctx.guild, ctx.author) # delete role
-                fun.removeUserDB(id) # db에서 데이터 삭제
-                embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 성공적으로 {self.title}에서 탈퇴되셨습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
-            else:
-                embed = discord.Embed(title = f':x: {self.title} 탈퇴불가능', description = f'{ctx.author.mention} 가입한 날로부터 하루가 지나야 합니다!\n가입날짜 `{joindate.year}년 {joindate.month}월 {joindate.day}일`', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-                await ctx.channel.send(embed = embed)
     
     @commands.command(name="내정보", aliases=["정보창", "내정보창", "상태창"])
     async def 내정보(self, ctx):
@@ -216,14 +174,15 @@ class GameService(commands.Cog):
             passTicket = False
             fundtime = 0
             bonusMoney = random.randint(1, self.supply)
-            if userInfo[1] == 'NULL':
+            if userInfo[1] == 'NULL' or userInfo[1] == None:
                 passTicket = True
             else:
                 fundtime = datetime.datetime.strptime(userInfo[1], '%Y-%m-%d %H:%M:%S')
-                if now.day != fundtime.day:
+                difftime = now - fundtime
+                if difftime.days >= 1:
                     passTicket = True
             if passTicket:
-                nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
+                nowDatetime = "{}-{:02d}-{:02d} 00:00:00".format(now.year, now.month, now.day)
                 cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (str(userMoney+bonusMoney), nowDatetime, id))
                 embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{fun.printN(bonusMoney)}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
                 embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
