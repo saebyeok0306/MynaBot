@@ -4,6 +4,10 @@ from itertools import cycle
 import data.Functions as fun
 from discord.ext import commands, tasks
 
+# venv\Scripts\activate
+# venv\Scripts\deactivate
+# pip freeze > requirements.txt
+# .venv$ pip install -r requirements.txt 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -15,7 +19,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 token = ''
-coreList = ['Administrator', 'Command', 'UserRoles']
+coreList = ['Administrator', 'Command', 'UserRoles', 'Papago']
 with open('data/token.json', 'r') as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token']
@@ -67,19 +71,19 @@ async def on_message(message):
 
 @bot.command(name='로드', aliases=['load'])
 async def load_commands(ctx, extension):
-    if ctx.message.author.guild_permissions.administrator:
+    if ctx.message.author.id == 383483844218585108:
         bot.load_extension(f'core.{extension}')
         await ctx.send(f':white_check_mark: {extension}을(를) 로드했습니다!')
 
 @bot.command(name='언로드', aliases=['unload'])
 async def unload_commands(ctx, extension):
-    if ctx.message.author.guild_permissions.administrator:
+    if ctx.message.author.id == 383483844218585108:
         bot.unload_extension(f'core.{extension}')
         await ctx.send(f':white_check_mark: {extension}을(를) 언로드했습니다!')
 
 @bot.command(name='리로드', aliases=['reload'])
 async def reload_commands(ctx, extension=None):
-    if ctx.message.author.guild_permissions.administrator:
+    if ctx.message.author.id == 383483844218585108:
         if extension is None: # extension이 None이면 (그냥 !리로드 라고 썼을 때)
             for filename in os.listdir('core'):
                 if filename.endswith('.py'):

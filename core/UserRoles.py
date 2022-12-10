@@ -23,11 +23,11 @@ class UserRoles(commands.Cog):
             await ctx.channel.send(embed = embed)
             return False
 
-        if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
-            embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
-            await ctx.channel.send(embed = embed)
-            return False
+        # if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
+        #     embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
+        #     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+        #     await ctx.channel.send(embed = embed)
+        #     return False
         
         guild = ctx.guild
         user  = ctx.author

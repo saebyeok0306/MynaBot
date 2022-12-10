@@ -19,3 +19,10 @@ log/
 # 작업중인 파일 넘기기
 core/CatGame.py
 data/CatGame
+explain.png
+
+# key 파일 무시
+keys.xml
+
+# venv
+/venv
