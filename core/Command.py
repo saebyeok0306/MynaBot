@@ -21,8 +21,12 @@ class Command(commands.Cog):
         embed.add_field(name = '!골라줘 `대상1` `대상2` ...', value = f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')
         embed.add_field(name = '!계산 `수식`', value = f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!')
         embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
+        embed.add_field(name = f'!한영번역 `내용`', value = f'한국어를 영어로 번역해줘요!')
+        embed.add_field(name = f'!영한번역 `내용`', value = f'영어를 한국어로 번역해줘요!')
         # embed.add_field(name = f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
         # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
+        if ctx.guild.id in [631471244088311840]:
+            embed.add_field(name = f'!흑이', value = f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!')
         await ctx.channel.send(embed=embed)
     
     @commands.command(name="가입명령", aliases=["가입", "회원가입"])
@@ -204,6 +208,26 @@ class Command(commands.Cog):
                 embed=discord.Embed(color=0xB22222, title="뮤님의 남은 복무일", description=f'복무기간은 {service_day.days}일이네요.\n그리고... **{remain_day.days}일**이나 남았네요. ㅅㄱㄹ\n복무비율 : `{round((service_day.days / total_day.days)*100, 2)}%`\n전역날짜 : 2024년 4월 10일', timestamp=ctx.message.created_at)
                 embed.set_thumbnail(url=random.choice(img))
                 await ctx.reply(embed=embed, mention_author=False)
+    
+
+    @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
+    async def 흑이(self, ctx):
+        if ctx.guild.id in [631471244088311840]:
+            import urllib.request
+            api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
+            request = urllib.request.Request(api_url)
+            response = urllib.request.urlopen(request)
+            rescode = response.getcode()
+            if(rescode==200):
+                response_body = response.read()
+                response_body = response_body.decode('utf-8')
+                try:
+                    urllib.request.urlretrieve(response_body, "explain.png")
+                    file = discord.File("explain.png")
+                    await ctx.channel.send(file=file)
+                except:
+                    # text = f"아래의 이미지는 파일전송에 실패했어요.\n`{response_body}`"
+                    await ctx.channel.send(response_body)
     
 
 def setup(bot):
