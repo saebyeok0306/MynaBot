@@ -1,20 +1,36 @@
 # discordBot Project
 
-디스코드 환경에서 사용할 수 있는 봇 코드입니다.
+디스코드 서버에 사용하기 위해 개발한 디스코드 봇입니다.<br>
+서버 운영에 도움이 되는 명령어가 다수 포함되어 있습니다.
 
-## 환경설정
-* Python 3.9.5
+---
+## 개발환경
+
+* Python 3.10.8
 * SQLite3 (Database)
 
-## 1. 비트코인 게임
-![text](https://github.com/westreed/discordBot/blob/main/img/4.PNG?raw=true)
-![text](https://github.com/westreed/discordBot/blob/main/img/2.PNG?raw=true)
-![text](https://github.com/westreed/discordBot/blob/main/img/3.PNG?raw=true)
+---
+## 유저 명령어
 
-## 2. 강화 게임
-![text](https://github.com/westreed/discordBot/blob/main/img/5.PNG?raw=true)
-![text](https://github.com/westreed/discordBot/blob/main/img/6.PNG?raw=true)
+`!도움말` : 봇의 명령어들을 보여줍니다.<br>
+`!회원가입` `!회원탈퇴` : 데이터베이스가 필요한 몇몇 명령어를 사용하기 위해 필요합니다.<br>
+`!주사위 [값]` : 1~값 범위의 랜덤한 값을 출력합니다. 기본값 : 100<br>
+`!청소 [갯수]` : 입력한 사용자의 채팅을 갯수만큼 삭제합니다. 기본값 : 5<br>
+`!골라줘 [대상1 대상2 ..]` : 뒤에 입력된 선택지 중에서 하나를 랜덤으로 골라줍니다.<br>
+`!계산 [수식]` : 입력된 수식을 계산합니다. 파이썬 코드 입력가능<br>
+`!색상변경 [색상]` : 유저의 아이디 색상을 변경합니다. 색상은 Hex(0x10F023) 형태로 입력.<br>
+`!한영번역 [내용]` : 한국어 텍스트를 영어로 번역해줍니다. (by Papago)<br>
+`!영한번역 [내용]` : 영어 텍스트를 한국어로 번역해줍니다. (by Papago)<br>
+`!스위치 [갯수] or [이름1 이름2 ..]` : 사용된 스위치의 경우의 수를 전부 보여줍니다.
 
-## 3. 소코반 게임
-![text](https://github.com/westreed/discordBot/blob/main/img/1.PNG?raw=true)
-![text](https://github.com/westreed/discordBot/blob/main/img/7.PNG?raw=true)
+---
+
+## 관리자 명령어
+
+`!관리자청소 [갯수]` : 대상 구분없이 채팅을 갯수만큼 삭제합니다.<br>
+`!로그보기 [갯수]` : 명령어 실행 중 발생한 오류내역을 보여줍니다.<br>
+`!로그삭제` : 로그내역을 전부 삭제합니다.<br>
+`!코드 [수식]` : 입력된 코드내용을 실행합니다.<br>
+`!SQL [SQL]` : 입력된 SQL문을 실행합니다.
+
+---
