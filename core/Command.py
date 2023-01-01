@@ -209,6 +209,25 @@ class Command(commands.Cog):
                 embed.set_thumbnail(url=random.choice(img))
                 await ctx.reply(embed=embed, mention_author=False)
     
+    @commands.command(name="공나물")
+    async def 공나물(self, ctx, *input):
+        # if ctx.guild.id in [631471244088311840]:
+        admission_date = datetime.datetime(2023,1,9)
+        discharge_date = datetime.datetime(2024,10,8)
+        today = datetime.datetime.now()
+        total_day = discharge_date - admission_date
+        service_day = today - admission_date
+        remain_day = discharge_date - today
+        img = ['https://t1.daumcdn.net/cfile/tistory/9908C54F5CE7538722', 'https://cdn.jjalbot.com/2016/10/HJGmTOaI0/89_55169e3725c87_1575.jpg', 'https://bunny.jjalbot.com/2016/10/SJzbVvTIA/20160131_56ae13416c72a.jpg', 'https://w.namu.la/s/8ed49fe793805b1176604267c3c7ae415691cf072d9a8e8a39646badb5e503ff6a87ccac7d3d5e0cfab61b8fe7bb141d42236c46cd151dcc791a1afa89b498940b46ec625f5c7b56492c44440af3dfafb62aa7fc76b19b61a19fba6f5393874c','https://mblogthumb-phinf.pstatic.net/20150114_105/na6624_1421213096849GdEb8_JPEG/woozza_1418335377269.jpg?type=w2']
+        if service_day.days < 0:
+            embed=discord.Embed(color=0xB22222, title="공나물님의 남은 입대일", description=f'D-{-service_day.days}일 남았네요.', timestamp=ctx.message.created_at)
+            embed.set_thumbnail(url=random.choice(img))
+            await ctx.reply(embed=embed, mention_author=False)
+        else:
+            embed=discord.Embed(color=0xB22222, title="공나물님의 남은 복무일", description=f'복무기간은 {service_day.days}일이네요.\n그리고... **{remain_day.days}일**이나 남았네요. ㅅㄱㄹ\n복무비율 : `{round((service_day.days / total_day.days)*100, 2)}%`\n전역날짜 : 2024년 4월 10일', timestamp=ctx.message.created_at)
+            embed.set_thumbnail(url=random.choice(img))
+            await ctx.reply(embed=embed, mention_author=False)
+    
 
     @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
     async def 흑이(self, ctx):
