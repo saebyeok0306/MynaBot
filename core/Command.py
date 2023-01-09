@@ -23,6 +23,7 @@ class Command(commands.Cog):
         embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
         embed.add_field(name = f'!한영번역 `내용`', value = f'한국어를 영어로 번역해줘요!')
         embed.add_field(name = f'!영한번역 `내용`', value = f'영어를 한국어로 번역해줘요!')
+        embed.add_field(name = f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value = f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.')
         # embed.add_field(name = f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
         # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
         if ctx.guild.id in [631471244088311840]:
@@ -107,7 +108,7 @@ class Command(commands.Cog):
         # def is_me(message): return message.author == ctx.author
         # await ctx.channel.purge(limit=remove+1, check=is_me)
         msg = await ctx.channel.send(content = text)
-        await msg.delete(delay=2)
+        await msg.delete(delay=5)
     
     @commands.command()
     async def 핑(self, ctx):
@@ -228,6 +229,53 @@ class Command(commands.Cog):
                 except:
                     # text = f"아래의 이미지는 파일전송에 실패했어요.\n`{response_body}`"
                     await ctx.channel.send(response_body)
+    
+
+    @commands.command(name="스위치", aliases=['경우의수'])
+    async def 스위치(self, ctx, *input):
+        OPT = False
+        IPT = []
+        if len(input) >= 10: OPT = True
+        elif len(input) == 1 and input[0].isdigit():
+            if int(input[0]) < 10:
+                IPT = range(int(input[0]))
+            else:
+                OPT = True
+        elif len(input) >= 2: IPT = input
+        else: OPT = True
+        
+        if OPT is True:
+            embed = discord.Embed(title = f':x: 경우의 수 (스위치)', description = f'{ctx.author.mention} 사용할 스위치의 갯수를 입력해주세요.\n혹은 스위치 갯수가 10개이상이면 안됩니다.', color = 0xffc0cb)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            await ctx.channel.send(embed = embed)
+            return False
+        res = []
+        for c in list(itertools.chain.from_iterable(itertools.combinations(IPT, r) for r in range(len(IPT)+1))):
+            temp = ''
+            for i in range(len(IPT)):
+                le = IPT[i]
+                if le not in c:
+                    temp += (f'Switch("{le}", Set);')
+                else:
+                    temp += (f'Switch("{le}", Cleared);')
+                if i != len(IPT)-1: temp += '\n'
+            res.append(temp)
+
+        if len(res) > 16:
+            embed = discord.Embed(title = f':gear: 경우의 수 (스위치)', description = f'{ctx.author.mention} 경우의 수입니다. 너무 많아서 텍스트파일로 업로드해요!\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.', color = 0xffc0cb)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            await ctx.channel.send(embed = embed)
+            with open('text.txt', 'w', encoding='utf-8') as l:
+                for idx, _res in enumerate(res):
+                    l.write(f"{idx+1}번째\n{_res}\n\n")
+            file = discord.File("text.txt")
+            await ctx.channel.send(file=file)
+        else:
+            embed = discord.Embed(title = f':gear: 경우의 수 (스위치)', description = f'{ctx.author.mention} 경우의 수입니다.\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.', color = 0xffc0cb)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            for idx, _res in enumerate(res):
+                embed.add_field(name = f'{idx+1}번째', value = f'{_res}')
+            await ctx.channel.send(embed = embed)
     
 
 def setup(bot):
