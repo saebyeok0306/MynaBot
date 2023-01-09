@@ -214,7 +214,7 @@ class Command(commands.Cog):
     async def 공나물(self, ctx, *input):
         if ctx.guild.id in [631471244088311840]:
             admission_date = datetime.datetime(2023,1,9)
-            discharge_date = datetime.datetime(2024,10,8)
+            discharge_date = datetime.datetime(2024,10,7)
             today = datetime.datetime.now()
             total_day = discharge_date - admission_date
             service_day = today - admission_date
@@ -225,7 +225,7 @@ class Command(commands.Cog):
                 embed.set_thumbnail(url=random.choice(img))
                 await ctx.reply(embed=embed, mention_author=False)
             else:
-                embed=discord.Embed(color=0xB22222, title="공나물님의 남은 복무일", description=f'복무기간은 {service_day.days}일이네요.\n그리고... **{remain_day.days}일**이나 남았네요. ㅅㄱㄹ\n복무비율 : `{round((service_day.days / total_day.days)*100, 2)}%`\n전역날짜 : 2024년 4월 10일', timestamp=ctx.message.created_at)
+                embed=discord.Embed(color=0xB22222, title="공나물님의 남은 복무일", description=f'복무기간은 {service_day.days}일이네요.\n그리고... **{remain_day.days}일**이나 남았네요. ㅅㄱㄹ\n복무비율 : `{round((service_day.days / total_day.days)*100, 2)}%`\n전역날짜 : 2024년 10월 7일', timestamp=ctx.message.created_at)
                 embed.set_thumbnail(url=random.choice(img))
                 await ctx.reply(embed=embed, mention_author=False)
     
