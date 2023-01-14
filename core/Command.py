@@ -233,21 +233,25 @@ class Command(commands.Cog):
     @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
     async def 흑이(self, ctx):
         if ctx.guild.id in [631471244088311840]:
-            import urllib.request
-            api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
-            request = urllib.request.Request(api_url)
-            response = urllib.request.urlopen(request)
-            rescode = response.getcode()
-            if(rescode==200):
-                response_body = response.read()
-                response_body = response_body.decode('utf-8')
-                try:
-                    urllib.request.urlretrieve(response_body, "explain.png")
-                    file = discord.File("explain.png")
-                    await ctx.channel.send(file=file)
-                except:
-                    # text = f"아래의 이미지는 파일전송에 실패했어요.\n`{response_body}`"
-                    await ctx.channel.send(response_body)
+            if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
+                import urllib.request
+                api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
+                request = urllib.request.Request(api_url)
+                response = urllib.request.urlopen(request)
+                rescode = response.getcode()
+                if(rescode==200):
+                    response_body = response.read()
+                    response_body = response_body.decode('utf-8')
+                    try:
+                        urllib.request.urlretrieve(response_body, "explain.png")
+                        file = discord.File("explain.png")
+                        await ctx.channel.send(file=file)
+                    except:
+                        await ctx.channel.send(response_body)
+            else:
+                msg = await ctx.channel.send(f"흑이 소환은 `봇명령` 채널에서만 가능해요.")
+                await msg.delete(delay=5)
+
     
 
     @commands.command(name="스위치", aliases=['경우의수'])
