@@ -19,6 +19,7 @@ with open("data/token.json", "r") as f:
     token = loaded_data['token2']
 
 async def loadCore():
+    print("코어모듈을 로드합니다...")
     for filename in os.listdir('core'):
         if filename.endswith('.py'):
             extensionName = filename[:-3]
@@ -89,11 +90,6 @@ async def on_command_error(ctx, error):
             text += f'date : {nowDatetime}'
             text += f'\n\n'
             l.write(text)
-        
-        # embed = discord.Embed(title='Error', description='오류가 발생했습니다.', color=0xFF0000)
-        # embed.add_field(name='상세내용', value=f'```{error}```')
-        # await ctx.send(embed=embed)
-
 
 @bot.event
 async def on_member_remove(member):

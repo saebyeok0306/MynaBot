@@ -25,6 +25,7 @@ with open('data/token.json', 'r') as f:
     token = loaded_data['token']
 
 async def loadCore():
+    print("코어모듈을 로드합니다...")
     for filename in os.listdir('core'):
         if filename.endswith('.py'):
             extensionName = filename[:-3]

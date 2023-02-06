@@ -39,7 +39,6 @@ class ChatGPT(commands.Cog):
 
         try:
             response = await self.requestOpenAPI(text, model_engine, max_tokens)
-            print(response)
             for i in range(len(response) // 1500 + 1):
                 await ctx.reply(response[i*1500:(i+1)*1500], mention_author=False)
         except Exception as e:
