@@ -24,6 +24,8 @@ class Command(commands.Cog):
         embed.add_field(name = f'!한영번역 `내용`', value = f'한국어를 영어로 번역해줘요!')
         embed.add_field(name = f'!영한번역 `내용`', value = f'영어를 한국어로 번역해줘요!')
         embed.add_field(name = f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value = f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.')
+        embed.add_field(name = f'!마이나야 `질문`', value = f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!')
+        embed.add_field(name = f'!초기화', value=f'마이나에게 질문한 대화내역을 초기화해요.')
         # embed.add_field(name = f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
         # embed.add_field(name = '!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
         if ctx.guild.id in [631471244088311840]:
