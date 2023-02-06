@@ -108,5 +108,5 @@ class UserRoles(commands.Cog):
         embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
         await ctx.channel.send(embed = embed)
 
-def setup(bot):
-    bot.add_cog(UserRoles(bot))
+async def setup(bot):
+    await bot.add_cog(UserRoles(bot))

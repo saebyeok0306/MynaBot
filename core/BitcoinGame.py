@@ -685,5 +685,5 @@ class BitcoinGame(commands.Cog):
                                 await ctx.channel.send(embed = embed)
                                 return 0
 
-def setup(bot):
-    bot.add_cog(BitcoinGame(bot))
+async def setup(bot):
+    await bot.add_cog(BitcoinGame(bot))

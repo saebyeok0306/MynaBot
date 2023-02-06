@@ -199,8 +199,8 @@ class SlotmachineGame(commands.Cog):
             #     print(f'슬롯머신게임 {e}')
             #     pass
 
-def setup(bot):
-    bot.add_cog(SlotmachineGame(bot))
+async def setup(bot):
+    await bot.add_cog(SlotmachineGame(bot))
 
 # embed.add_field(name=f'1등 (배팅금액×300배)', value=f'{slotList[0]}{slotList[0]}{slotList[0]}')
 # embed.add_field(name=f'2등 (배팅금액×50배)', value=f'{slotList[1]}{slotList[1]}{slotList[1]}')

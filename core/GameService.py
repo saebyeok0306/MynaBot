@@ -193,5 +193,5 @@ class GameService(commands.Cog):
                 await ctx.channel.send(embed = embed)
             con.close() #db 종료
     
-def setup(bot):
-    bot.add_cog(GameService(bot))
+async def setup(bot):
+    await bot.add_cog(GameService(bot))

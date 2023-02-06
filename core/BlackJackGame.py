@@ -402,5 +402,5 @@ class BlackJackGame(commands.Cog):
                 blackJackUser = []
                 return 0
 
-def setup(bot):
-    bot.add_cog(BlackJackGame(bot))
+async def setup(bot):
+    await bot.add_cog(BlackJackGame(bot))

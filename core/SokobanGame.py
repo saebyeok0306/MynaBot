@@ -339,5 +339,5 @@ class SokobanGame(commands.Cog):
             sokobanPlay = False
 
 
-def setup(bot):
-    bot.add_cog(SokobanGame(bot))
+async def setup(bot):
+    await bot.add_cog(SokobanGame(bot))

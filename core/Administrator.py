@@ -141,5 +141,5 @@ class Administrator(commands.Cog):
                     await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
                     await ctx.channel.send(file=file)
 
-def setup(bot):
-    bot.add_cog(Administrator(bot))
+async def setup(bot):
+    await bot.add_cog(Administrator(bot))

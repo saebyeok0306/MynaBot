@@ -24,12 +24,13 @@ with open('data/token.json', 'r') as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token']
 
-for filename in os.listdir('core'):
-    if filename.endswith('.py'):
-        extensionName = filename[:-3]
-        if extensionName in coreList:
-            bot.load_extension(f'core.{extensionName}')
-            # print(f'{extensionName}가 로드되었습니다.')
+async def loadCore():
+    for filename in os.listdir('core'):
+        if filename.endswith('.py'):
+            extensionName = filename[:-3]
+            if extensionName in coreList:
+                await bot.load_extension(f'core.{extensionName}')
+                # print(f'{extensionName}가 로드되었습니다.')
 
 @bot.event
 async def on_ready():
@@ -47,6 +48,7 @@ async def on_ready():
 
     change_status.start()
     fun.getGuilds(bot)
+    await loadCore()
 
 @bot.event
 async def on_message(message):

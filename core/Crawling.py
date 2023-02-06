@@ -71,5 +71,5 @@ class Crawling(commands.Cog):
                     await channel.send(content = f'Lastpid : {lastPid}')
 
 
-def setup(bot):
-    bot.add_cog(Crawling(bot))
+async def setup(bot):
+    await bot.add_cog(Crawling(bot))
