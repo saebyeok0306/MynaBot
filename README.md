@@ -6,8 +6,10 @@
 ---
 ## 개발환경
 
-* Python 3.10.8
-* SQLite3 (Database)
+* IDE : Visual Studio Code
+* Language : Python 3.10.8
+* Library : discord.py 2.1.0
+* Database : SQLite3
 
 ---
 ## 유저 명령어
