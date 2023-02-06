@@ -48,13 +48,13 @@ async def on_ready():
 @bot.command(name='로드', aliases=['load'])
 async def load_commands(ctx, extension):
     if ctx.message.author.guild_permissions.administrator:
-        bot.load_extension(f'core.{extension}')
+        await bot.load_extension(f'core.{extension}')
         await ctx.send(f':white_check_mark: {extension}을(를) 로드했습니다!')
 
 @bot.command(name='언로드', aliases=['unload'])
 async def unload_commands(ctx, extension):
     if ctx.message.author.guild_permissions.administrator:
-        bot.unload_extension(f'core.{extension}')
+        await bot.unload_extension(f'core.{extension}')
         await ctx.send(f':white_check_mark: {extension}을(를) 언로드했습니다!')
 
 @bot.command(name='리로드', aliases=['reload'])
