@@ -64,7 +64,7 @@ async def sokobanPrint(message):
     printText += '\n채팅으로 !상 !하 !좌 !우 를 입력해서\n조작할 수 있습니다. `(!리셋 !종료)`'
     embed = discord.Embed(title = f':video_game: {gameName3} │ {sokobanLevel}레벨', description = f'{printText}', color = 0x324260)
     if message:
-        embed.set_footer(text = f"{message.display_name} | {gameName3}", icon_url = message.avatar_url)
+        embed.set_footer(text = f"{message.display_name} | {gameName3}", icon_url = message.display_avatar)
     await sokobanMessage.edit(embed = embed)
     # await sokobanReaction(sokobanMessage)
 
@@ -207,7 +207,7 @@ class SokobanGame(commands.Cog):
                 embed.add_field(name = f'!소코반  시작', value = f'레벨을 지정하지 않으면, 1레벨부터 시작해요.')
                 embed.add_field(name = f'!소코반  시작  레벨', value = f'소코반을 플레이할 수 있어요. (MAX {sokobanMAX}레벨)')
                 # embed.add_field(name = f'!소코반  종료', value = f'소코반 게임을 종료합니다.')
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
 
             elif(input[0] == '시작'):
@@ -215,7 +215,7 @@ class SokobanGame(commands.Cog):
                 global sokobanMessage, sokobanTimer, sokobanLog
                 if sokobanPlay or sokobanLoop:
                     embed = discord.Embed(title = f':video_game: {gameName3} 안내', description = f'소코반 게임이 이미 실행된 상태입니다.', color = 0x324260)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                 else:
                     self.run.start() # sokoban System Run
@@ -227,7 +227,7 @@ class SokobanGame(commands.Cog):
                     sokobanMapSetting() # 맵세팅
                     embed = discord.Embed(title = f':video_game: {gameName3} 플레이', description = f'소코반 게임을 실행합니다.\n게임을 세팅 중이니 잠시만 기다려주세요.', color = 0x324260)
                     embed.add_field(name = f'레벨', value = f'{sokobanLevel}레벨로 진행')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                     sokobanMessage = await ctx.channel.send(embed = embed)
                     await sokobanReaction(sokobanMessage)
                     await sokobanPrint(0)
@@ -324,7 +324,7 @@ class SokobanGame(commands.Cog):
                 if log < logLen-1:
                     logText += ' > '
             embed = discord.Embed(title = f':video_game: {gameName3} 로그', description = f'{logText}', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
             msg = await ctx.channel.send(embed = embed)
             await msg.delete(delay=10)
 

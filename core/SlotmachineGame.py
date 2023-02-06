@@ -38,7 +38,7 @@ class SlotmachineGame(commands.Cog):
             check = fun.game_check(id)
             if check == 0:
                 embed = discord.Embed(title = f':exclamation: {gameName3} 미가입', description = f'{ctx.author.mention} {gameName3} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
@@ -52,7 +52,7 @@ class SlotmachineGame(commands.Cog):
                 con.close() #db 종료
 
                 embed = discord.Embed(title = f':video_game: {gameName3} 도움말', description = f'{ctx.author.mention} {gameName3} 의 명령어입니다!', color = 0x324260)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                 embed.add_field(name=f'1등 (배팅금액×300배 + {fun.printN(total_Betting)}원)', value=f'{slotList[0]}{slotList[0]}{slotList[0]}\n추가로 슬롯머신에 담긴 배팅금액의 절반도 지급됩니다.')
                 embed.add_field(name=f'2등 (배팅금액×50배)', value=f'{slotList[1]}{slotList[1]}{slotList[1]}')
                 embed.add_field(name=f'3등 (배팅금액×20배)', value=f'{slotList[2]}{slotList[2]}{slotList[2]}')
@@ -75,14 +75,14 @@ class SlotmachineGame(commands.Cog):
                 if betting is False:
                     slotPlay.remove(id)
                     embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return False
                 
             except:
                 slotPlay.remove(id)
                 embed = discord.Embed(title = f':exclamation: {gameName3} 오류', description = f'{ctx.author.mention} 배팅하실 금액을 입력하셔야 합니다.\n!슬롯 [배팅금액]', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
@@ -96,7 +96,7 @@ class SlotmachineGame(commands.Cog):
             if myMoney < betting:
                 slotPlay.remove(id)
                 embed = discord.Embed(title = f':exclamation: {gameName3} 금액부족', description = f'{ctx.author.mention} 보유하고 계시는 돈이 부족합니다.\n보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
             myMoney -= betting
@@ -107,7 +107,7 @@ class SlotmachineGame(commands.Cog):
 
 
             embed = discord.Embed(title = f':slot_machine: {ctx.author.display_name}님의 슬롯머신', description = f'슬롯머신을 돌립니다!', color = 0x324260)
-            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
             embed.add_field(name = f'배팅금액', value = f'{fun.printN(betting)}원')
             msg1 = await ctx.channel.send(embed = embed)
             msg2 = await ctx.channel.send(f'{slotEmoji}{slotEmoji}{slotEmoji}')
@@ -181,7 +181,7 @@ class SlotmachineGame(commands.Cog):
 
 
             embed = discord.Embed(title = f':slot_machine: {ctx.author.display_name}님의 슬롯머신', description = f'슬롯머신을 돌립니다!\n{resultText}', color = 0x324260)
-            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {gameName3}", icon_url = ctx.author.display_avatar)
             embed.add_field(name = f'배팅금액', value = f'{fun.printN(betting)}원')
             if rank is None:
                 rewardText = f'0원'

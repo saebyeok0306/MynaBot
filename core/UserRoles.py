@@ -13,19 +13,19 @@ class UserRoles(commands.Cog):
     async def 색상변경(self, ctx, *input):
         if not ctx.channel.id in fun.getBotChannel(self.bot, ctx):
             embed = discord.Embed(title = f':exclamation: 채널 설정 안내', description = f'{ctx.author.mention} 해당서버의 관리자께서,\n채널주제에 `#{self.bot.user.name}`를 작성해주셔야 합니다.', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
         
         if fun.game_check(ctx.author.id) is False:
             embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
 
         # if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
         #     embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
-        #     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+        #     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
         #     await ctx.channel.send(embed = embed)
         #     return False
         
@@ -60,7 +60,7 @@ class UserRoles(commands.Cog):
             for col, hexs in colorLists.items():
                 colorText += f'{col}, '
             embed.add_field(name = f'기본 색상 종류', value=f'{colorText[:-2]}')
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
 
         if len(input) == 0:
@@ -81,13 +81,13 @@ class UserRoles(commands.Cog):
         
         if colors > 0xFFFFFF:
             embed = discord.Embed(title = f':tickets: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상의 범위는 `0x000001`에서 `0xFFFFFF`까지 입니다.', color = 0x51ffc9)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
         
         if colors == 0x000000 or colors == 0x36393F:
             embed = discord.Embed(title = f':tickets: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 해당 색상은 금지된 색상입니다.', color = 0x51ffc9)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
 
@@ -98,14 +98,14 @@ class UserRoles(commands.Cog):
                     await role.edit(color=colors)
 
                     embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!', color = colors)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return True
         
         # return True 가 작동하지 않은 경우
         await fun.createUserRole(guild, user)
         embed = discord.Embed(title = f':tickets: 닉네임 색상변경', description = f'{ctx.author.mention} 생성된 역할이 없어서, 새롭게 역할을 생성했습니다.\n다시 한번더 색상변경 명령어를 사용해주세요.', color = 0xFF0000)
-        embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+        embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
         await ctx.channel.send(embed = embed)
 
 async def setup(bot):

@@ -86,14 +86,14 @@ class BlackJackGame(commands.Cog):
             id = ctx.author.id
             if fun.game_check(id) is False: # 회원가입이 된 유저인지 체크
                 embed = discord.Embed(title = f':exclamation: {gameName4} 미가입', description = f'{ctx.author.mention} {gameName4} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
             fun.setUserName(id, ctx)
 
             if input[0] == '도움말':
                 embed = discord.Embed(title = f':black_joker: {gameName4} 도움말', description = f'', color = 0x827397)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 embed.add_field(name=f'!블랙잭  [배팅금액]  [타이머]', value=f'타이머는 처음 명령어를 실행하는 유저만 사용하시면 됩니다.')
                 embed.add_field(name=f'블랙잭 룰', value=f'카드의 합이 21이하이고, 딜러보다 높을 때 승리합니다.')
                 embed.add_field(name=f'▶️ 버튼', value=f'카드를 추가로 더 받습니다.')
@@ -106,12 +106,12 @@ class BlackJackGame(commands.Cog):
                 betting = fun.returnNumber(input[0])
                 if betting is False:
                     embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return False
             except: # 입력한 값이 숫자가 아닐 때
                 embed = discord.Embed(title = f':exclamation: {gameName4} 오류', description = f'{ctx.author.mention} 배팅하실 금액을 입력하셔야 합니다.\n!블랙잭 [배팅금액]', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
             
@@ -125,13 +125,13 @@ class BlackJackGame(commands.Cog):
 
             if blackJackPlay == 2:
                 embed = discord.Embed(title = f':exclamation: {gameName4} 참가불가', description = f'{ctx.author.mention} 게임이 시작했어요..', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
             if myMoney < betting: # 보유한 돈이 부족할때
                 embed = discord.Embed(title = f':exclamation: {gameName4} 금액부족', description = f'{ctx.author.mention} 보유하고 계시는 돈이 부족합니다.\n보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
@@ -173,14 +173,14 @@ class BlackJackGame(commands.Cog):
                 blackJackUser.append([ctx.author.display_name, betting, ctx.author])
 
                 embed = discord.Embed(title = f':black_joker: 블랙잭 참여인원({len(blackJackJoin)}명)', description = f'{timer}초 후 블랙잭이 시작됩니다.\n바로 게임을 시작하시려면, ▶️ 반응을 눌러주세요.', color = 0x827397)
-                embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                 embed.add_field(name=f'{ctx.author.display_name}', value=f'배팅금액 : {fun.printN(betting)}원')
                 msg = await ctx.channel.send(embed = embed)
                 await msg.add_reaction('▶️')
 
                 while timer:
                     embed = discord.Embed(title = f':black_joker: 블랙잭 참여인원({len(blackJackJoin)}명)', description = f'{timer}초 후 블랙잭이 시작됩니다.\n바로 게임을 시작하시려면, ▶️ 반응을 눌러주세요.', color = 0x827397)
-                    embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
                     for user in blackJackUser:
                         embed.add_field(name=f'{user[0]}', value=f'배팅금액 : {fun.printN(user[1])}원')
                     await msg.edit(embed = embed)
@@ -213,7 +213,7 @@ class BlackJackGame(commands.Cog):
 
                 def printCardField(embed, titleText, logText, show):
                     embed = discord.Embed(title = titleText, description = logText, color = 0x827397)
-                    embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"방장 {ctx.author.display_name} | {gameName4}", icon_url = ctx.author.display_avatar)
 
                     for i in range(joinNum):
                         userBetting = blackJackUser[i][1]

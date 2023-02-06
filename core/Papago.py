@@ -36,7 +36,7 @@ class Papago(commands.Cog):
         if len(text) >= 500:
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'너무 길어요. ({len(text)})')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="결과", value=f'더 짧은 문장으로 작성해주세요.')
             await ctx.reply(embed=embed, mention_author=False)
             return False
@@ -45,7 +45,7 @@ class Papago(commands.Cog):
         if res is True:
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'파파고 번역 결과에요.')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="원문", value=f'{text}')
             embed.add_field(name="결과", value=f'{content}')
             await ctx.reply(embed=embed, mention_author=False)
@@ -53,7 +53,7 @@ class Papago(commands.Cog):
             print("Error Code:" + content)
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'오늘 할당량이 끝났어요.')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="결과", value=f'내일 다시 부탁드려요!')
             await ctx.reply(embed=embed, mention_author=False)
     
@@ -63,7 +63,7 @@ class Papago(commands.Cog):
         if len(text) >= 500:
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'너무 길어요. ({len(text)})')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="결과", value=f'더 짧은 문장으로 작성해주세요.')
             await ctx.reply(embed=embed, mention_author=False)
             return False
@@ -72,7 +72,7 @@ class Papago(commands.Cog):
         if res is True:
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'파파고 번역 결과에요.')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="원문", value=f'{text}')
             embed.add_field(name="결과", value=f'{content}')
             await ctx.reply(embed=embed, mention_author=False)
@@ -80,7 +80,7 @@ class Papago(commands.Cog):
             print("Error Code:" + content)
             embed = discord.Embed(color=0x2f3136)
             embed.set_author(name=f'오늘 할당량이 끝났어요.')
-            embed.set_thumbnail(url=self.bot.user.avatar_url)
+            embed.set_thumbnail(url=self.bot.user.display_avatar)
             embed.add_field(name="결과", value=f'내일 다시 부탁드려요!')
             await ctx.reply(embed=embed, mention_author=False)
 

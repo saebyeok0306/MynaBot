@@ -13,7 +13,7 @@ class Command(commands.Cog):
     @commands.command(name="도움말", aliases=["도움", "설명"])
     async def 도움말(self, ctx):
         embed=discord.Embed(color=0xB22222, title="도움말:", description=f'{self.bot.user.name}에게 있는 명령어들을 알려드려요. By.갈대')
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
         embed.add_field(name = f'!회원가입', value = f'서비스를 이용하려면, 가입이 필요해요.\n최종적으로 별명과 계정ID값만 사용해요.')
         embed.add_field(name = f'!회원탈퇴', value = f'회원가입이 있으면 회원탈퇴도 있는법.')
         embed.add_field(name = '!주사위 `값(기본값 100)`', value = f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
@@ -44,11 +44,11 @@ class Command(commands.Cog):
                 con.close() #db 종료
                 await fun.createUserRole(ctx.guild, ctx.author)
                 embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 성공적으로 갈대의 {self.title}에 가입되셨습니다.\n수집되는 데이터는 유저의 별명과 사용자아이디(별명#0000)만 사용됩니다!', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
             else:
                 embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 이미 {self.title}에 가입되어 있습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
 
     @commands.command(name="탈퇴명령", aliases=["탈퇴", "회원탈퇴"])
@@ -57,7 +57,7 @@ class Command(commands.Cog):
             id = ctx.author.id
             if fun.game_check(id) is False:
                 embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 갈대의 {self.title}에 가입되어 있지 않습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return False
 
@@ -67,11 +67,11 @@ class Command(commands.Cog):
                 await fun.deleteUserRole(ctx.guild, ctx.author) # delete role
                 fun.removeUserDB(id) # db에서 데이터 삭제
                 embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 성공적으로 {self.title}에서 탈퇴되셨습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
             else:
                 embed = discord.Embed(title = f':x: {self.title} 탈퇴불가능', description = f'{ctx.author.mention} 가입한 날로부터 하루가 지나야 합니다!\n가입날짜 `{joindate.year}년 {joindate.month}월 {joindate.day}일`', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
     
     @commands.command(name="주사위", aliases=["다이스"])
@@ -114,7 +114,7 @@ class Command(commands.Cog):
     async def 핑(self, ctx):
         embed = discord.Embed(color=0x2f3136)
         embed.set_author(name=f'{self.bot.user.name}봇의 지연시간(ms)')
-        embed.set_thumbnail(url=self.bot.user.avatar_url)
+        embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.add_field(name="지연시간(ping)", value=f'{round(self.bot.latency * 1000)}ms로 측정되요!')
         await ctx.reply(embed=embed, mention_author=False)
 
@@ -160,18 +160,18 @@ class Command(commands.Cog):
     @commands.command(name="마크", aliases=['마인크래프트', '마크서버'])
     async def 마크(self, ctx, *input):
         embed=discord.Embed(color=0xB22222, title="산업모드서버", description="`갈대`의 1.18.2 포지서버", timestamp=ctx.message.created_at)
-        embed.set_thumbnail(url=ctx.author.avatar_url)
+        embed.set_thumbnail(url=ctx.author.display_avatar)
         embed.add_field(name = '서버주소', value = 'westreed.kro.kr')
         embed.add_field(name = '서버문의', value = '@갈대#2519 에게 연락하세요!')
         embed.add_field(name = '서버모드', value = 'https://drive.google.com/drive/folders/1oT2hivIlCF9Cm5TIsFr3pK-vkvnw1zaT?usp=sharing')
         embed.add_field(name = '상세정보', value = '상세한 설명은 "!갈대서버"를 입력하세요.')
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
         await ctx.channel.send(embed=embed)
     
     @commands.command(name="갈대서버")
     async def 갈대서버(self, ctx, *input):
         embed=discord.Embed(color=0xB22222, title="갈대서버 상세설명", description="모드파일 : https://drive.google.com/drive/folders/1oT2hivIlCF9Cm5TIsFr3pK-vkvnw1zaT?usp=sharing\n넣는경로 : C:\\Users\\\계정명\\AppData\\Roaming\\\.minecraft\\mods", timestamp=ctx.message.created_at)
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+        embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
         embed.add_field(name = '설치순서1', value = '다운받은 파일 중, forge-1.18.2-40.1.0-installer.jar을 실행하여 1.18.2 포지를 설치한다.')
         embed.add_field(name = '설치순서2', value = 'userMods.zip을 마인크래프트 모드폴더에 풀어놓는다.')
         embed.add_field(name = '설치순서3', value = '마크런처에서 설치된 1.18.2 포지를 켜서, westreed.kro.kr 주소로 서버 접속하기.')
@@ -269,7 +269,7 @@ class Command(commands.Cog):
         
         if OPT is True:
             embed = discord.Embed(title = f':x: 경우의 수 (스위치)', description = f'{ctx.author.mention} 사용할 스위치의 갯수를 입력해주세요.\n혹은 스위치 갯수가 10개이상이면 안됩니다.', color = 0xffc0cb)
-            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
         res = []
@@ -286,7 +286,7 @@ class Command(commands.Cog):
 
         if len(res) > 16:
             embed = discord.Embed(title = f':gear: 경우의 수 (스위치)', description = f'{ctx.author.mention} 경우의 수입니다. 너무 많아서 텍스트파일로 업로드해요!\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.', color = 0xffc0cb)
-            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             with open('text.txt', 'w', encoding='utf-8') as l:
                 for idx, _res in enumerate(res):
@@ -295,7 +295,7 @@ class Command(commands.Cog):
             await ctx.channel.send(file=file)
         else:
             embed = discord.Embed(title = f':gear: 경우의 수 (스위치)', description = f'{ctx.author.mention} 경우의 수입니다.\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.', color = 0xffc0cb)
-            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | 경우의 수", icon_url = ctx.author.display_avatar)
             for idx, _res in enumerate(res):
                 embed.add_field(name = f'{idx+1}번째', value = f'{_res}')
             await ctx.channel.send(embed = embed)

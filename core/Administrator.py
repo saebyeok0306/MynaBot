@@ -22,6 +22,7 @@ class Administrator(commands.Cog):
     
     @commands.command(name="로그보기", aliases=["에러로그", "에러로그보기"])
     async def 로그보기(self, ctx, *input):
+        print("로그보기")
         if ctx.message.author.id == 383483844218585108:
             showPage = 9
             if len(input) == 1:
@@ -55,7 +56,7 @@ class Administrator(commands.Cog):
                 content = content[:showPage]
             
             embed=discord.Embed(color=0xFFA1A1, title=":scroll: 에러로그", description=f'에러를 기록한 로그를 취합합니다.')
-            embed.set_footer(text = f"{ctx.author.display_name} | 에러로그", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | 에러로그", icon_url = ctx.author.display_avatar)
             for text in content:
                 embed.add_field(name=f'{text[0]}', value=f'{text[1]}')
             await ctx.channel.send(embed = embed)

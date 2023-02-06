@@ -63,7 +63,7 @@ class Crawling(commands.Cog):
                         embed.set_thumbnail(url=pd["icon"])
 
                         # embed=discord.Embed(title=f'{pd["title"]}',url=f'{pd["link"]}', color=0x2f3136)
-                        # embed.set_footer(text=f'{self.bot.user} │ {pd["date"]}', icon_url=self.bot.user.avatar_url)
+                        # embed.set_footer(text=f'{self.bot.user} │ {pd["date"]}', icon_url=self.bot.user.display_avatar)
                         # embed.set_thumbnail(url=pd["icon"])
                         await channel.send(embed = embed)
                 if lastIdx != lastPid:

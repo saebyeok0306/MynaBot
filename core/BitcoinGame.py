@@ -218,7 +218,7 @@ class BitcoinGame(commands.Cog):
             check = fun.game_check(id)
             if check == 0:
                 embed = discord.Embed(title = f':exclamation: {gameName} 미가입', description = f'{ctx.author.mention} {gameName} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
@@ -241,7 +241,7 @@ class BitcoinGame(commands.Cog):
                 embed.add_field(name = f'!코인  추천삭제', value = f'내가 등록한 코인들을 전부 삭제해요.')
                 embed.add_field(name = f'!코인  추천삭제 `코인명`', value = f'내가 등록한 특정코인을 삭제해요.')
                 embed.add_field(name = f'꿀팁', value = f'코인이름을 쓸 땐, "코인"을 뺀 이름만 써도 되요.\n**ex.사과코인 == 사과**')
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
             
             # !코인 추천 [이름]
@@ -258,7 +258,7 @@ class BitcoinGame(commands.Cog):
                     embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} 님이 등록하신 코인명 리스트입니다.', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return True
 
@@ -267,7 +267,7 @@ class BitcoinGame(commands.Cog):
                     embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} 코인 이름은 개인당 최대 6개까지 추천할 수 있습니다.', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                 else:
                     _coinName = input[1]
@@ -281,28 +281,28 @@ class BitcoinGame(commands.Cog):
                         embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} {_coinName}에 불가능한 글자가 포함되어 있습니다.\n**코인이름은 한글만 가능합니다.**', color = 0xffc0cb)
                         for no in NoText:
                             embed.add_field(name = f'{no}', value = f'불가능')
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                         msg = await ctx.channel.send(embed = embed)
                         await msg.delete(delay=10)
                         return False
                     
                     if len(_coinName) < 2:
                         embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} {_coinName}은 글자수가 **{len(_coinName)}** 입니다.\n코인이름은 최소 3글자이상 써주셔야 합니다.', color = 0xffc0cb)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                         msg = await ctx.channel.send(embed = embed)
                         await msg.delete(delay=10)
                         return False
 
                     if len(_coinName) > 6:
                         embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} {_coinName}은 글자수가 **{len(_coinName)}** 입니다.\n코인이름은 최대 6글자까지 가능합니다.', color = 0xffc0cb)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                         msg = await ctx.channel.send(embed = embed)
                         await msg.delete(delay=10)
                         return False
                     
                     if [_coinName] in allCoinName:
                         embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} {_coinName}은 이미 있는 이름입니다.', color = 0xffc0cb)
-                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                        embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                         msg = await ctx.channel.send(embed = embed)
                         await msg.delete(delay=10)
                         return False
@@ -317,7 +317,7 @@ class BitcoinGame(commands.Cog):
                     embed = discord.Embed(title = f':x: {gameName} 이름추천', description = f'{ctx.author.mention} {_coinName}이 데이터베이스에 등록됩니다.\n내가 등록한 단어는 총 {len(coinNameInfo)}개 입니다. (최대 6개까지 가능)', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
             
             # !코인 추천삭제 [이름]
@@ -337,7 +337,7 @@ class BitcoinGame(commands.Cog):
                     embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{ctx.author.mention} 님이 등록하신 코인을 전부 삭제했습니다.', color = 0xffc0cb)
                     for name, date in coinNameInfo:
                         embed.add_field(name = f'{name}', value = f'{date}')
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return True
                 
@@ -353,7 +353,7 @@ class BitcoinGame(commands.Cog):
 
                 if userCoinName == []:
                     embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{ctx.author.mention} 님, {_coinName}이라는 코인은 등록된 기록이 없습니다.\n**!코인 추천** 을 입력해서 등록한 코인들을 확인해보세요.', color = 0xffc0cb)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return False
                 
@@ -363,7 +363,7 @@ class BitcoinGame(commands.Cog):
                 con.close() #db 종료
 
                 embed = discord.Embed(title = f':x: {gameName} 추천삭제', description = f'{ctx.author.mention} {_coinName}을 삭제했습니다.\n차트에 이미 존재하는 코인인 경우, 상폐될 때까지 남아있습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return False
 
@@ -380,12 +380,12 @@ class BitcoinGame(commands.Cog):
                 con.close() #db 종료
                 if not ownCoin:
                     embed = discord.Embed(title = f':exclamation: {ctx.author.display_name}님의 코인현황', description = f'{ctx.author.mention} 거래내역이 없습니다.\n**!코인 [매수│매도] [코인명] [수량│퍼센트%]**을 통해, 코인을 매수해보세요.', color = 0xffc0cb)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return 0
                 else:
                     embed = discord.Embed(title = f'{ctx.author.display_name}님의 코인현황', description = '보유 중인 코인들과 수익률을 보여줍니다.', color = 0xffc0cb)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                     #moneyPM, costMoney, currentValue = game_coinValue(id)
                     costMoney = 0
                     currentValue = 0
@@ -435,12 +435,12 @@ class BitcoinGame(commands.Cog):
                             con.close() #db 종료
                             if not ownCoin:
                                 embed = discord.Embed(title = f':exclamation: {target.display_name}님의 코인현황', description = f'{target.display_name}님의 거래내역이 없습니다.', color = 0xffc0cb)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                                 return 0
                             else:
                                 embed = discord.Embed(title = f'{target.display_name}님의 코인현황', description = f'{target.display_name}님이 보유 중인 코인들과 수익률을 보여줍니다.', color = 0xffc0cb)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 #moneyPM, costMoney, currentValue = game_coinValue(id)
                                 costMoney = 0
                                 currentValue = 0
@@ -475,7 +475,7 @@ class BitcoinGame(commands.Cog):
                                 return 0
                         else:
                             embed = discord.Embed(title = f':x: {target.display_name}님의 코인현황', description = f'{target.display_name}님은 게임서비스에 가입하지 않은 유저입니다.', color = 0xff0000)
-                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                             await ctx.channel.send(embed = embed)
                             return 0
 
@@ -501,7 +501,7 @@ class BitcoinGame(commands.Cog):
                                 num = fun.returnNumber(input[2])
                                 if num is False:
                                     embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
-                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
                                     await ctx.channel.send(embed = embed)
                                     return False
                             coinCost = c[3]*num
@@ -527,11 +527,11 @@ class BitcoinGame(commands.Cog):
                                 embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 구매')
                                 embed.add_field(name=f'코인보유', value=f'`총 {fun.printN(ownCoinN)}코인` 보유')
                                 embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                             else:
                                 embed = discord.Embed(title = f'{c[1]} 매수실패', description = f'{c[1]}을 {fun.printN(num)}개를 매수하는데 필요한 돈이 부족합니다.\n부족한 금액 : {fun.printN(coinCost-user_Money)}원', color = 0xff0000)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                             return 0
                         
@@ -562,7 +562,7 @@ class BitcoinGame(commands.Cog):
                                 embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 구매')
                                 embed.add_field(name=f'코인보유', value=f'`총 {fun.printN(ownCoinN)}코인` 보유')
                                 embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                             return 0
                         
@@ -575,7 +575,7 @@ class BitcoinGame(commands.Cog):
                             con.close() #db 종료
                             if not tradeLog:
                                 embed = discord.Embed(title = f'{c[1]} 매도실패', description = f'해당 코인을 구입한 기록이 없습니다.', color = 0xff0000)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                                 return False
                             coinNum = int(tradeLog[0])
@@ -591,7 +591,7 @@ class BitcoinGame(commands.Cog):
                                 num = fun.returnNumber(input[2])
                                 if num is False:
                                     embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
-                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
                                     await ctx.channel.send(embed = embed)
                                     return False
                             if coinNum <= num:
@@ -607,11 +607,11 @@ class BitcoinGame(commands.Cog):
                             embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
                             embed.add_field(name=f'코인금액', value=f'`총 {fun.printN(coinCost)}원` 획득')
                             embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
-                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                             await ctx.channel.send(embed = embed)
                             # else:
                             #     embed = discord.Embed(title = f'{c[1]} 매도실패', description = f'{c[1]}을 마지막으로 거래한 시각은 {lastDate} 입니다.\n매수한 시점으로부터 2시간 뒤에 매도가 가능합니다.', color = 0xff0000)
-                            #     embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                            #     embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                             #     await ctx.channel.send(embed = embed)
                             return 0
                         
@@ -624,7 +624,7 @@ class BitcoinGame(commands.Cog):
                             con.close() #db 종료
                             if not tradeLog: #구입기록 없음
                                 embed = discord.Embed(title = f'{c[1]} 풀매도실패', description = f'해당 코인을 구입한 기록이 없습니다.', color = 0xff0000)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                                 return False
                             coinNum = int(tradeLog[0])
@@ -643,11 +643,11 @@ class BitcoinGame(commands.Cog):
                             embed.add_field(name=f'코인갯수', value=f'`{fun.printN(num)}개` 판매')
                             embed.add_field(name=f'코인금액', value=f'`총 {fun.printN(coinCost)}원` 획득')
                             embed.add_field(name=f'보유재산', value=f'잔액 `{fun.printN(user_Money)}원`')
-                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                            embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                             await ctx.channel.send(embed = embed)
                             # else:
                             #     embed = discord.Embed(title = f'{c[1]} 풀매도실패', description = f'{c[1]}을 마지막으로 거래한 시각은 {lastDate} 입니다.\n매수한 시점으로부터 2시간 뒤에 매도가 가능합니다.', color = 0xff0000)
-                            #     embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                            #     embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                             #     await ctx.channel.send(embed = embed)
                             return 0
                         
@@ -661,12 +661,12 @@ class BitcoinGame(commands.Cog):
                             con.close() #db 종료
                             if not allCoin:
                                 embed = discord.Embed(title = f':exclamation: {c[1]} 보유현황', description = f'{ctx.author.mention} 해당 코인을 소유하고 있는 유저가 없습니다.', color = 0xff0000)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 await ctx.channel.send(embed = embed)
                                 return 0
                             else:
                                 embed = discord.Embed(title = f'{c[1]} 보유현황', description = f'유저들이 보유 중인 {c[1]}의 현황을 보여줍니다.', color = 0xffc0cb)
-                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.avatar_url)
+                                embed.set_footer(text = f"{ctx.author.display_name} | {gameName}", icon_url = ctx.author.display_avatar)
                                 for pcoin in allCoin:
                                     if pcoin:
                                         PM, costMoney, coinValue = fun.game_perCoinValue(pcoin[0], pcoin[1])

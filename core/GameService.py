@@ -14,7 +14,7 @@ class GameService(commands.Cog):
     async def 서비스(self, ctx, *input):
         if len(input) == 1 and input[0] == '도움말':
             embed=discord.Embed(color=0xB22222, title="서비스 도움말", description=f'{self.title}에 가입해야만 쓸 수 있는 명령어들입니다.')
-            embed.set_footer(text=ctx.author, icon_url=ctx.author.avatar_url)
+            embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
             embed.add_field(name = f'!지원금', value = f'하루에 한번 지원금으로 1~{fun.printN(self.supply)}원을 드립니다!\n오늘은 얼마를 줄까..?')
             embed.add_field(name = f'!내정보', value = f'내가 보유한 재산이나 랭킹 순위를 볼 수 있어요.')
             embed.add_field(name = f'!순위', value = f'디스코드게임을 플레이하고 있는 유저들의 순위를 볼 수 있어요.')
@@ -33,7 +33,7 @@ class GameService(commands.Cog):
         if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return False
 
@@ -62,7 +62,7 @@ class GameService(commands.Cog):
                 slotDiffMoney = myReward-myBetting
 
             embed = discord.Embed(title = f'{ctx.author.display_name}님의 정보창', description = f'디스코드 게임에서의 본인 정보입니다.\n현금 재산은 모든 게임에서 공유됩니다.', color = 0xffc0cb)
-            embed.set_thumbnail(url=ctx.author.avatar_url)
+            embed.set_thumbnail(url=ctx.author.display_avatar)
             if costMoney:
                 embed.add_field(name = f'코인 재산', value = f':coin:`{fun.printN(currentValue)}원`\n　 `({PMText[moneyPM]}{moneyPercent}%)`')
             else:
@@ -92,7 +92,7 @@ class GameService(commands.Cog):
                 if rankSameMoney != rank[1]: rankIndex += 1
                 rankSameMoney = rank[1]
                 embed.add_field(name = f'{rankIndex}위 {rank[0]}님', value = f'추정재산 `{fun.printN(rank[1])}원`')
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
     
     @commands.command()
@@ -100,7 +100,7 @@ class GameService(commands.Cog):
         if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return False
             try:
@@ -111,7 +111,7 @@ class GameService(commands.Cog):
                 tradeMoney = fun.returnNumber(input[1])
                 if tradeMoney is False:
                     embed = discord.Embed(title = f':exclamation: 입력값 오류', description = f'{ctx.author.mention} 입력값에 오류가 있습니다.', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     return False
                 con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
@@ -124,13 +124,13 @@ class GameService(commands.Cog):
                 targetUser = cur.fetchone()
                 if not targetUser:
                     embed = discord.Embed(title = f':x: 송금 실패', description = f'입력하신 사용자는 가입하지 않은 유저입니다!', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     con.close() #db 종료
                     return 0
                 if targetUser[0] == ctx.author.display_name:
                     embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 자기 자신에게 송금할 수 없습니다!', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                     con.close() #db 종료
                     return 0
@@ -143,16 +143,16 @@ class GameService(commands.Cog):
                     cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(myMoney), id,))
                     cur.execute("UPDATE 'User_Info' SET user_Money = ? WHERE user_ID = ?", (str(targetMoney), userid,))
                     embed = discord.Embed(title = f':page_with_curl: 송금 성공', description = f'{targetName}님에게 `{fun.printN(tradeMoney-chargeMoney)}원`을 송금했습니다!\n**수수료 {fun.printN(chargeMoney)}원** (10%) │ 남은재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                 else:
                     embed = discord.Embed(title = f':exclamation: 송금 실패', description = f'{ctx.author.mention} 돈이 부족합니다. 보유재산 `{fun.printN(myMoney)}원` :money_with_wings:', color = 0xff0000)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                     await ctx.channel.send(embed = embed)
                 con.close() #db 종료
             except Exception as e:
                 embed = discord.Embed(title = f':x: 송금 실패', description = f'{ctx.author.mention} 명령어가 잘못되었습니다.\n**!송금 [@유저] [금액]**의 형태로 입력해보세요.\n{e}', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return 0
 
@@ -161,7 +161,7 @@ class GameService(commands.Cog):
         if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
             if fun.game_check(ctx.author.id) is False:
                 embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
                 return False
             id = ctx.author.id
@@ -185,11 +185,11 @@ class GameService(commands.Cog):
                 nowDatetime = "{}-{:02d}-{:02d} 00:00:00".format(now.year, now.month, now.day)
                 cur.execute("UPDATE 'User_Info' SET user_Money = ?, user_Support = ? WHERE user_ID = ?", (str(userMoney+bonusMoney), nowDatetime, id))
                 embed = discord.Embed(title = f':gift: {self.title} 지원금', description = f'{ctx.author.mention} 지원금을 받으셨습니다! `+{fun.printN(bonusMoney)}원`\n＃지원금은 하루에 한번씩만 받으실 수 있습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
             else:
                 embed = discord.Embed(title = f':watch: {self.title} 지원금', description = f'{ctx.author.mention} 지원금은 하루에 한번 씩 받을 수 있습니다.\n- {fundtime.year}년 {fundtime.month}월 {fundtime.day}일에 지원금을 받았음.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.avatar_url)
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
                 await ctx.channel.send(embed = embed)
             con.close() #db 종료
     
