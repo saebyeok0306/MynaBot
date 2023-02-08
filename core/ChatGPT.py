@@ -15,7 +15,7 @@ class ChatGPT(commands.Cog):
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
-        self.singleton = False
+        self.runtime = False
         self.expired = None
         self.history = None
         self.channel = None
@@ -31,7 +31,7 @@ class ChatGPT(commands.Cog):
     
     @tasks.loop(seconds=60)
     async def Timer(self):
-        if self.singleton is True and self.expired+self.delta < datetime.now():
+        if self.runtime is True and self.expired+self.delta < datetime.now():
             try:
                 await self.channel.send("`ChatGPT`: 대화기록이 삭제되었습니다.")
                 with open('text.txt', 'w', encoding='utf-8') as l:
@@ -41,7 +41,7 @@ class ChatGPT(commands.Cog):
                 await self.channel.send(file=file)
             except: pass
 
-            self.singleton = False
+            self.runtime = False
             self.expired = None
             self.history = None
             self.channel = None
@@ -66,8 +66,8 @@ class ChatGPT(commands.Cog):
             await msg.delete(delay=5)
             return False
         
-        if self.singleton is False:
-            self.singleton = True
+        if self.runtime is False:
+            self.runtime = True
 
         self.talking = True
         self.expired = datetime.now()
@@ -91,8 +91,8 @@ class ChatGPT(commands.Cog):
     
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
-        if self.singleton is True:
-            self.singleton = False
+        if self.runtime is True:
+            self.runtime = False
             self.history = None
             self.expired = None
             self.talking = None
