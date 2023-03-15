@@ -25,7 +25,7 @@ class ChatGPT(commands.Cog):
         self.history = None
         self.channel = None
         self.talking = False
-        self.delta = timedelta(seconds=10) #minutes=5
+        self.delta = timedelta(minutes=5)
         tree = elemTree.parse('./keys.xml')
         SECRETKEY = tree.find('string[@name="chatSecret"]').text
         openai.api_key = SECRETKEY
@@ -34,7 +34,7 @@ class ChatGPT(commands.Cog):
     def cog_unload(self):
         self.Timer.cancel()
     
-    @tasks.loop(seconds=10) #60
+    @tasks.loop(seconds=60)
     async def Timer(self):
         if self.runtime is True and self.expired+self.delta < datetime.now():
             try:
