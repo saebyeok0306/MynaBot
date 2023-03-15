@@ -25,7 +25,7 @@ class ChatGPT(commands.Cog):
         self.history = None
         self.channel = None
         self.talking = False
-        self.delta = timedelta(minutes=5)
+        self.delta = timedelta(seconds=10) #minutes=5
         tree = elemTree.parse('./keys.xml')
         SECRETKEY = tree.find('string[@name="chatSecret"]').text
         openai.api_key = SECRETKEY
@@ -34,14 +34,15 @@ class ChatGPT(commands.Cog):
     def cog_unload(self):
         self.Timer.cancel()
     
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=10) #60
     async def Timer(self):
         if self.runtime is True and self.expired+self.delta < datetime.now():
             try:
-                await self.channel.send("`ChatGPT`: 대화기록이 삭제되었습니다.")
+                await self.channel.send(f"`ChatGPT`: 대화기록이 삭제되었습니다.")
                 with open('text.txt', 'w', encoding='utf-8') as l:
-                    l.write("대화내역\n")
-                    l.write(self.history[len(systemMsg):])
+                    l.write("대화내역")
+                    for line in self.history[len(systemMsg):]:
+                        l.write(f"\n{'User' if line['role'] == 'user' else 'Bot'} : {line['content']}")
                 file = discord.File("text.txt")
                 await self.channel.send(file=file)
             except: pass
@@ -62,7 +63,7 @@ class ChatGPT(commands.Cog):
             # frequency_penalty=0,
             # presence_penalty=0
         )
-        return competion['choices'][0]['message']
+        return competion['choices'][0]['message']['content']
         # return competion.choices[0].message.content.strip()
 
     @commands.command(name="마이나야", aliases=["검색"])
@@ -90,8 +91,8 @@ class ChatGPT(commands.Cog):
 
             try:
                 response = await self.requestOpenAPI(prompt, model_engine, max_tokens)
-                self.history = prompt + [response]
-                await ctx.reply(response['content'], mention_author=False)
+                self.history = prompt + [{"role":"assistant", "content":response}]
+                await ctx.reply(response, mention_author=False)
             except Exception as e:
                 await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}", mention_author=True)
             await msg.delete()
