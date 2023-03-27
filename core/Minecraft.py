@@ -11,12 +11,12 @@ class Minecraft(commands.Cog):
         if ctx.guild.id in [631471244088311840]:
             embed=discord.Embed(color=0xB22222, title="모드서버", description="`갈대`의 1.19.2 패브릭서버", timestamp=ctx.message.created_at)
             embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
-            embed.add_field(name = '서버주소', value = 'westreedserver.kro.kr')
+            embed.add_field(name = '서버주소', value = 'westreed.kro.kr')
             embed.add_field(name = '서버문의', value = '@갈대#2519 에게 연락하세요!')
             embed.add_field(name = '서버모드', value = 'https://drive.google.com/drive/folders/1EEJq1CwCNP14cofTOmjZzGbtZD8uFBc8?usp=sharing')
             embed.add_field(name = '설치순서1', value = '다운받은 파일 중, fabric-installer-0.11.1.exe을 실행하여 1.19.2 패브릭모드를 설치한다.')
             embed.add_field(name = '설치순서2', value = 'mode.zip을 마인크래프트 모드폴더에 풀어놓는다.')
-            embed.add_field(name = '설치순서3', value = '마크런처에서 설치된 1.19.2 패브릭모드를 켜서, westreedserver.kro.kr 주소로 서버 접속하기.')
+            embed.add_field(name = '설치순서3', value = '마크런처에서 설치된 1.19.2 패브릭모드를 켜서, westreed.kro.kr 주소로 서버 접속하기.')
             await ctx.channel.send(embed=embed)
 
 async def setup(bot):
