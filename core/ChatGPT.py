@@ -1,5 +1,6 @@
 import discord, asyncio
 import openai
+import data.Functions as fun
 from discord.ext import commands, tasks
 import xml.etree.ElementTree as elemTree
 import typing, functools
@@ -69,34 +70,38 @@ class ChatGPT(commands.Cog):
     @commands.command(name="마이나야", aliases=["검색"])
     async def 마이나야(self, ctx, *input):
         if ctx.guild.id in [966942556078354502, 631471244088311840]:
-            if self.talking is True:
-                msg = await ctx.reply("죄송합니다, 질문은 하나씩만 답변가능해요.\n이전 질문에 대한 답변이후에 다시 시도해주세요.", mention_author=True)
+            if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
+                if self.talking is True:
+                    msg = await ctx.reply("죄송합니다, 질문은 하나씩만 답변가능해요.\n이전 질문에 대한 답변이후에 다시 시도해주세요.", mention_author=True)
+                    await msg.delete(delay=5)
+                    return False
+                
+                if self.runtime is False:
+                    self.runtime = True
+
+                self.talking = True
+                self.expired = datetime.now()
+                self.channel = ctx.channel
+
+                text = " ".join(input)
+                prompt = [{"role":"user", "content":text}]
+                if self.history: prompt = self.history + prompt
+                else: prompt = systemMsg + prompt
+                msg = await self.channel.send("네, 잠시만 기다려주세요...")
+                model_engine = "gpt-3.5-turbo"
+                max_tokens = 1024
+
+                try:
+                    response = await self.requestOpenAPI(prompt, model_engine, max_tokens)
+                    self.history = prompt + [{"role":"assistant", "content":response}]
+                    await ctx.reply(response, mention_author=False)
+                except Exception as e:
+                    await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}", mention_author=True)
+                await msg.delete()
+                self.talking = False
+            else:
+                msg = await ctx.channel.send(f"ChatGPT 명령은 `봇명령` 채널에서만 가능해요.")
                 await msg.delete(delay=5)
-                return False
-            
-            if self.runtime is False:
-                self.runtime = True
-
-            self.talking = True
-            self.expired = datetime.now()
-            self.channel = ctx.channel
-
-            text = " ".join(input)
-            prompt = [{"role":"user", "content":text}]
-            if self.history: prompt = self.history + prompt
-            else: prompt = systemMsg + prompt
-            msg = await self.channel.send("네, 잠시만 기다려주세요...")
-            model_engine = "gpt-3.5-turbo"
-            max_tokens = 1024
-
-            try:
-                response = await self.requestOpenAPI(prompt, model_engine, max_tokens)
-                self.history = prompt + [{"role":"assistant", "content":response}]
-                await ctx.reply(response, mention_author=False)
-            except Exception as e:
-                await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}", mention_author=True)
-            await msg.delete()
-            self.talking = False
     
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
