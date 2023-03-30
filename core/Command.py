@@ -231,8 +231,9 @@ class Command(commands.Cog):
                     except:
                         await ctx.channel.send(response_body)
             else:
-                msg = await ctx.channel.send(f"흑이 소환은 `봇명령` 채널에서만 가능해요.")
+                msg = await ctx.reply(f"흑이 소환은 `봇명령` 채널에서만 가능해요.")
                 await msg.delete(delay=5)
+                await ctx.message.delete(delay=5)
 
     
 

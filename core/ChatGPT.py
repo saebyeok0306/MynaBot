@@ -100,8 +100,9 @@ class ChatGPT(commands.Cog):
                 await msg.delete()
                 self.talking = False
             else:
-                msg = await ctx.channel.send(f"ChatGPT 명령은 `봇명령` 채널에서만 가능해요.")
+                msg = await ctx.reply(f"ChatGPT 명령은 `봇명령` 채널에서만 가능해요.")
                 await msg.delete(delay=5)
+                await ctx.message.delete(delay=5)
     
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
