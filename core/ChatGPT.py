@@ -109,9 +109,15 @@ class ChatGPT(commands.Cog):
                 try:
                     response = await self.requestOpenAPI(prompt, "gpt-3.5-turbo")
                     self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":response}]
-                    await ctx.reply(response, mention_author=False)
+                    if len(response) <= 2000: await ctx.reply(response, mention_author=False)
+                    else:
+                        with open('text.txt', 'w', encoding='utf-8') as l:
+                            l.write(response)
+                        file = discord.File("text.txt")
+                        await ctx.channel.send(f'답변이 너무 길어서 파일로 올릴게요.')
+                        await ctx.channel.send(file=file)
                 except Exception as e:
-                    await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}", mention_author=True)
+                    await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", mention_author=True)
                 await msg.delete() # 기존 wait msg 삭제
                 self.chatRoom[chater].runtime = False
             else:
