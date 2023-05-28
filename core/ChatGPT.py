@@ -133,7 +133,11 @@ class ChatGPT(commands.Cog):
                 if chater in self.chatRoom:
                     if self.chatRoom[chater].dm:
                         # dm이 있는 경우
-                        await self.chatRoom[chater].dm.send(file = self.chatRoom[chater].makeChatRecord())
+                        try:
+                            await self.chatRoom[chater].dm.send(file = self.chatRoom[chater].makeChatRecord())
+                        except:
+                            # dm 전송에 실패한 경우
+                            await self.chatRoom[chater].channel.send(file = self.chatRoom[chater].makeChatRecord())
                     else:
                         # dm이 없는 경우
                         await self.chatRoom[chater].channel.send(file = self.chatRoom[chater].makeChatRecord())
@@ -160,6 +164,11 @@ class ChatGPT(commands.Cog):
                         if idx != cnt-1: text += ", "
                     text += f"이 있고 총 {cnt}개의 방이 있습니다."
                     await ctx.reply(text)
+                else:
+                    text = f"현재 생성된 대화방이 없습니다."
+                    msg = await ctx.reply(text)
+                    await msg.delete(delay=5)
+                    await ctx.message.delete(delay=5)
             else:
                 msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
                 await msg.delete(delay=5)
