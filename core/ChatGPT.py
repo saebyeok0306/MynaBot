@@ -58,24 +58,39 @@ class ChatGPT(commands.Cog):
         del_list = []
         for chater in self.chatRoom:
             if self.chatRoom[chater].expired + self.delta < nowTime:
-                await self.chatRoom[chater].channel.send(f"{self.chatRoom[chater].userdata.display_name}님과의 대화기록이 삭제되었습니다.")
-                if self.chatRoom[chater].dm:
-                    # dm이 있는 경우
-                    await self.chatRoom[chater].dm.send(file = self.chatRoom[chater].makeChatRecord())
-                else:
-                    # dm이 없는 경우
-                    await self.chatRoom[chater].channel.send(file = self.chatRoom[chater].makeChatRecord())
+                try:
+                    await self.chatRoom[chater].channel.send(f"{self.chatRoom[chater].userdata.display_name}님과의 대화기록이 삭제되었습니다.")
+                    if self.chatRoom[chater].dm:
+                        # dm이 있는 경우
+                        await self.chatRoom[chater].dm.send(file = self.chatRoom[chater].makeChatRecord())
+                    else:
+                        # dm이 없는 경우
+                        await self.chatRoom[chater].channel.send(file = self.chatRoom[chater].makeChatRecord())
+                except: pass
                 del_list.append(chater)
         for chater in del_list:
             del self.chatRoom[chater]
     
-    @to_thread
+    # @to_thread
+    # def requestOpenAPI(self, prompt, model_engine):
+    #     competion = openai.ChatCompletion.create(
+    #         model=model_engine,
+    #         messages=prompt,
+    #         temperature=0.2,
+    #         stream=True,
+    #     )
+    #     # return competion['choices'][0]['message']['content']
+    #     return competion
+    
     def requestOpenAPI(self, prompt, model_engine):
         competion = openai.ChatCompletion.create(
             model=model_engine,
-            messages=prompt
+            messages=prompt,
+            temperature=0.2,
+            stream=True,
         )
-        return competion['choices'][0]['message']['content']
+        # return competion['choices'][0]['message']['content']
+        return competion
 
     @commands.command(name="마이나야", aliases=["검색"])
     async def 마이나야(self, ctx, *input):
@@ -104,21 +119,51 @@ class ChatGPT(commands.Cog):
                 prompt = [{"role":"user", "content":text}]
                 if self.chatRoom[chater].history: prompt = self.chatRoom[chater].history + prompt
                 else: prompt = systemMsg + [{"role":"system", "content":f"The user`s name is '{ctx.author.display_name}'."}] + prompt
-                msg = await ctx.reply("네, 잠시만 기다려주세요...")
+                msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
 
                 try:
-                    response = await self.requestOpenAPI(prompt, "gpt-3.5-turbo")
-                    self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":response}]
-                    if len(response) <= 2000: await ctx.reply(response, mention_author=False)
+                    response = self.requestOpenAPI(prompt, "gpt-3.5-turbo")
+                    # message = None
+                    isLong = False
+                    collected_message = ""
+                    cnt = 0
+                    
+                    for chunk in response:
+                        cnt += 1
+                        try:
+                            chunk_message = chunk['choices'][0]['delta']['content']
+                            collected_message += chunk_message
+                            if isLong is False:
+                                if len(collected_message) >= 2000:
+                                    isLong = True
+                                    await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
+                                # if message is None:
+                                #     message = await ctx.reply(collected_message, mention_author=False)
+                                if(cnt > 12):
+                                    cnt = 0
+                                    await msg.edit(content=collected_message)
+                        except: pass
+
+                    if isLong is False:
+                        await msg.edit(content=collected_message)
                     else:
-                        with open('text.txt', 'w', encoding='utf-8') as l:
-                            l.write(response)
-                        file = discord.File("text.txt")
-                        await ctx.channel.send(f'답변이 너무 길어서 파일로 올릴게요.')
+                        with open('result.txt', 'w', encoding='utf-8') as l:
+                            l.write(collected_message)
+                        file = discord.File("result.txt")
+                        await msg.reply(f"{ctx.author.display_name}님의 질문에 해당하는 답변이에요.")
                         await ctx.channel.send(file=file)
+
+                    self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":collected_message}]
+                    # if len(response) <= 2000: await ctx.reply(response, mention_author=False)
+                    # else:
+                    #     with open('text.txt', 'w', encoding='utf-8') as l:
+                    #         l.write(response)
+                    #     file = discord.File("text.txt")
+                    #     await ctx.channel.send(f'답변이 너무 길어서 파일로 올릴게요.')
+                    #     await ctx.channel.send(file=file)
                 except Exception as e:
                     await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", mention_author=True)
-                await msg.delete() # 기존 wait msg 삭제
+                # await msg.delete() # 기존 wait msg 삭제
                 self.chatRoom[chater].runtime = False
             else:
                 msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
