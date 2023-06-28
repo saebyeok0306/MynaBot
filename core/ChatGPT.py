@@ -59,12 +59,13 @@ class ChatGPT(commands.Cog):
         for chater in self.chatRoom:
             if self.chatRoom[chater].expired + self.delta < nowTime:
                 try:
-                    await self.chatRoom[chater].channel.send(f"{self.chatRoom[chater].userdata.display_name}님과의 대화기록이 삭제되었습니다.")
                     if self.chatRoom[chater].dm:
                         # dm이 있는 경우
+                        await self.chatRoom[chater].dm.send(f"{self.chatRoom[chater].userdata.display_name}님과의 대화기록이 삭제되었습니다.")
                         await self.chatRoom[chater].dm.send(file = self.chatRoom[chater].makeChatRecord())
                     else:
                         # dm이 없는 경우
+                        await self.chatRoom[chater].channel.send(f"{self.chatRoom[chater].userdata.display_name}님과의 대화기록이 삭제되었습니다.")
                         await self.chatRoom[chater].channel.send(file = self.chatRoom[chater].makeChatRecord())
                 except: pass
                 del_list.append(chater)
@@ -95,7 +96,7 @@ class ChatGPT(commands.Cog):
     @commands.command(name="마이나야", aliases=["검색"])
     async def 마이나야(self, ctx, *input):
         if ctx.guild.id in [966942556078354502, 631471244088311840]:
-            if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
+            if(ctx.channel.id in fun.getBotChannel(self.bot, ctx) or ctx.author.guild_permissions.administrator):
                 chater = ctx.author.display_name + '#' + ctx.author.discriminator
                 if chater not in self.chatRoom:
                     # 대화 기록이 없으면, 유저와 dm 등록하기
