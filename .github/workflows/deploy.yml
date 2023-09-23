@@ -62,7 +62,7 @@ jobs:
           username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "/home/discord/bot.zip"
-          target: ${{ env.FOLDER_PATH }}
+          target: "/home/${{ secrets.HOST_NAME }}/discord"
       
       # - name: Unzip file
       #   uses: appleboy/ssh-action@master
