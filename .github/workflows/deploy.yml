@@ -1,0 +1,69 @@
+name: Deploy Discord Bot
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    branches:
+      - main
+
+  env:
+    PYTHON_VERSION: '3.10'
+    USER_NAME: 'nks9696'
+    FOLDER_PATH: '/home/discord'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 환경 설정
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+        
+      - name: Setup Python venv
+        run: python -m venv venv
+      
+      - name: Install dependencies
+        run: ./venv/bin/python -m pip install -r requirements.txt
+      
+      - name: Delete File
+        run: |
+          rm -rf data/DiscordDb.db
+          rm -rf data/token.json
+          rm -rf data/CatGame
+
+      - name: Make zip file
+        run: zip -qq -r ./bot.zip .
+        shell: bash
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo ${{ secrets.SSH_PRIVATE_KEY }} > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan ${{ secrets.HOST_NAME }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+      
+      - name: Close Process
+        run: |
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "screen -S dc -X quit"
+      
+      - name: Delete File Remote Server
+        run: |
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "find ${{ env.FOLDER_PATH }} -type d ! -name 'data' -exec rm -rf {} +"
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/Functions.py"
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/sokobanMap.py"
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/Timeout.py"
+
+      - name: Upload files to Debian server
+        run: |
+          scp -r ./bot.zip ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }}:${{ env.FOLDER_PATH }}
+      
+      - name: Unzip file
+        run: |
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "unzip ${{ env.FOLDER_PATH }}/bot.zip -d ${{ env.FOLDER_PATH }}"
