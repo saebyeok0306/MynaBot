@@ -10,7 +10,6 @@ on:
 
 env:
   PYTHON_VERSION: '3.10'
-  USER_NAME: 'rsa-key-20220317'
   FOLDER_PATH: '/home/discord'
 
 jobs:
@@ -42,31 +41,36 @@ jobs:
         run: zip -qq -r ./bot.zip .
         shell: bash
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo $SSH_PRIVATE_KEY > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan ${{ secrets.HOST_NAME }} >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          eval $(ssh-agent -s)
-          ssh-add ~/.ssh/id_rsa
+      - name: Close and Delete file
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd ${{ env.FOLDER_PATH }}
+            screen -S dc -X quit
+            find ${{ env.FOLDER_PATH }} -type d ! -name 'data' -exec rm -rf {} +
+            rm ${{ env.FOLDER_PATH }}/data/Functions.py
+            rm ${{ env.FOLDER_PATH }}/data/sokobanMap.py
+            rm ${{ env.FOLDER_PATH }}/data/Timeout.py
       
-      - name: Close Process
-        run: |
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "sudo screen -S dc -X quit"
-      
-      - name: Delete File Remote Server
-        run: |
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "find ${{ env.FOLDER_PATH }} -type d ! -name 'data' -exec rm -rf {} +"
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/Functions.py"
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/sokobanMap.py"
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "rm ${{ env.FOLDER_PATH }}/data/Timeout.py"
-
-      - name: Upload files to Debian server
-        run: |
-          scp -r ./bot.zip ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }}:${{ env.FOLDER_PATH }}
+      - name: Deploy
+        uses: appleboy/scp-action@master
+        with:
+        host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "bot.zip"
+          target: "${{ env.FOLDER_PATH }}"
       
       - name: Unzip file
-        run: |
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "unzip ${{ env.FOLDER_PATH }}/bot.zip -d ${{ env.FOLDER_PATH }}"
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_NAME }}
+          username: ${{ secrets.USER_NAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            unzip ${{ env.FOLDER_PATH }}/bot.zip -d ${{ env.FOLDER_PATH }}
