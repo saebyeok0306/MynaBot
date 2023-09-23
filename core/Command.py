@@ -151,7 +151,10 @@ class Command(commands.Cog):
             await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
         else:
             # 결과 보내기
-            if len(result) <= 1500: await ctx.channel.send(f'```{result}```')
+            if len(result) <= 1500:
+                try: result = fun.printN(int(result))
+                except: pass
+                await ctx.channel.send(f'```{result}```')
             # 메시지의 길이가 1500을 넘기는 경우
             else:
                 with open('text.txt', 'w', encoding='utf-8') as l:

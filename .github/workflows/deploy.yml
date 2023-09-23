@@ -31,11 +31,13 @@ jobs:
       - name: Install dependencies
         run: ./venv/bin/python -m pip install -r requirements.txt
       
-      - name: Print pwd
-        run: pwd
+      - name: Print pwd and mkdir
+        run: |
+          pwd
+          mkdir -p ${{ env.FOLDER_PATH }}
 
       - name: Make zip file
-        run: sudo zip -qq -r /home/bot.zip .
+        run: sudo zip -qq -r ${{ env.FOLDER_PATH }} .
         shell: bash
 
       # - name: Close and Delete file
@@ -59,7 +61,7 @@ jobs:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "/home/bot.zip"
+          source: ${{ env.FOLDER_PATH }}
           target: ${{ env.FOLDER_PATH }}
       
       # - name: Unzip file
