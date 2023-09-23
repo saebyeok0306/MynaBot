@@ -59,7 +59,7 @@ jobs:
       - name: Deploy
         uses: appleboy/scp-action@master
         with:
-        host: ${{ secrets.HOST_NAME }}
+          host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "bot.zip"
