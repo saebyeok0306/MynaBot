@@ -30,6 +30,9 @@ jobs:
       
       - name: Install dependencies
         run: ./venv/bin/python -m pip install -r requirements.txt
+      
+      - name: Print pwd
+        run: pwd
 
       - name: Make zip file
         run: sudo zip -qq -r /home/bot.zip .
@@ -57,7 +60,7 @@ jobs:
           username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "/home/bot.zip"
-          target: "${{ env.FOLDER_PATH }}"
+          target: ${{ env.FOLDER_PATH }}
       
       # - name: Unzip file
       #   uses: appleboy/ssh-action@master
