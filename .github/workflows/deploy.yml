@@ -49,6 +49,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan ${{ secrets.HOST_NAME }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+          eval $(ssh-agent -s)
           ssh-add ~/.ssh/id_rsa
       
       - name: Close Process
