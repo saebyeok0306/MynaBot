@@ -52,7 +52,7 @@ jobs:
       
       - name: Close Process
         run: |
-          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "screen -S dc -X quit"
+          ssh ${{ env.USER_NAME }}@${{ secrets.HOST_NAME }} "sudo screen -S dc -X quit"
       
       - name: Delete File Remote Server
         run: |
