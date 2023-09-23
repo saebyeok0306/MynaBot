@@ -1,4 +1,5 @@
 name: Deploy Discord Bot
+
 on:
   push:
     branches:
@@ -7,10 +8,10 @@ on:
     branches:
       - main
 
-  env:
-    PYTHON_VERSION: '3.10'
-    USER_NAME: 'nks9696'
-    FOLDER_PATH: '/home/discord'
+env:
+  PYTHON_VERSION: '3.10'
+  USER_NAME: 'nks9696'
+  FOLDER_PATH: '/home/discord'
 
 jobs:
   deploy:
