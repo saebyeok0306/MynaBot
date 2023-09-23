@@ -34,7 +34,7 @@ jobs:
       - name: Print pwd and mkdir
         run: |
           pwd
-          mkdir -p ${{ env.FOLDER_PATH }}
+          sudo mkdir -p ${{ env.FOLDER_PATH }}
 
       - name: Make zip file
         run: sudo zip -qq -r ${{ env.FOLDER_PATH }} .
