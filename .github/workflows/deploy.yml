@@ -34,6 +34,12 @@ jobs:
       - name: Make zip file
         run: sudo zip -qq -r ./bot.zip .
         shell: bash
+      
+      - name: checking
+        run: |
+          pwd
+          ls -al
+        shell: bash
 
       # - name: Close and Delete file
       #   uses: appleboy/ssh-action@master
@@ -50,16 +56,25 @@ jobs:
       #       rm ${{ env.FOLDER_PATH }}/data/sokobanMap.py
       #       rm ${{ env.FOLDER_PATH }}/data/Timeout.py
       
-      - name: copy files to server
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      # - name: Deploy
+      #   uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      #   with:
+      #     server: ${{ secrets.HOST_NAME}}
+      #     username: ${{ secrets.USER_NAME }}
+      #     password: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     local-dir: ./bot.zip
+      #     server-dir: /home/discord
+      #     security: loose
+      #     protocol: ftps
+
+      - name: Deploy
+        uses: appleboy/scp-action@master
         with:
-          server: ${{ secrets.HOST_NAME}}
+          host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.USER_NAME }}
-          password: ${{ secrets.SSH_PRIVATE_KEY }}
-          local-dir: ./bot.zip
-          server-dir: /home/discord
-          security: loose
-          protocol: ftps
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./bot.zip"
+          target: "/home/${{ secrets.HOST_NAME }}/discord"
       
       # - name: Unzip file
       #   uses: appleboy/ssh-action@master
