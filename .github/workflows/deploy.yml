@@ -10,7 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.10'
-  USER_NAME: 'nks9696'
+  USER_NAME: 'rsa-key-20220317'
   FOLDER_PATH: '/home/discord'
 
 jobs:
