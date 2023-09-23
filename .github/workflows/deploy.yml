@@ -61,7 +61,7 @@ jobs:
           host: ${{ secrets.HOST_NAME }}
           username: ${{ secrets.USER_NAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ${{ env.FOLDER_PATH }}
+          source: "/home/discord/bot.zip"
           target: ${{ env.FOLDER_PATH }}
       
       # - name: Unzip file

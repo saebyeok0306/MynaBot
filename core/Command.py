@@ -152,7 +152,7 @@ class Command(commands.Cog):
         else:
             # 결과 보내기
             if len(result) <= 1500:
-                try: result = fun.printN(int(result))
+                try: result = f"{result} ({fun.printN(int(result))})"
                 except: pass
                 await ctx.channel.send(f'```{result}```')
             # 메시지의 길이가 1500을 넘기는 경우
