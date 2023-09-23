@@ -37,7 +37,7 @@ jobs:
           sudo mkdir -p ${{ env.FOLDER_PATH }}
 
       - name: Make zip file
-        run: sudo zip -qq -r ${{ env.FOLDER_PATH }} .
+        run: sudo zip -qq -r ${{ env.FOLDER_PATH }}/bot.zip .
         shell: bash
 
       # - name: Close and Delete file
