@@ -89,9 +89,9 @@ class ChatGPT(commands.Cog):
         competion = await openai.ChatCompletion.acreate(
             model=model_engine,
             messages=prompt,
-            temperature=0.2,
+            temperature=0.4,
             stream=True,
-            request_timeout=120,
+            request_timeout=60,
         )
         # return competion['choices'][0]['message']['content']
         return competion
@@ -153,18 +153,19 @@ class ChatGPT(commands.Cog):
                     output_token = len(self.encoding.encode(collected_message))
                     input_dolar = round(0.0015 * input_token / 1000, 4)
                     output_dolar = round(0.002 * output_token/ 1000, 4)
-                    collected_message += f"\n> `{input_token}+{output_token}({input_token+output_token})토큰, ${input_dolar+output_dolar}를 사용했어요.`"
-                    if not isLong and len(collected_message) >= 2000:
+                    used_record_text = f"\n> `{input_token}+{output_token}({input_token+output_token})토큰, ${input_dolar+output_dolar}를 사용했어요.`"
+
+                    if not isLong and len(collected_message + used_record_text) >= 2000:
                         isLong = True
                         await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
 
                     if isLong is False:
-                        await msg.edit(content=collected_message)
+                        await msg.edit(content=collected_message + used_record_text)
                     else:
                         with open('result.txt', 'w', encoding='utf-8') as l:
                             l.write(collected_message)
                         file = discord.File("result.txt")
-                        await msg.reply(f"{ctx.author.display_name}님의 질문에 해당하는 답변이에요.")
+                        await msg.reply(f"{ctx.author.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}")
                         await ctx.channel.send(file=file)
 
                     self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":collected_message}]

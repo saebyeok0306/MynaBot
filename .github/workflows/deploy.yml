@@ -63,7 +63,7 @@ jobs:
           username: ${{ secrets.USER_NAME }}
           password: ${{ secrets.SSH_PRIVATE_KEY }}
           local-dir: /home/runner/work/discordBot/discordBot/
-          server-dir: /home/discord
+          server-dir: /home/discord/test/
           security: loose
           protocol: ftps
 
