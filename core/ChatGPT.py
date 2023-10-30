@@ -1,5 +1,6 @@
 import discord, asyncio
 import openai
+import tiktoken
 import data.Functions as fun
 from collections import defaultdict
 from discord.ext import commands, tasks
@@ -44,6 +45,7 @@ class ChatGPT(commands.Cog):
         self.bot = bot
         self.chatRoom = defaultdict(Chat) # runtime, expired, history, channel
         self.delta = timedelta(minutes=10)
+        self.encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
         tree = elemTree.parse('./keys.xml')
         SECRETKEY = tree.find('string[@name="chatSecret"]').text
         openai.api_key = SECRETKEY
@@ -83,12 +85,13 @@ class ChatGPT(commands.Cog):
     #     # return competion['choices'][0]['message']['content']
     #     return competion
     
-    def requestOpenAPI(self, prompt, model_engine):
-        competion = openai.ChatCompletion.create(
+    async def requestOpenAPI(self, prompt, model_engine):
+        competion = await openai.ChatCompletion.acreate(
             model=model_engine,
             messages=prompt,
             temperature=0.2,
             stream=True,
+            request_timeout=120,
         )
         # return competion['choices'][0]['message']['content']
         return competion
@@ -97,6 +100,7 @@ class ChatGPT(commands.Cog):
     async def 마이나야(self, ctx, *input):
         if ctx.guild.id in [966942556078354502, 631471244088311840]:
             if(ctx.channel.id in fun.getBotChannel(self.bot, ctx) or ctx.author.guild_permissions.administrator):
+                await ctx.defer()
                 chater = ctx.author.display_name + '#' + ctx.author.discriminator
                 if chater not in self.chatRoom:
                     # 대화 기록이 없으면, 유저와 dm 등록하기
@@ -123,13 +127,13 @@ class ChatGPT(commands.Cog):
                 msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
 
                 try:
-                    response = self.requestOpenAPI(prompt, "gpt-3.5-turbo")
+                    response = await self.requestOpenAPI(prompt, "gpt-3.5-turbo")
                     # message = None
                     isLong = False
                     collected_message = ""
                     cnt = 0
                     
-                    for chunk in response:
+                    async for chunk in response:
                         cnt += 1
                         try:
                             chunk_message = chunk['choices'][0]['delta']['content']
@@ -144,6 +148,15 @@ class ChatGPT(commands.Cog):
                                     cnt = 0
                                     await msg.edit(content=collected_message)
                         except: pass
+
+                    input_token = len(self.encoding.encode(text))
+                    output_token = len(self.encoding.encode(collected_message))
+                    input_dolar = round(0.0015 * input_token / 1000, 4)
+                    output_dolar = round(0.002 * output_token/ 1000, 4)
+                    collected_message += f"\n> `{input_token}+{output_token}({input_token+output_token})토큰, ${input_dolar+output_dolar}를 사용했어요.`"
+                    if not isLong and len(collected_message) >= 2000:
+                        isLong = True
+                        await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
 
                     if isLong is False:
                         await msg.edit(content=collected_message)
