@@ -19,7 +19,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 token = ''
-coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft']
+coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard']
 with open('data/token.json', 'r') as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token']
