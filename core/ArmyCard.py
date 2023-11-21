@@ -35,11 +35,11 @@ class ArmyCard(commands.Cog):
             
         else:
             img_bg = Image.open(f'{self.path}/card.png')
-            font =ImageFont.truetype(os.path.join(self.path, 'NanumGothic.ttf'), 26, encoding="UTF-8")
+            font =ImageFont.truetype(os.path.join("data", 'NanumGothic.ttf'), 26, encoding="UTF-8")
             draw =ImageDraw.Draw(img_bg)
             draw.text((20,7),f"{name}님의 남은 복무일",fill="white",stroke_width=2,stroke_fill="black",font=font,align='left')
-            draw.text((150,30),f"D-{remain_day.days} 만큼 남았군요?",fill="white",stroke_width=2,stroke_fill="black",font=font,align='left')
-            draw.text((150,30),f"D-{remain_day.days}",fill="red",stroke_width=2,stroke_fill="black",font=font,align='left')
+            draw.text((140,35),f"D-{remain_day.days} 만큼 남았군요?",fill="white",stroke_width=2,stroke_fill="black",font=font,align='left')
+            draw.text((140,35),f"D-{remain_day.days}",fill="red",stroke_width=2,stroke_fill="black",font=font,align='left')
             img_bg.save(f"{self.path}/result.png")
             file = discord.File(f"{self.path}/result.png")
             await ctx.reply(file=file)

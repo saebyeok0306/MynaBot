@@ -20,6 +20,8 @@ log/
 core/CatGame.py
 data/CatGame
 explain.png
+user_img.png
+result.png
 
 # key 파일 무시
 keys.xml

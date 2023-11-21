@@ -16,6 +16,7 @@ class Command(commands.Cog):
         embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
         embed.add_field(name = f'!회원가입', value = f'서비스를 이용하려면, 가입이 필요해요.\n최종적으로 별명과 계정ID값만 사용해요.')
         embed.add_field(name = f'!회원탈퇴', value = f'회원가입이 있으면 회원탈퇴도 있는법.')
+        embed.add_field(name = f'!프로필', value = f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.')
         embed.add_field(name = '!주사위 `값(기본값 100)`', value = f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
         embed.add_field(name = '!청소 `값(기본값 5)`', value = f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**')
         embed.add_field(name = '!골라줘 `대상1` `대상2` ...', value = f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')

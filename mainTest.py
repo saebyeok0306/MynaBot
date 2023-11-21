@@ -13,7 +13,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!!', intents=intents)
 
 token = ''
-coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard']
+coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile']
 with open("data/token.json", "r") as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token2']
@@ -75,21 +75,21 @@ async def reload_commands(ctx, extension=None):
             await bot.load_extension(f'core.{extension}')
             await ctx.send(f':white_check_mark: {extension}을(를) 다시 불러왔습니다!')
     
-@bot.event
-async def on_command_error(ctx, error):
-    if isinstance(error, commands.CommandNotFound):             return
-    elif isinstance(error, commands.MissingRequiredArgument):   return
-    elif isinstance(error, commands.BadArgument):               return
-    else:
-        with open('log/error.txt', 'a', encoding='utf-8') as l:
-            now = datetime.datetime.now()
-            nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
-            text = f'user : {ctx.author.name}#{ctx.author.discriminator}\n'
-            text += f'cmd : {ctx.message.content} from {ctx.message.guild.name}.{ctx.message.channel.name}\n'
-            text += f'error : {error}\n'
-            text += f'date : {nowDatetime}'
-            text += f'\n\n'
-            l.write(text)
+# @bot.event
+# async def on_command_error(ctx, error):
+#     if isinstance(error, commands.CommandNotFound):             return
+#     elif isinstance(error, commands.MissingRequiredArgument):   return
+#     elif isinstance(error, commands.BadArgument):               return
+#     else:
+#         with open('log/error.txt', 'a', encoding='utf-8') as l:
+#             now = datetime.datetime.now()
+#             nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute)
+#             text = f'user : {ctx.author.name}#{ctx.author.discriminator}\n'
+#             text += f'cmd : {ctx.message.content} from {ctx.message.guild.name}.{ctx.message.channel.name}\n'
+#             text += f'error : {error}\n'
+#             text += f'date : {nowDatetime}'
+#             text += f'\n\n'
+#             l.write(text)
 
 @bot.event
 async def on_member_remove(member):
