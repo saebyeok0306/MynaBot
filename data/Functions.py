@@ -1,8 +1,6 @@
 import sqlite3, datetime
 from collections import defaultdict
 
-guildsList = []
-
 def printN(num:int) -> str: #자리수에 콤마 넣어주는 함수
     goldUnit = ["","만","억","조","경","해","자","양","가","구","간"]
     _num = str(num)[::-1]
@@ -114,15 +112,9 @@ def getBotChannelGuild(bot, guild):
             botChannel.append(ch)
     return botChannel
 
-def getGuilds(bot): #init
-    global guildsList
-    guildsList = bot.guilds
-    print(guildsList)
-
-def getTopicChannel(Topic):
+def getTopicChannel(bot, Topic):
     data = defaultdict(list)
-    global guildsList
-    for guild in guildsList:
+    for guild in bot.guilds:
         for ch in guild.text_channels:
             if ch.topic is not None and Topic in ch.topic:
                 data[guild].append(ch)

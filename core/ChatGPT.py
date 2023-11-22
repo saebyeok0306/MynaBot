@@ -84,17 +84,6 @@ class ChatGPT(commands.Cog):
     #     )
     #     # return competion['choices'][0]['message']['content']
     #     return competion
-    
-    async def requestOpenAPI(self, prompt, model_engine):
-        competion = await openai.ChatCompletion.acreate(
-            model=model_engine,
-            messages=prompt,
-            temperature=0.4,
-            stream=True,
-            request_timeout=60,
-        )
-        # return competion['choices'][0]['message']['content']
-        return competion
 
     @commands.command(name="마이나야", aliases=["검색"])
     async def 마이나야(self, ctx, *input):
@@ -126,28 +115,53 @@ class ChatGPT(commands.Cog):
                 else: prompt = systemMsg + [{"role":"system", "content":f"The user`s name is '{ctx.author.display_name}'."}] + prompt
                 msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
 
+                timeout_sec = 20
+                isLong = False
+                collected_message = ""
                 try:
-                    response = await self.requestOpenAPI(prompt, "gpt-3.5-turbo")
-                    # message = None
-                    isLong = False
-                    collected_message = ""
-                    cnt = 0
+                    async def timeout(sec, request_task):
+                        nonlocal msg
+                        _sec = sec // 4
+                        for _ in range(4):
+                            await asyncio.sleep(_sec)
+                            if collected_message != "":
+                                return True
+                            
+                        if collected_message == "":
+                            request_task.cancel()
+                            return False
+                        return True
+
+                    async def requestOpenAPI(prompt, model_engine):
+                        nonlocal msg, isLong, collected_message
+                        competion = await openai.ChatCompletion.acreate(
+                            model=model_engine,
+                            messages=prompt,
+                            temperature=0.4,
+                            stream=True,
+                            # request_timeout=60,
+                        )
+
+                        cnt = 0
+                        # return competion['choices'][0]['message']['content']
+                        async for chunk in competion:
+                            cnt += 1
+                            try:
+                                chunk_message = chunk['choices'][0]['delta']['content']
+                                collected_message += chunk_message
+                                if isLong is False:
+                                    if len(collected_message) >= 2000:
+                                        isLong = True
+                                        await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
+                                    if(cnt > 12):
+                                        cnt = 0
+                                        await msg.edit(content=collected_message)
+                            except: pass
+                        return True
                     
-                    async for chunk in response:
-                        cnt += 1
-                        try:
-                            chunk_message = chunk['choices'][0]['delta']['content']
-                            collected_message += chunk_message
-                            if isLong is False:
-                                if len(collected_message) >= 2000:
-                                    isLong = True
-                                    await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
-                                # if message is None:
-                                #     message = await ctx.reply(collected_message, mention_author=False)
-                                if(cnt > 12):
-                                    cnt = 0
-                                    await msg.edit(content=collected_message)
-                        except: pass
+                    request_task = asyncio.create_task(requestOpenAPI(prompt, "gpt-3.5-turbo"))
+                    timeout_task = asyncio.create_task(timeout(timeout_sec, request_task))
+                    await asyncio.gather(timeout_task, request_task)
 
                     input_token = len(self.encoding.encode(text))
                     output_token = len(self.encoding.encode(collected_message))
@@ -169,13 +183,9 @@ class ChatGPT(commands.Cog):
                         await ctx.channel.send(file=file)
 
                     self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":collected_message}]
-                    # if len(response) <= 2000: await ctx.reply(response, mention_author=False)
-                    # else:
-                    #     with open('text.txt', 'w', encoding='utf-8') as l:
-                    #         l.write(response)
-                    #     file = discord.File("text.txt")
-                    #     await ctx.channel.send(f'답변이 너무 길어서 파일로 올릴게요.')
-                    #     await ctx.channel.send(file=file)
+
+                except asyncio.CancelledError as e:
+                    await ctx.reply(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!", mention_author=True)
                 except Exception as e:
                     await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", mention_author=True)
                 # await msg.delete() # 기존 wait msg 삭제

@@ -41,7 +41,7 @@ class Crawling(commands.Cog):
             post_data.append(OrderedDict({'pid':int(post_number), 'title':post_title, 'link':post_links, 'icon':post_icon, 'date':post_date}))
         post_data.reverse()
 
-        guilds = fun.getTopicChannel('#크롤링마이나')
+        guilds = fun.getTopicChannel(self.bot, '#크롤링마이나')
         for guild in guilds.keys():
             channels = guilds[guild]
             for channel in channels:

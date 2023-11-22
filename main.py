@@ -1,6 +1,5 @@
 import discord, asyncio, json, random, datetime
 import sys, os
-from itertools import cycle
 import data.Functions as fun
 from discord.ext import commands, tasks
 
@@ -18,6 +17,8 @@ from discord.ext import commands, tasks
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
+status_count = 0
+
 token = ''
 coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile']
 with open('data/token.json', 'r') as f:
@@ -42,13 +43,25 @@ async def on_ready():
     
     now = datetime.datetime.now()
     nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
-    status = cycle([f"{nowTime}에 부팅됨!", "명령어는 '!도움말'", f"{len(bot.guilds)} 서버에 마이나봇이 있음!"])
+
     @tasks.loop(seconds=10)
     async def change_status():
-        await bot.change_presence(activity=discord.Game(next(status)))
+        global status_count
+
+        if status_count == 0:
+            await bot.change_presence(activity=discord.Game(f"{nowTime}에 부팅됨!"))
+        elif status_count == 1:
+            await bot.change_presence(activity=discord.Game(f"명령어는 '!도움말'"))
+        elif status_count == 2:
+            await bot.change_presence(activity=discord.Game(f"{len(bot.guilds)} 서버에 마이나봇이 있음!"))
+        else:
+            await bot.change_presence(activity=discord.Game(f"{sum(map(lambda x : x.member_count, bot.guilds))} 명이 이용"))
+
+        status_count += 1
+        if status_count > 3:
+            status_count = 0
 
     change_status.start()
-    fun.getGuilds(bot)
     await loadCore()
 
 @bot.event
@@ -131,4 +144,5 @@ async def on_member_remove(member):
     else: print(f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. (역할없음)")
     # fun.removeUserDB(member.id) # db에서 데이터 삭제
 
-bot.run(token)
+if __name__ == '__main__':
+    bot.run(token)

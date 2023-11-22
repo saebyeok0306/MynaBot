@@ -206,7 +206,7 @@ class BitcoinGame(commands.Cog):
     @tasks.loop(seconds=60)
     async def run(self):
         if fun.guildsList != []:
-            guilds = fun.getTopicChannel(f'#차트{self.bot.user.name}')
+            guilds = fun.getTopicChannel(self.bot, f'#차트{self.bot.user.name}')
             for guild in guilds:
                 await bitcoinSystem(self.bot, guild, guilds[guild])
 
