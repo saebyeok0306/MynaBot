@@ -1,4 +1,4 @@
-import discord, asyncio, random, math
+import discord, datetime
 import data.Functions as fun
 from data.Timeout import timeout
 from discord.ext import commands
@@ -23,7 +23,7 @@ class Administrator(commands.Cog):
     @commands.command(name="로그보기", aliases=["에러로그", "에러로그보기"])
     async def 로그보기(self, ctx, *input):
         print("로그보기")
-        if ctx.message.author.id == 383483844218585108:
+        if ctx.message.author.guild_permissions.administrator:
             showPage = 9
             if len(input) == 1:
                 if input[0] == 'all' or input[0] =='All':
@@ -63,17 +63,17 @@ class Administrator(commands.Cog):
     
     @commands.command(name="로그삭제", aliases=["로그지우기"])
     async def 로그삭제(self, ctx):
-        if ctx.message.author.id == 383483844218585108:
+        if ctx.message.author.guild_permissions.administrator:
             with open('log/error.txt', 'w', encoding='utf-8') as l:
                 l.write('')
             await ctx.channel.send(f'로그를 전부 지웠어요!')
     
     @commands.command(name="코드")
     async def 코드(self, ctx, *input):
-        if ctx.message.author.id == 383483844218585108:
+        if ctx.message.author.guild_permissions.administrator:
             text = " ".join(input)
 
-            @timeout(2, error_message='TimeoutError')
+            # @timeout(2, error_message='TimeoutError')
             def Calculate(self, ctx, text):
                 return str(eval(text))
             
@@ -141,6 +141,32 @@ class Administrator(commands.Cog):
                     file = discord.File("text.txt")
                     await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
                     await ctx.channel.send(file=file)
+    
+    def AnnouncementEmbed(self, ctx, input):
+        text = " ".join(input).replace("\\n", "\n")
+        embed = discord.Embed(
+            color=0xFFA1A1,
+            title="[ 📢 마이나 공지사항 안내 ]",
+            description=text
+        )
+        embed.set_footer(text = f"{ctx.author.display_name} | {datetime.datetime.now().strftime('%Y.%m.%d %H:%M')}", icon_url = ctx.author.display_avatar)
+        return embed
+    
+    @commands.command(name="공지사항테스트")
+    async def 공지사항테스트(self, ctx, *input):
+        if ctx.message.author.id == 383483844218585108:
+            embed = self.AnnouncementEmbed(ctx, input)
+            await ctx.channel.send(embed=embed)
+    
+    @commands.command(name="공지사항")
+    async def 공지사항(self, ctx, *input):
+        if ctx.message.author.id == 383483844218585108:
+            embed = self.AnnouncementEmbed(ctx, input)
+
+            guild_channels = fun.getBotChannelGuild(self.bot)
+            for guild in guild_channels.keys():
+                for channel in guild_channels[guild]:
+                    await channel.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Administrator(bot))

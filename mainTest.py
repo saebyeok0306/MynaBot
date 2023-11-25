@@ -1,7 +1,8 @@
 import discord, asyncio, json, datetime
 import sys, os
-from itertools import cycle
+import data.Database as db
 import data.Functions as fun
+import data.Logs as logs
 from discord.ext import commands, tasks
 
 
@@ -38,6 +39,8 @@ async def on_ready():
     now = datetime.datetime.now()
     nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
 
+    logs.bot_log_channel = 1177975720111259739
+
     @tasks.loop(seconds=10)
     async def change_status():
         global status_count
@@ -57,6 +60,9 @@ async def on_ready():
 
     change_status.start()
     await loadCore()
+
+    for guild in bot.guilds:
+        db.SaveUserDBAtGuild(guild)
 
 
 @bot.command(name='로드', aliases=['load'])
@@ -105,11 +111,26 @@ async def reload_commands(ctx, extension=None):
 #             l.write(text)
 
 @bot.event
+async def on_member_join(member):
+    log_text = f"{member.guild} 서버에 {member.display_name} 님이 가입했습니다. ("
+    user_res = db.SaveUserDB(member)
+    if user_res: log_text += "유저정보 추가, "
+    log_text += ")"
+
+    await logs.SendLog(bot=bot, log_text=log_text)
+
+@bot.event
 async def on_member_remove(member):
-    Result = await fun.deleteUserRole(member.guild, member) # delete role
-    if Result is True: print(f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. (역할제거)")
-    else: print(f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. (역할없음)")
-    # fun.removeUserDB(member.id) # db에서 데이터 삭제
+    log_text = f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. ("
+
+    role_res = await db.DeleteRoleServerByAuthor(member)
+    if role_res: log_text += f"역할 제거, "
+    user_res = db.DeleteUserByAuthor(member)
+    if user_res: log_text += f"유저정보 제거, "
+    log_text += ")"
+    
+    await logs.SendLog(bot=bot, log_text=log_text)
+
 
 if __name__ == '__main__':
     bot.run(token)

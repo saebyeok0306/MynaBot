@@ -1,4 +1,5 @@
 import sqlite3, discord, asyncio, random, math
+import data.Database as db
 import data.Functions as fun
 from discord.ext import commands
 
@@ -16,21 +17,12 @@ class UserRoles(commands.Cog):
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)
             return False
-        
-        if fun.game_check(ctx.author.id) is False:
-            embed = discord.Embed(title = f':exclamation: {self.title} 미가입', description = f'{ctx.author.mention} {self.title} 게임에 가입하셔야 이용이 가능합니다. (!회원가입)', color = 0xff0000)
-            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-            await ctx.channel.send(embed = embed)
-            return False
 
         # if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
         #     embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
         #     embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
         #     await ctx.channel.send(embed = embed)
         #     return False
-        
-        guild = ctx.guild
-        user  = ctx.author
         
         colorLists = {
             '랜덤' : '000000',
@@ -91,22 +83,23 @@ class UserRoles(commands.Cog):
             await ctx.channel.send(embed = embed)
             return False
 
-        roleName = fun.returnRoleName(user.id)
-        if roleName is not None:
-            for role in user.roles:
-                if role.name == roleName:
-                    await role.edit(color=colors)
+        # 1. 서버에 역할이 있는지 체크하기
+        user_role = db.GetRoleServerByAuthor(ctx.author)
+        if not user_role:
+            user_role = await db.CreateRoleServer(ctx.author)
 
-                    embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!', color = colors)
-                    embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                    await ctx.channel.send(embed = embed)
-                    return True
-        
-        # return True 가 작동하지 않은 경우
-        await fun.createUserRole(guild, user)
-        embed = discord.Embed(title = f':tickets: 닉네임 색상변경', description = f'{ctx.author.mention} 생성된 역할이 없어서, 새롭게 역할을 생성했습니다.\n다시 한번더 색상변경 명령어를 사용해주세요.', color = 0xFF0000)
+        # 2. 유저에게 역할이 부여되어있는지 체크하기
+        role = db.GetRoleAuthor(ctx.author)
+        if not role:
+            await ctx.author.add_roles(user_role)
+            role = user_role
+            
+        await role.edit(color=colors)
+
+        embed = discord.Embed(title = f':star2: 닉네임 색상변경', description = f'{ctx.author.mention} 색상변경이 완료되었어요!', color = colors)
         embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
         await ctx.channel.send(embed = embed)
+        return True
 
 async def setup(bot):
     await bot.add_cog(UserRoles(bot))

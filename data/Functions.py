@@ -100,24 +100,26 @@ def game_getMessageChannel(bot, channel):
 def getBotChannel(bot, message):
     botChannel = []
     channels = message.guild.text_channels
-    for ch in channels:
-        if ch.topic is not None and f'#{bot.user.name}' in ch.topic:
-            botChannel.append(ch.id)
+    for channel in channels:
+        if channel.topic is not None and f'#{bot.user.name}' in channel.topic:
+            botChannel.append(channel.id)
     return botChannel
 
-def getBotChannelGuild(bot, guild):
-    botChannel = []
-    for ch in guild.text_channels:
-        if ch.topic is not None and f'#{bot.user.name}' in ch.topic:
-            botChannel.append(ch)
+def getBotChannelGuild(bot):
+    botChannel = {}
+    for guild in bot.guilds:
+        botChannel[guild] = []
+        for channel in guild.text_channels:
+            if channel.topic is not None and f'#{bot.user.name}' in channel.topic:
+                botChannel[guild].append(channel)
     return botChannel
 
 def getTopicChannel(bot, Topic):
     data = defaultdict(list)
     for guild in bot.guilds:
-        for ch in guild.text_channels:
-            if ch.topic is not None and Topic in ch.topic:
-                data[guild].append(ch)
+        for channel in guild.text_channels:
+            if channel.topic is not None and Topic in channel.topic:
+                data[guild].append(channel)
     return data
 
 # 내가 구매한 코인의 가치 표기

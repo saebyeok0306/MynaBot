@@ -14,8 +14,6 @@ class Command(commands.Cog):
     async def 도움말(self, ctx):
         embed=discord.Embed(color=0xB22222, title="도움말:", description=f'{self.bot.user.name}에게 있는 명령어들을 알려드려요. By.갈대')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
-        embed.add_field(name = f'!회원가입', value = f'서비스를 이용하려면, 가입이 필요해요.\n최종적으로 별명과 계정ID값만 사용해요.')
-        embed.add_field(name = f'!회원탈퇴', value = f'회원가입이 있으면 회원탈퇴도 있는법.')
         embed.add_field(name = f'!프로필', value = f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.')
         embed.add_field(name = '!주사위 `값(기본값 100)`', value = f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
         embed.add_field(name = '!청소 `값(기본값 5)`', value = f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**')
@@ -33,50 +31,6 @@ class Command(commands.Cog):
         if ctx.guild.id in [631471244088311840]:
             embed.add_field(name = f'!흑이', value = f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!')
         await ctx.channel.send(embed=embed)
-    
-    @commands.command(name="가입명령", aliases=["가입", "회원가입"])
-    async def 회원가입(self, ctx):
-        import sqlite3
-        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
-            id = ctx.author.id
-            if fun.game_check(id) is False:
-                now = datetime.datetime.now()
-                nowDatetime = "{}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(now.year, now.month, now.day, now.hour, now.minute, now.second)
-                con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
-                cur = con.cursor()
-                cur.execute("INSERT INTO User_Info VALUES(?, ?, ?, ?, ?, ?, ?, ?)", (id, ctx.author.display_name, nowDatetime, 0, 'NULL', 0, 0, 'NULL'))
-                con.close() #db 종료
-                await fun.createUserRole(ctx.guild, ctx.author)
-                embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 성공적으로 갈대의 {self.title}에 가입되셨습니다.\n수집되는 데이터는 유저의 별명과 사용자아이디(별명#0000)만 사용됩니다!', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                await ctx.channel.send(embed = embed)
-            else:
-                embed = discord.Embed(title = f':wave: {self.title} 가입', description = f'{ctx.author.mention} 이미 {self.title}에 가입되어 있습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                await ctx.channel.send(embed = embed)
-
-    @commands.command(name="탈퇴명령", aliases=["탈퇴", "회원탈퇴"])
-    async def 회원탈퇴(self, ctx):
-        if(ctx.channel.id in fun.getBotChannel(self.bot, ctx)):
-            id = ctx.author.id
-            if fun.game_check(id) is False:
-                embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 갈대의 {self.title}에 가입되어 있지 않습니다.', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                await ctx.channel.send(embed = embed)
-                return False
-
-            nowdate = datetime.datetime.now()
-            joindate = fun.returnJoinDate(id)
-            if nowdate.day != joindate.day:
-                await fun.deleteUserRole(ctx.guild, ctx.author) # delete role
-                fun.removeUserDB(id) # db에서 데이터 삭제
-                embed = discord.Embed(title = f':heart: {self.title} 탈퇴', description = f'{ctx.author.mention} 성공적으로 {self.title}에서 탈퇴되셨습니다.', color = 0xffc0cb)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                await ctx.channel.send(embed = embed)
-            else:
-                embed = discord.Embed(title = f':x: {self.title} 탈퇴불가능', description = f'{ctx.author.mention} 가입한 날로부터 하루가 지나야 합니다!\n가입날짜 `{joindate.year}년 {joindate.month}월 {joindate.day}일`', color = 0xff0000)
-                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
-                await ctx.channel.send(embed = embed)
     
     @commands.command(name="주사위", aliases=["다이스"])
     async def 주사위(self, ctx, *input):
