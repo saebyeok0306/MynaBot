@@ -15,6 +15,7 @@ class Command(commands.Cog):
         embed=discord.Embed(color=0xB22222, title="도움말:", description=f'{self.bot.user.name}에게 있는 명령어들을 알려드려요. By.갈대')
         embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
         embed.add_field(name = f'!프로필', value = f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.')
+        embed.add_field(name = f'!유튜브 `검색어`', value = f'유튜브 영상을 검색할 수 있어요. 반응 버튼으로 영상을 선택할 수 있어요.')
         embed.add_field(name = '!주사위 `값(기본값 100)`', value = f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
         embed.add_field(name = '!청소 `값(기본값 5)`', value = f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**')
         embed.add_field(name = '!골라줘 `대상1` `대상2` ...', value = f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')

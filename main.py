@@ -22,7 +22,7 @@ bot.remove_command('help')
 status_count = 0
 
 token = ''
-coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile']
+coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile', 'Youtube']
 with open('data/token.json', 'r') as f:
     loaded_data = json.load(f)  # 데이터 로드하기
     token = loaded_data['token']
