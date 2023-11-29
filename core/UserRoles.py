@@ -8,7 +8,7 @@ class UserRoles(commands.Cog):
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
-        self.title = '게임서비스'
+        self.title = '닉네임 색상변경'
     
     @commands.command(name="색상변경", aliases=['색상수정'])
     async def 색상변경(self, ctx, *input):
