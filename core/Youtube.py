@@ -38,8 +38,16 @@ class Youtube(commands.Cog):
             embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색오류 ]", description=f"검색어를 입력하셔야 합니다!")
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             msg = await ctx.reply(embed=embed)
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await msg.delete(delay=10)
+            await ctx.message.delete(delay=10)
+            return
+        
+        elif len(keyword) > 20:
+            embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색오류 ]", description=f"검색어는 20자 이내로 입력하셔야 합니다!\n현재 {len(keyword)}자를 입력하셨습니다.")
+            embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
+            msg = await ctx.reply(embed=embed)
+            await msg.delete(delay=10)
+            await ctx.message.delete(delay=10)
             return
 
         tree = elemTree.parse('./keys.xml')
@@ -51,8 +59,16 @@ class Youtube(commands.Cog):
         embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
         msg = await ctx.channel.send(embed=embed)
 
+        result_count = self.list_count
         try:
             videos = self.search_videos(youtube, keyword)
+            if len(videos) == 0:
+                embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색완료 ]", description=f"{keyword}에 대한 검색 결과가 없습니다!")
+                embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
+                await msg.edit(embed=embed)
+                return
+            elif len(videos) < 10:
+                result_count = len(videos)
         except Exception as e:
             embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색오류 ]", description=f"유튜브 API에 문제가 발생했어요.\n`{e}`")
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
@@ -70,12 +86,13 @@ class Youtube(commands.Cog):
             result.append((video_id, video_url, video_info, thumbnail_url))
         
         paging = 0
-        half_count = self.list_count//2
+        half_count = self.list_count//2 # 5
         while True:
             # Youtube Search Texts
             result_text = ""
-            for i in range(half_count) if paging == 0 else range(half_count, self.list_count):
-                result_text += f"{i+1}번 {result[i][2]}\n"
+            for i in range(half_count) if paging == 0 else range(half_count, result_count):
+                if i < result_count:
+                    result_text += f"{i+1}번 {result[i][2]}\n"
 
             embed = discord.Embed(color=0xB22222, title="[ 🪄유튜브 검색중 ]", description=f"**{keyword} 의 검색 결과입니다.**\n`아래의 이모지를 클릭해서 선택할 수 있습니다.`\n\n{result_text}")
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
@@ -83,11 +100,12 @@ class Youtube(commands.Cog):
 
             # 1 ~ 10
             for i in range(half_count) if paging == 0 else range(half_count, self.list_count):
-                await msg.add_reaction(self.sel_emoji[i])
+                if i <result_count:
+                    await msg.add_reaction(self.sel_emoji[i])
             
             # Next, Prev, Cancle
-            if paging == 0: await msg.add_reaction(self.sel_emoji[-2]) # Next
-            else:           await msg.add_reaction(self.sel_emoji[-3]) # Prev
+            if paging == 0 and result_count > half_count: await msg.add_reaction(self.sel_emoji[-2]) # Next
+            if paging == 1: await msg.add_reaction(self.sel_emoji[-3]) # Prev
             await msg.add_reaction(self.sel_emoji[-1]) # Cancle
 
             try:
@@ -108,9 +126,10 @@ class Youtube(commands.Cog):
                     continue
                 
                 elif str(reaction) == self.sel_emoji[-2]: # next
-                    paging = 1
-                    await msg.clear_reactions()
-                    continue
+                    if result_count > half_count:
+                        paging = 1
+                        await msg.clear_reactions()
+                        continue
                 
                 elif str(reaction) == self.sel_emoji[-1]:
                     await msg.delete()
