@@ -42,8 +42,8 @@ class Youtube(commands.Cog):
             await ctx.message.delete(delay=10)
             return
         
-        elif len(keyword) > 20:
-            embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색오류 ]", description=f"검색어는 20자 이내로 입력하셔야 합니다!\n현재 {len(keyword)}자를 입력하셨습니다.")
+        elif len(keyword) > 50:
+            embed = discord.Embed(color=0xB22222, title="[ 🚨유튜브 검색오류 ]", description=f"검색어는 50자 이내로 입력하셔야 합니다!\n현재 {len(keyword)}자를 입력하셨습니다.")
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             msg = await ctx.reply(embed=embed)
             await msg.delete(delay=10)
