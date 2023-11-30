@@ -7,8 +7,8 @@ __pycache__/
 # data/token.json  파일무시
 token.json
 
-# DiscordDB.db 파일무시
-DiscordDB.db
+# *.db 파일무시
+*.db
 
 # temp 디렉토리 무시
 temp/
@@ -23,8 +23,8 @@ explain.png
 user_img.png
 result.png
 
-# key 파일 무시
-keys.xml
+# .env 파일 무시
+.env
 
 # venv
 /venv

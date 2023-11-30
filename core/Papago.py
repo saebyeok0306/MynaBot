@@ -2,7 +2,7 @@ import urllib.request
 import os, sys, discord, asyncio, json
 import data.Functions as fun
 from discord.ext import commands, tasks
-import xml.etree.ElementTree as elemTree
+from dotenv import dotenv_values
 
 class Papago(commands.Cog):
 
@@ -11,9 +11,9 @@ class Papago(commands.Cog):
         self.bot = bot
     
     def TransText(self, langS, langT, Texts):
-        tree = elemTree.parse('./keys.xml')
-        client_id = tree.find('string[@name="clientID"]').text # 개발자센터에서 발급받은 Client ID 값
-        client_secret = tree.find('string[@name="clientSecret"]').text # 개발자센터에서 발급받은 Client Secret 값
+        config = dotenv_values('.env')
+        client_id = config['Naver_Client_ID'] # 개발자센터에서 발급받은 Client ID 값
+        client_secret = config['Naver_Client_Secret'] # 개발자센터에서 발급받은 Client Secret 값
         encText = urllib.parse.quote(Texts)
         data = f"source={langS}&target={langT}&text=" + encText
         url = "https://openapi.naver.com/v1/papago/n2mt"

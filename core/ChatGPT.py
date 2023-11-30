@@ -4,7 +4,7 @@ import tiktoken
 import data.Functions as fun
 from collections import defaultdict
 from discord.ext import commands, tasks
-import xml.etree.ElementTree as elemTree
+from dotenv import dotenv_values
 import typing, functools
 from datetime import datetime, timedelta
 
@@ -46,9 +46,9 @@ class ChatGPT(commands.Cog):
         self.chatRoom = defaultdict(Chat) # runtime, expired, history, channel
         self.delta = timedelta(minutes=10)
         self.encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
-        tree = elemTree.parse('./keys.xml')
-        SECRETKEY = tree.find('string[@name="chatSecret"]').text
-        openai.api_key = SECRETKEY
+
+        config = dotenv_values('.env')
+        openai.api_key = config['ChatGPT_Secret']
         self.Timer.start()
     
     def cog_unload(self):

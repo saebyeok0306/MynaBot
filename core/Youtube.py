@@ -1,5 +1,5 @@
 from googleapiclient.discovery import build
-import xml.etree.ElementTree as elemTree
+from dotenv import dotenv_values
 import discord, asyncio
 from discord.ext import commands
 
@@ -50,9 +50,8 @@ class Youtube(commands.Cog):
             await ctx.message.delete(delay=10)
             return
 
-        tree = elemTree.parse('./keys.xml')
-        SECRETKEY = tree.find('string[@name="YoutubeKey"]').text
-        youtube = build('youtube', 'v3', developerKey=SECRETKEY)
+        config = dotenv_values('.env')
+        youtube = build('youtube', 'v3', developerKey=config['Youtube_Secret'])
 
 
         embed = discord.Embed(color=0xB22222, title="[ 🪄유튜브 검색중 ]", description=f"잠시만 기다려주세요!\n정보를 수집 중이므로 다소 시간이 걸릴 수 있습니다.")
