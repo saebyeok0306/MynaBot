@@ -4,6 +4,7 @@ import data.Database as db
 import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
+from dotenv import dotenv_values
 
 # venv\Scripts\activate
 # venv\Scripts\deactivate
@@ -20,21 +21,16 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 status_count = 0
-
-token = ''
-coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile', 'Youtube']
-with open('data/token.json', 'r') as f:
-    loaded_data = json.load(f)  # 데이터 로드하기
-    token = loaded_data['token']
+core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile', 'Youtube']
 
 async def loadCore():
     print("코어모듈을 로드합니다...")
     for filename in os.listdir('core'):
         if filename.endswith('.py'):
-            extensionName = filename[:-3]
-            if extensionName in coreList:
-                await bot.load_extension(f'core.{extensionName}')
-                # print(f'{extensionName}가 로드되었습니다.')
+            extension_name = filename[:-3]
+            if extension_name in core_list:
+                await bot.load_extension(f'core.{extension_name}')
+                # print(f'{extension_name}가 로드되었습니다.')
 
 @bot.event
 async def on_ready():
@@ -107,12 +103,12 @@ async def reload_commands(ctx, extension=None):
         if extension is None: # extension이 None이면 (그냥 !리로드 라고 썼을 때)
             for filename in os.listdir('core'):
                 if filename.endswith('.py'):
-                    extensionName = filename[:-3]
-                    if extensionName in coreList:
-                        try: await bot.unload_extension(f'core.{extensionName}')
+                    extension_name = filename[:-3]
+                    if extension_name in core_list:
+                        try: await bot.unload_extension(f'core.{extension_name}')
                         except: pass
-                        await bot.load_extension(f'core.{extensionName}')
-                        await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
+                        await bot.load_extension(f'core.{extension_name}')
+                        await ctx.send(f':white_check_mark: {extension_name}을(를) 다시 불러왔습니다!')
         else:
             await bot.unload_extension(f'core.{extension}')
             await bot.load_extension(f'core.{extension}')
@@ -158,4 +154,5 @@ async def on_member_remove(member):
     await logs.SendLog(bot=bot, log_text=log_text)
 
 if __name__ == '__main__':
-    bot.run(token)
+    config = dotenv_values(".env")
+    bot.run(config['Discord_Token'])

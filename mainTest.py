@@ -4,6 +4,7 @@ import data.Database as db
 import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
+from dotenv import dotenv_values
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -13,19 +14,14 @@ from discord.ext import commands, tasks
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!!', intents=intents)
 status_count = 0
-
-token = ''
-coreList = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube']
-with open("data/token.json", "r") as f:
-    loaded_data = json.load(f)  # 데이터 로드하기
-    token = loaded_data['token2']
+core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube']
 
 async def loadCore():
     print("코어모듈을 로드합니다...")
     for filename in os.listdir('core'):
         if filename.endswith('.py'):
             extensionName = filename[:-3]
-            if extensionName in coreList:
+            if extensionName in core_list:
                 await bot.load_extension(f'core.{extensionName}')
 
 
@@ -133,4 +129,5 @@ async def on_member_remove(member):
 
 
 if __name__ == '__main__':
-    bot.run(token)
+    config = dotenv_values(".env")
+    bot.run(config['Discord_Token2'])
