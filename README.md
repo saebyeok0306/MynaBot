@@ -31,7 +31,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## How TO?
+## How To?
 
 ```cmd
 !도움말
