@@ -53,6 +53,7 @@ class TTS(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.guild.id not in [631471244088311840]: return
+        if message.author.bot: return None
 
         vc = message.guild.voice_client
         if vc is None: return
