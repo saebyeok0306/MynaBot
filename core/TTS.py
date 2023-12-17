@@ -30,7 +30,7 @@ class TTS(commands.Cog):
 
                 id = message.guild.id
                 file = f"data/{id}.mp3"
-                res = self.synthesize_text(file, message.content)
+                res = self.synthesize_text(file, message)
                 if res is True:
                     vc.play(discord.FFmpegPCMAudio(source=file), after= lambda x: os.remove(file))
                     self.voice_channel[id] = 0
@@ -39,9 +39,8 @@ class TTS(commands.Cog):
                 for id in self.voice_channel.keys():
                     self.voice_channel[id] += 1
 
-                    if self.voice_channel[id] > 60:
+                    if self.voice_channel[id] > 600:
                         guild = self.bot.get_guild(id)
-                        print(guild)
                         if guild.voice_client is not None:
                             await guild.voice_client.disconnect()
                         del self.voice_channel[id]
@@ -61,10 +60,6 @@ class TTS(commands.Cog):
         if vc.channel != message.channel: return
         if message.content.startswith("!"): return
 
-        if message.content.strip() == "": return
-        
-        if message.guild.id not in self.voice_channel.keys():
-            self.voice_channel[message.guild.id] = 0
         self.message_queue.append(message)
 
     @commands.command(name="TTS", aliases=["음성채팅입장", "음성입력", "TTS입장", "입장"])
@@ -89,6 +84,10 @@ class TTS(commands.Cog):
 
         voice_channel = ctx.author.voice.channel
         await voice_channel.connect()
+
+        if ctx.guild.id not in self.voice_channel.keys():
+            self.voice_channel[ctx.guild.id] = 0
+
     
     @commands.command(name="입장이동", aliases=["이동", "음성채널이동"])
     async def 입장이동(self, ctx, *input):
@@ -120,84 +119,82 @@ class TTS(commands.Cog):
     #         await ctx.voice_client.disconnect()
     
     
-    @staticmethod
-    def synthesize_text(file, text):
+    def synthesize_text(self, file, message):
         # "texttospeech import"
         from google.cloud import texttospeech
         import re
+        from emoji import core
 
-        client = texttospeech.TextToSpeechClient()
-
+        text = message.content
+        author = message.author
         print(f"synthesize_text : {text}")
 
+        # 1. 이모지를 먼저 제거합니다.
+        text = core.replace_emoji(text, replace="")
+
+        # 2. 남은 텍스트에서 디스코드 이모지 문자열 <:이모지:> 을 검사해서 제거합니다.
         pattern = r'<(.*?)>'
         matches = re.findall(pattern, text)
         if matches:
             for pat in matches:
                 text = text.replace(f"<{pat}>", "")
         
-        if text.strip() == "": return False
+        text = text.strip()
         
+        # 모두 제거 후, 문자열이 공백이면 return 합니다.
+        if text == "": return False
+        
+        client = texttospeech.TextToSpeechClient()
         text_length = len(text)
         # 최대 길이를 200으로 지정 (지나치게 길어지면 에러 발생)
         max_length = 200
-        # . 단위로 문장 분리
-        words = text.split('. ')
-        sentences = []
-        current_sentence = ''
-        for word in words:
-            if len(current_sentence + word) <= max_length:
-                current_sentence += word + ' '
-            else:
-                sentences.append(current_sentence.strip() + '.')
-                current_sentence = word + ' '
-        if current_sentence:
-            sentences.append(current_sentence.strip() + '.')
+
+        # 문자열의 길이가 최대 길이보다 크면 return 합니다.
+        if  text_length > max_length: return False
 
 
-        # 빈 배열 생성
-        audio_data = []
+        # 텍스트 변환
+        input_text = texttospeech.SynthesisInput(text=text)
+
+        # gender = [
+        #     ("ko-KR-Neural2-C", texttospeech.SsmlVoiceGender.MALE),
+        #     ("ko-KR-Neural2-B", texttospeech.SsmlVoiceGender.FEMALE)
+        # ]
+        gender = {"name": "ko-KR-Neural2-C", "ssml_gender": texttospeech.SsmlVoiceGender.MALE}
+
+
+        # JOKE
+        if author.id in [298824090171736074, 369723279167979520]:
+            gender["name"] = "ko-KR-Neural2-B"
+            gender["ssml_gender"] = texttospeech.SsmlVoiceGender.FEMALE
+
+
+        # 오디오 설정 (예제에서는 한국어, 남성C)
+        voice = texttospeech.VoiceSelectionParams(
+            language_code="ko-KR",
+            name=gender["name"],
+            ssml_gender=gender["ssml_gender"],
+        )
+
+        speed = 2.0
         text_speed = [(10, 1.1), (20, 1.3), (30, 1.5), (40, 1.7)]
+        for le, sp in text_speed:
+            if text_length <= le:
+                speed = sp
+                break
 
-        # 문장 개수 단위로 텍스트 변환
-        for sentence in sentences:
-            input_text = texttospeech.SynthesisInput(text=sentence)
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3,
+            speaking_rate=speed,
+        )
 
-            gender = [
-                ("ko-KR-Neural2-C", texttospeech.SsmlVoiceGender.MALE),
-                ("ko-KR-Neural2-B", texttospeech.SsmlVoiceGender.FEMALE)
-            ]
-
-            # 오디오 설정 (예제에서는 한국어, 남성C)
-            voice = texttospeech.VoiceSelectionParams(
-                language_code="ko-KR",
-                name=gender[0][0],
-                ssml_gender=gender[0][1],
-            )
-
-            speed = 2.0
-            for le, sp in text_speed:
-                if text_length <= le:
-                    speed = sp
-                    break
-
-            audio_config = texttospeech.AudioConfig(
-                audio_encoding=texttospeech.AudioEncoding.MP3,
-                speaking_rate=speed,
-            )
-
-            response = client.synthesize_speech(
-                request={"input": input_text, "voice": voice, "audio_config": audio_config}
-            )
-
-            audio_data.append(response.audio_content)
-
-        audio_data = b"".join(audio_data)
-        
+        response = client.synthesize_speech(
+            request={"input": input_text, "voice": voice, "audio_config": audio_config}
+        )
         
         # audio 폴더 안에 output.mp3라는 이름으로 파일 생성
         with open(file, "wb") as out:
-            out.write(audio_data)
+            out.write(response.audio_content)
         
         return True
     
