@@ -2,6 +2,7 @@ import discord, asyncio
 import openai
 import tiktoken
 import data.Functions as fun
+import data.Logs as logs
 from collections import defaultdict
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
@@ -183,6 +184,7 @@ class ChatGPT(commands.Cog):
                         await ctx.channel.send(file=file)
 
                     self.chatRoom[chater].history = prompt + [{"role":"assistant", "content":collected_message}]
+                    await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 ChatGPT 명령어를 실행했습니다.")
 
                 except asyncio.CancelledError as e:
                     await ctx.reply(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!", mention_author=True)

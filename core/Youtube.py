@@ -1,6 +1,7 @@
 from googleapiclient.discovery import build
 from dotenv import dotenv_values
 import discord, asyncio
+import data.Logs as logs
 from discord.ext import commands
 
 class Youtube(commands.Cog):
@@ -117,6 +118,8 @@ class Youtube(commands.Cog):
                     if str(reaction) == self.sel_emoji[i]:
                         await msg.delete()
                         await self.select_video(ctx, keyword, result[i])
+
+                        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 유튜브 명령어를 실행했습니다.")
                         return
                 
                 if str(reaction) == self.sel_emoji[-3]: # prev

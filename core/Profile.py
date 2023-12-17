@@ -1,5 +1,6 @@
 import discord, random, asyncio, datetime
 import data.Functions as fun
+import data.Logs as logs
 from discord.ext import commands
 from PIL import Image,ImageDraw,ImageFont
 
@@ -93,6 +94,8 @@ class Profile(commands.Cog):
         img_bg.save(f"{self.path}/result.png")
         file = discord.File(f"{self.path}/result.png")
         await ctx.reply(file=file, mention_author=False)
+
+        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{level})")
     
     
 async def setup(bot):
