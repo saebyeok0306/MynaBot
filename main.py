@@ -5,11 +5,16 @@ import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True, override=True)
 
 # venv\Scripts\activate
 # venv\Scripts\deactivate
 # pip freeze > requirements.txt
 # .venv$ pip install -r requirements.txt 
+
+# pip install discord.py[voice]
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -21,7 +26,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 status_count = 0
-core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile', 'Youtube']
+core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard', 'Profile', 'Youtube', 'TTS']
 
 async def loadCore():
     print("코어모듈을 로드합니다...")

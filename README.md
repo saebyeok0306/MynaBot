@@ -16,8 +16,10 @@
 
 * discord.py
 * google-api-python-client
+* google-cloud-texttospeech
 * openai
 * pillow
+* pynacl
 * python-dotenv
 * tiktoken
 
@@ -44,7 +46,11 @@ ChatGPT_Secret=OpenAI Chat GPT Secret (ChatGPT)
 Youtube_Secret=Google API Secret (Youtube)
 ```
 
-### 3. 파이썬 실행
+### 3. ffmpeg 설치
+
+ffmpeg를 설치하고 시스템 환경변수의 path에 등록해야 합니다.
+
+### 4. 파이썬 실행
 
 ```bash
 python main.py

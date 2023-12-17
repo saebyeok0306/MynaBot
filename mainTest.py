@@ -5,6 +5,9 @@ import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
+from dotenv import load_dotenv
+
+load_dotenv(verbose=True, override=True)
 
 
 # sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -14,7 +17,7 @@ from dotenv import dotenv_values
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!!', intents=intents)
 status_count = 0
-core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube']
+core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube', 'TTS']
 
 async def loadCore():
     print("코어모듈을 로드합니다...")
@@ -59,6 +62,14 @@ async def on_ready():
 
     for guild in bot.guilds:
         db.SaveUserDBAtGuild(guild)
+
+@bot.event
+async def on_message(message):
+    if message.author.bot: return None
+
+    # await on_message_tts(message)
+
+    await bot.process_commands(message)
 
 
 @bot.command(name='로드', aliases=['load'])
