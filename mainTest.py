@@ -17,7 +17,7 @@ load_dotenv(verbose=True, override=True)
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!!', intents=intents)
 status_count = 0
-core_list = ['Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube', 'TTS', 'Message']
+core_list = ['Administrator', 'Command', 'ColorName', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube', 'TTS', 'Message']
 
 async def loadCore():
     print("코어모듈을 로드합니다...")

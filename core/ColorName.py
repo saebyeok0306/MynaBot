@@ -3,7 +3,7 @@ import data.Database as db
 import data.Functions as fun
 from discord.ext import commands
 
-class UserRoles(commands.Cog):
+class ColorName(commands.Cog):
 
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
@@ -102,4 +102,4 @@ class UserRoles(commands.Cog):
         return True
 
 async def setup(bot):
-    await bot.add_cog(UserRoles(bot))
+    await bot.add_cog(ColorName(bot))

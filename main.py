@@ -26,7 +26,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command('help')
 status_count = 0
 core_list = [
-    'Administrator', 'Command', 'UserRoles', 'Papago', 'ChatGPT',
+    'Administrator', 'Command', 'ColorName', 'Papago', 'ChatGPT',
     'Minecraft', 'ArmyCard', 'Profile', 'Youtube', 'TTS', 'Message'
 ]
 
