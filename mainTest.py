@@ -63,15 +63,6 @@ async def on_ready():
     for guild in bot.guilds:
         db.SaveUserDBAtGuild(guild)
 
-@bot.event
-async def on_message(message):
-    if message.author.bot: return None
-
-    # await on_message_tts(message)
-
-    await bot.process_commands(message)
-
-
 @bot.command(name='로드', aliases=['load'])
 async def load_commands(ctx, extension):
     if ctx.message.author.guild_permissions.administrator:
