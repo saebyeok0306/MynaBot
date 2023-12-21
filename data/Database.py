@@ -16,13 +16,16 @@ def GetUserByAuthor(author):
     return _user
 
 def SaveUserDB(author):
+    con = Connect()
+    cur = con.cursor()
     if not GetUserByAuthor(author):
-        con = Connect()
-        cur = con.cursor()
         cur.execute("INSERT INTO User VALUES (?, ?, ?)", (author.id, author.guild.id, author.display_name))
         con.close()
         return True
-    return False
+    else:
+        cur.execute("UPDATE User SET username=? WHERE id=? AND guild_id=?", (author.display_name, author.id, author.guild.id))
+        con.close()
+        return False
 
 def DeleteUserByAuthor(author):
     if GetUserByAuthor(author):
@@ -72,3 +75,82 @@ async def CreateRoleServer(author):
     await author.guild.edit_role_positions(positions=position)
     await author.add_roles(new_role)
     return new_role
+
+def GetStatByAuthor(author):
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Stat WHERE id = ? AND guild_id = ?", (author.id, author.guild.id,))
+    _user = cur.fetchone()
+
+    con.close()
+
+    return _user
+
+def SaveStatDB(author, level=1, exp=0):
+    con = Connect()
+    cur = con.cursor()
+    author_id = (author.id, author.guild.id,)
+    if not GetStatByAuthor(author):
+        cur.execute("INSERT INTO Stat VALUES (?, ?, ?, ?)", (*author_id, level, exp))
+        con.close()
+        return True
+    else:
+        cur.execute("UPDATE Stat SET level=?, exp=? WHERE id=? AND guild_id=?", (level, exp, *author_id))
+        con.close()
+        return False
+
+def DeleteStatByAuthor(author):
+    if GetUserByAuthor(author):
+        con = Connect()
+        cur = con.cursor()
+        author_id = (author.id, author.guild.id,)
+        cur.execute("DELETE FROM Stat WHERE id = ? AND guild_id = ?", author_id)
+        con.close()
+        return True
+    return False
+
+def GetChatByAuthor(author):
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Chat WHERE id = ? AND guild_id = ?", (author.id, author.guild.id,))
+    _user = cur.fetchone()
+
+    con.close()
+
+    return _user
+
+def GetChat():
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Chat")
+    _user = cur.fetchall()
+
+    con.close()
+
+    return _user
+
+def SaveChatDB(author, history, database):
+    con = Connect()
+    cur = con.cursor()
+    author_id = (author.id, author.guild.id,)
+    if not GetChatByAuthor(author):
+        cur.execute("INSERT INTO Chat VALUES (?, ?, ?, ?)", (*author_id, history, database))
+        con.close()
+        return True
+    else:
+        cur.execute("UPDATE Chat SET history=?, data=? WHERE id=? AND guild_id=? ", (history, database, *author_id))
+        con.close()
+        return False
+
+def DeleteChatByAuthor(author):
+    if GetChatByAuthor(author):
+        con = Connect()
+        cur = con.cursor()
+        author_id = (author.id, author.guild.id,)
+        cur.execute("DELETE FROM Chat WHERE id = ? AND guild_id = ?", author_id)
+        con.close()
+        return True
+    return False
