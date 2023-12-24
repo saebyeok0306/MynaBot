@@ -17,6 +17,7 @@
 * discord.py
 * google-api-python-client
 * google-cloud-texttospeech
+* langid
 * openai
 * pillow
 * pynacl
