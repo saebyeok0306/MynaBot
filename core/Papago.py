@@ -1,5 +1,6 @@
 import urllib.request
 import discord, json, langid
+from data.Timeout import timeout
 from discord.ext import commands
 from dotenv import dotenv_values
 
@@ -60,6 +61,10 @@ class Papago(commands.Cog):
         embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.add_field(name="결과", value=f'내일 다시 부탁드려요!')
         await ctx.reply(embed=embed, mention_author=False)
+    
+    @timeout(5)
+    def recogize_language(self, text):
+        return langid.classify(text)
 
         
     @commands.command(name="번역")
@@ -70,7 +75,16 @@ class Papago(commands.Cog):
         if await self.too_long_text(ctx, text):
             return False
 
-        lang, _ = langid.classify(text)
+        # lang, _ = langid.classify(text)
+
+        try: lang, _ = self.recogize_language(text)
+        except Exception as e:
+            if type(e).__name__ == 'TimeoutError':
+                await ctx.channel.send(f'언어를 인식하는데 시간이 오래걸려서 정지시켰어요. ㅠㅠ')
+            else:
+                await ctx.channel.send(f'언어를 인식하는 과정에서 오류가 발생했어요.\n에러 : {e}')
+            return False
+
         support = self.support_langs[lang]
         if support is not False:
             if self.exception_lang.get(lang):
