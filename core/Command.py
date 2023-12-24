@@ -22,6 +22,7 @@ class Command(commands.Cog):
         embed.add_field(name = '!골라줘 `대상1` `대상2` ...', value = f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')
         embed.add_field(name = '!계산 `수식`', value = f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!')
         embed.add_field(name = f'!색상변경 `색상`', value = f'닉네임 색상을 변경할 수 있어요!')
+        embed.add_field(name = f'!번역 `내용`', value = f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!')
         embed.add_field(name = f'!한영번역 `내용`', value = f'한국어를 영어로 번역해줘요!')
         embed.add_field(name = f'!영한번역 `내용`', value = f'영어를 한국어로 번역해줘요!')
         embed.add_field(name = f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value = f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.')
