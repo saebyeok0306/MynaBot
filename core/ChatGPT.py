@@ -168,7 +168,7 @@ class ChatGPT(commands.Cog):
                 nonlocal msg, isLong, collected_message
 
                 config = dotenv_values('.env')
-                client = openai.AsyncOpenAI(api_key=config["ChatGPT_Secret"])
+                client = openai.AsyncOpenAI(api_key=config["OpenAI_Secret"])
                 competion = await client.chat.completions.create(
                     model=model_engine,
                     messages=prompt,

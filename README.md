@@ -42,9 +42,10 @@ pip install -r requirements.txt
 Discord_Token=디스코드봇 토큰 (메인)
 Discord_Token2=디스코드봇 토큰 (테스트용봇)
 Naver_Client_ID=네이버 개발자센터 ClientID (Papago)
-Naver_Client_Secret=네이버 개발자센터 Secret (Papago)
-ChatGPT_Secret=OpenAI Chat GPT Secret (ChatGPT)
-Youtube_Secret=Google API Secret (Youtube)
+Naver_Client_Secret=네이버 개발자센터 Secret Key (Papago)
+OpenAI_Secret=OpenAI Secret Key (ChatGPT, TTS)
+Youtube_Secret=Google API Secret Key (Youtube)
+GOOGLE_APPLICATION_CREDENTIALS=Google Account (TTS)
 ```
 
 ### 3. ffmpeg 설치

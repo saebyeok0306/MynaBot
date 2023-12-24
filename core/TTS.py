@@ -209,7 +209,7 @@ class TTS(commands.Cog):
                     break
 
             config = dotenv_values('.env')
-            client = openai.OpenAI(api_key=config['TTS_Secret'])
+            client = openai.OpenAI(api_key=config['OpenAI_Secret'])
             speech_file_path = Path(self.file_path) / f"{file}"
             response = client.audio.speech.create(
                 model="tts-1",
