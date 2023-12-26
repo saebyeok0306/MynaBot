@@ -18,12 +18,11 @@ class TTS(commands.Cog):
         self.is_cat = defaultdict(bool)
         self.message_queue = deque()
         self.file_path = "./data"
-        self.read_message.start()
+        self.message_queue_process.start()
     
     def cog_unload(self):
-        self.read_message.stop()
-    
-    @tasks.loop(seconds=1)
+        self.message_queue_process.stop()
+
     async def read_message(self):
         import os
         
@@ -60,15 +59,30 @@ class TTS(commands.Cog):
                             await guild.voice_client.disconnect()
                         del self.voice_channel[id]
                         print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
-
         except:
             pass
+    
+    @tasks.loop(seconds=1)
+    async def message_queue_process(self):
+        await self.read_message()
+
+    def is_allow_guild(self, ctx):
+
+        allow_guilds = {
+            "유즈맵 제작공간" : 631471244088311840,
+            "데이터베이스" : 966942556078354502,
+            "강화대전쟁" : 1171793482441039963,
+        }
+        if ctx.guild.id in allow_guilds.values():
+            return True
+        
+        return False
             
     @commands.Cog.listener()
     async def on_message(self, message):
         # if str(message.channel).startswith("Direct Message"): return
         if message.author.bot: return None
-        if message.guild.id not in [631471244088311840]: return
+        if self.is_allow_guild(message) is False: return
 
         vc = message.guild.voice_client
         if vc is None: return
@@ -83,7 +97,7 @@ class TTS(commands.Cog):
 
     @commands.command(name="TTS", aliases=["음성채팅입장", "음성입력", "TTS입장", "입장"])
     async def TTS(self, ctx, *input):
-        if ctx.guild.id not in [631471244088311840]: return
+        if self.is_allow_guild(ctx) is False: return
 
         if ctx.author.voice is None:
             embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"음성채팅 채널에 먼저 입장해야 합니다!")
@@ -112,7 +126,7 @@ class TTS(commands.Cog):
     
     @commands.command(name="입장이동", aliases=["이동", "음성채널이동"])
     async def 입장이동(self, ctx, *input):
-        if ctx.guild.id not in [631471244088311840]: return
+        if self.is_allow_guild(ctx) is False: return
 
         if ctx.author.voice is None:
             embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"음성채팅 채널에 먼저 입장해야 합니다!")
@@ -136,6 +150,7 @@ class TTS(commands.Cog):
 
     @commands.command(name="흑이체")
     async def 흑이체(self, ctx):
+        if self.is_allow_guild(ctx) is False: return
         if ctx.author.voice is None:
             return
         
@@ -265,24 +280,30 @@ class TTS(commands.Cog):
         # 텍스트 변환
         input_text = texttospeech.SynthesisInput(text=text)
 
-        # gender = [
-        #     ("ko-KR-Neural2-C", texttospeech.SsmlVoiceGender.MALE),
-        #     ("ko-KR-Neural2-B", texttospeech.SsmlVoiceGender.FEMALE)
-        # ]
-        gender = {"name": "ko-KR-Neural2-C", "ssml_gender": texttospeech.SsmlVoiceGender.MALE}
+        # 성별 선택
+        gender = "MALE"
+        if author.id in [298824090171736074, 369723279167979520, 413315617270136832, 389327234827288576, 317960020912504832, 383483844218585108]:
+            gender = "FEMALE"
 
-
-        # JOKE
-        if author.id in [298824090171736074, 369723279167979520, 413315617270136832, 389327234827288576]:
-            gender["name"] = "ko-KR-Neural2-B"
-            gender["ssml_gender"] = texttospeech.SsmlVoiceGender.FEMALE
+        gender_info = {
+            "MALE": {
+                "name" : "ko-KR-Neural2-C",
+                "ssml_gender": texttospeech.SsmlVoiceGender.MALE,
+                "pitch": 1.2
+            },
+            "FEMALE": {
+                "name" : "ko-KR-Neural2-A",
+                "ssml_gender": texttospeech.SsmlVoiceGender.FEMALE,
+                "pitch": 4.0
+            }
+        }
 
 
         # 오디오 설정 (예제에서는 한국어, 남성C)
         voice = texttospeech.VoiceSelectionParams(
             language_code="ko-KR",
-            name=gender["name"],
-            ssml_gender=gender["ssml_gender"],
+            name=gender_info[gender]["name"],
+            ssml_gender=gender_info[gender]["ssml_gender"],
         )
 
         speed = 2.0
@@ -295,6 +316,7 @@ class TTS(commands.Cog):
         audio_config = texttospeech.AudioConfig(
             audio_encoding=texttospeech.AudioEncoding.MP3,
             speaking_rate=speed,
+            pitch=gender_info[gender]["pitch"]
         )
 
         response = client.synthesize_speech(
