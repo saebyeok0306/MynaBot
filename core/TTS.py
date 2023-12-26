@@ -22,8 +22,7 @@ class TTS(commands.Cog):
         self.bot = bot
         self.tts_channel = defaultdict(Chat)
         self.is_cat = defaultdict(bool)
-        # self.voice_channel = {}
-        # self.message_queue = defaultdict(deque)
+        self.delete_tts_channel = []
         self.file_path = "./data"
         self.message_queue_process.start()
     
@@ -41,20 +40,25 @@ class TTS(commands.Cog):
             
             message = self.tts_channel[guild_id].message_queue.popleft()
 
-            id = message.guild.id
-            file = f"{id}.mp3"
+            file = f"{guild_id}.mp3"
             res = self.synthesize_text(file, message)
+
+            if type(res) is tuple and res[0] is False:
+                embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"아래의 오류가 발생했습니다.\n{res[1]}")
+                embed.set_footer(text = f"{self.bot.user.name}", icon_url = self.bot.user.display_avatar)
+                await self.tts_channel[guild_id].voice_channel.send(embed = embed)
+                self.delete_tts_channel.append(guild_id)
+                return
             # res = self.openai_tts(file, message)
             if res is True:
                 vc.play(discord.FFmpegPCMAudio(source=f"{self.file_path}/{file}"), after= lambda x: os.remove(f"{self.file_path}/{file}"))
-                self.tts_channel[id].timer = 0
+                self.tts_channel[guild_id].timer = 0
         except:
             pass
     
     @tasks.loop(seconds=1)
     async def message_queue_process(self):
         message_tasks = []
-        delete_tts_channel = []
         for guild_id in self.tts_channel.keys():
             if self.tts_channel[guild_id].message_queue:
                 message_tasks.append(asyncio.create_task(self.read_message(guild_id)))
@@ -69,32 +73,36 @@ class TTS(commands.Cog):
 
                 channel = guild.voice_client.channel
                 if len(channel.members) == 1:
-                    await guild.voice_client.disconnect()
-                    delete_tts_channel.append(guild_id)
+                    self.delete_tts_channel.append(guild_id)
                     print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
 
                 elif self.tts_channel[guild_id].timer > 600:
-                    await guild.voice_client.disconnect()
-                    delete_tts_channel.append(guild_id)
+                    self.delete_tts_channel.append(guild_id)
                     print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
 
         await asyncio.gather(*message_tasks)
 
-        for guild_id in delete_tts_channel:
-            del self.tts_channel[guild_id]
+        for guild_id in self.delete_tts_channel:
+            try:
+                del self.tts_channel[guild_id]
+                guild = self.bot.get_guild(guild_id)
+                if guild.voice_client:
+                    await guild.voice_client.disconnect()
+            except: pass
+        self.delete_tts_channel = []
 
     def is_allow_guild(self, ctx):
-
-        allow_guilds = {
-            "유즈맵 제작공간" : 631471244088311840,
-            "데이터베이스" : 966942556078354502,
-            "강화대전쟁" : 1171793482441039963,
-            "마스에몽" : 948601885575741541,
-        }
-        if ctx.guild.id in allow_guilds.values():
-            return True
+        return True
+        # allow_guilds = {
+        #     "유즈맵 제작공간" : 631471244088311840,
+        #     "데이터베이스" : 966942556078354502,
+        #     "강화대전쟁" : 1171793482441039963,
+        #     "마스에몽" : 948601885575741541,
+        # }
+        # if ctx.guild.id in allow_guilds.values():
+        #     return True
         
-        return False
+        # return False
             
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -109,7 +117,7 @@ class TTS(commands.Cog):
         if message.content.startswith("!"): return
         if message.content.startswith("http://"): return
         if message.content.startswith("https://"): return
-        if not message.channel.id in fun.getBotChannel(self.bot, message):
+        if message.channel.id not in fun.getBotChannel(self.bot, message):
             if str(message.channel.type) != "voice": return
             if vc.channel != message.channel: return
 
@@ -127,7 +135,7 @@ class TTS(commands.Cog):
             await ctx.message.delete(delay=10)
             return
 
-        if ctx.voice_client is not None:
+        if ctx.guild.voice_client is not None and ctx.guild.voice_client.channel != ctx.author.voice.channel:
             embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"봇이 다른 음성채팅 채널에 입장한 상태입니다.")
             embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
             msg = await ctx.reply(embed=embed)
@@ -136,11 +144,11 @@ class TTS(commands.Cog):
             return
 
         voice_channel = ctx.author.voice.channel
+        if ctx.guild.voice_client: await ctx.guild.voice_client.disconnect()
         await voice_channel.connect()
 
-        if ctx.guild.id not in self.tts_channel.keys():
-            self.tts_channel[ctx.guild.id].voice_client = ctx.guild.voice_client
-            self.tts_channel[ctx.guild.id].voice_channel = voice_channel
+        self.tts_channel[ctx.guild.id].voice_client = ctx.guild.voice_client
+        self.tts_channel[ctx.guild.id].voice_channel = voice_channel
         
         await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 TTS 명령어를 실행했습니다.")
 
@@ -157,7 +165,7 @@ class TTS(commands.Cog):
             await ctx.message.delete(delay=10)
             return
         
-        if ctx.voice_client is None:
+        if ctx.guild.voice_client is None:
             embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"봇이 음성채팅 채널에 참여한 상태가 아닙니다!")
             embed.set_footer(text = f"{ctx.author.display_name}", icon_url = ctx.author.display_avatar)
             msg = await ctx.reply(embed=embed)
@@ -165,7 +173,7 @@ class TTS(commands.Cog):
             await ctx.message.delete(delay=10)
             return
 
-        await ctx.voice_client.disconnect()
+        await ctx.guild.voice_client.disconnect()
         voice_channel = ctx.author.voice.channel
         await voice_channel.connect()
 
@@ -273,8 +281,7 @@ class TTS(commands.Cog):
             response.stream_to_file(speech_file_path)
             return True
         except Exception as e:
-            print(e)
-            return False
+            return False, e
 
     def synthesize_text(self, file, message):
         from google.cloud import texttospeech
@@ -334,9 +341,12 @@ class TTS(commands.Cog):
             pitch=gender_info[gender]["pitch"]
         )
 
-        response = client.synthesize_speech(
-            request={"input": input_text, "voice": voice, "audio_config": audio_config}
-        )
+        try:
+            response = client.synthesize_speech(
+                request={"input": input_text, "voice": voice, "audio_config": audio_config}
+            )
+        except Exception as e:
+            return False, e
         
         # audio 폴더 안에 output.mp3라는 이름으로 파일 생성
         with open(f"{self.file_path}/{file}", "wb") as out:
