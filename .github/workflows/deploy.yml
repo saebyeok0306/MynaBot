@@ -33,7 +33,7 @@ jobs:
         run: docker save ${{ env.DOCKER_IMAGE_NAME }}:latest -o ${{ env.TAR_NAME }}.tar
 
       - name: Copy Docker image to server
-        run: scp -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ env.TAR_NAME }}.tar ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:${{ env.FOLDER_PATH }}/${{ env.TAR_NAME }}.tar
+        run: scp -i ${{ secrets.SSH_PRIVATE_KEY }} "./${{ env.TAR_NAME }}.tar" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:${{ env.FOLDER_PATH }}/
 
       - name: Load Docker image on server and run container
         run: |
