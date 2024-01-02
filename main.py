@@ -16,8 +16,6 @@ load_dotenv(verbose=True, override=True)
 
 # pip install discord.py[voice]
 
-# sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
 # screen -S dc python main.py
 # screen -S dc -X quit
 
