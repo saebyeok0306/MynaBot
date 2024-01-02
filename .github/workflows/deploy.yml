@@ -47,8 +47,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ env.FOLDER_PATH }}
-            docker stop ${{ env.CONTAINER_NAME }} || true
-            docker rm ${{ env.CONTAINER_NAME }} || true
             unzip -o ${{ env.ZIP_NAME }}
             docker build -t ${{ env.DOCKER_IMAGE_NAME }} .
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
             docker run -d --name ${{ env.CONTAINER_NAME }} -p 80:80 ${{ env.DOCKER_IMAGE_NAME }}
+            docker rmi $(docker images -f "dangling=true" -q) || true
