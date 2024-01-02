@@ -1,7 +1,7 @@
 import sqlite3, datetime
 import discord
 
-def Connect(db_path = r'data/DiscordDB.db') -> sqlite3.Connection:
+def Connect(db_path = r'db/DiscordDB.db') -> sqlite3.Connection:
     return sqlite3.connect(db_path, isolation_level = None)
 
 def GetUserByAuthor(author):

@@ -58,7 +58,7 @@ def returnNumber(text:str) -> int:
 
 def game_check(id):
     alr_exist = []
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT user_ID FROM User_Info WHERE user_ID = ?", (id,))
     rows = cur.fetchall()
@@ -72,7 +72,7 @@ def game_check(id):
 
 # DB에 저장된 닉네임이 현재닉네임과 일치하지 않을 때, 닉네임 갱신하기
 def setUserName(id, msg):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT user_Name FROM User_Info WHERE user_ID = ?", (id,))
     userName = cur.fetchone()[0]
@@ -124,7 +124,7 @@ def getTopicChannel(bot, Topic):
 
 # 내가 구매한 코인의 가치 표기
 def game_coinValue(id):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_UserID = ?", (id,))
     ownCoin = cur.fetchall()
@@ -148,7 +148,7 @@ def game_coinValue(id):
     return PM, costMoney, currentValue
 
 def game_perCoinValue(id, coinId):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT trade_CoinID, trade_CoinName, trade_CoinNum, trade_CoinCost FROM Coin_Trade WHERE trade_UserID = ? AND trade_CoinID = ?", (id, coinId,))
     ownCoin = cur.fetchone()
@@ -166,7 +166,7 @@ def game_perCoinValue(id, coinId):
 
 # 코인게임 랭킹 계산
 def coin_Ranking(set_):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT user_ID, user_Name, user_Money FROM User_Info")
     userList = cur.fetchall()
@@ -200,7 +200,7 @@ def coin_GetRank(id):
     return False, False
 
 def returnJoinDate(id):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT user_Date FROM User_Info WHERE user_ID = ?", (id,))
     userInfo = cur.fetchone()[0]
@@ -209,7 +209,7 @@ def returnJoinDate(id):
     return joindate
 
 def removeUserDB(id):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("DELETE FROM 'User_Info' WHERE user_ID = ?", (id,))
     cur.execute("DELETE FROM 'Coin_Trade' WHERE trade_UserID = ?", (id,))
@@ -219,7 +219,7 @@ def removeUserDB(id):
     return True
 
 def returnRoleName(id):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("SELECT user_Role FROM User_Info WHERE user_ID = ?", (id,))
     userInfo = cur.fetchone()[0]
@@ -227,7 +227,7 @@ def returnRoleName(id):
     return userInfo
 
 def createRoleName(id, roleName):
-    con = sqlite3.connect(r'data/DiscordDB.db', isolation_level = None) #db 접속
+    con = sqlite3.connect(r'db/DiscordDB.db', isolation_level = None) #db 접속
     cur = con.cursor()
     cur.execute("UPDATE 'User_Info' SET user_Role = ? WHERE user_ID = ?", (roleName, id))
     con.close() #db 종료
