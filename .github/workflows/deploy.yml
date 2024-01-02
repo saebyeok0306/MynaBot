@@ -32,7 +32,7 @@ jobs:
       - name: Save Docker image as tar
         run: |
           docker save ${{ env.DOCKER_IMAGE_NAME }}:latest -o ${{ env.TAR_NAME }}.tar
-          chmod 400 ${{ env.TAR_NAME }}.tar
+          chmod o+rwx ${{ env.TAR_NAME }}.tar
 
 #      - name: Copy Docker image to server
 #        run: |
