@@ -1,7 +1,6 @@
-FROM python:3.10
+FROM westreed/python3.10-ffmpeg
 
-RUN apt-get update && \
-    apt-get install -y ffmpeg
+RUN timedatectl set-timezone Asia/Seoul
 
 WORKDIR .
 
