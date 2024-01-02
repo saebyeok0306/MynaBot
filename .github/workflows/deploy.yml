@@ -30,7 +30,9 @@ jobs:
         run: docker build -t ${{ env.DOCKER_IMAGE_NAME }}:latest .
 
       - name: Save Docker image as tar
-        run: docker save ${{ env.DOCKER_IMAGE_NAME }}:latest -o ${{ env.TAR_NAME }}.tar
+        run: |
+          docker save ${{ env.DOCKER_IMAGE_NAME }}:latest -o ${{ env.TAR_NAME }}.tar
+          chmod 400 ${{ env.TAR_NAME }}.tar
 
 #      - name: Copy Docker image to server
 #        run: |
@@ -40,7 +42,7 @@ jobs:
 #        env:
 #          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: copy file via ssh password
+      - name: Copy Docker image to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
