@@ -1,7 +1,5 @@
-import discord, asyncio, json, datetime
-import sys, os
+import discord, datetime, os
 import data.Database as db
-import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
@@ -17,7 +15,11 @@ load_dotenv(verbose=True, override=True)
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='!!', intents=intents)
 status_count = 0
-core_list = ['Administrator', 'Command', 'ColorName', 'Papago', 'ChatGPT', 'ArmyCard', 'Profile', 'Youtube', 'TTS', 'Message']
+core_list = [
+    'Administrator', 'Command', 'ColorName',
+    'Papago', 'ChatGPT', 'ArmyCard', 'Profile',
+    'Youtube', 'TTS', 'Message', 'Extension'
+]
 
 async def loadCore():
     print("코어모듈을 로드합니다...")
@@ -34,7 +36,7 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('==============================')
-    
+
     now = datetime.datetime.now()
     nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
 
@@ -63,35 +65,6 @@ async def on_ready():
     for guild in bot.guilds:
         db.SaveUserDBAtGuild(guild)
 
-@bot.command(name='로드', aliases=['load'])
-async def load_commands(ctx, extension):
-    if ctx.message.author.guild_permissions.administrator:
-        await bot.load_extension(f'core.{extension}')
-        await ctx.send(f':white_check_mark: {extension}을(를) 로드했습니다!')
-
-@bot.command(name='언로드', aliases=['unload'])
-async def unload_commands(ctx, extension):
-    if ctx.message.author.guild_permissions.administrator:
-        await bot.unload_extension(f'core.{extension}')
-        await ctx.send(f':white_check_mark: {extension}을(를) 언로드했습니다!')
-
-@bot.command(name='리로드', aliases=['reload'])
-async def reload_commands(ctx, extension=None):
-    if ctx.message.author.guild_permissions.administrator:
-        if extension is None: # extension이 None이면 (그냥 !리로드 라고 썼을 때)
-            for filename in os.listdir('core'):
-                if filename.endswith('.py'):
-                    extensionName = filename[:-3]
-                    if extensionName in coreList:
-                        try: await bot.unload_extension(f'core.{extensionName}')
-                        except: pass
-                        await bot.load_extension(f'core.{extensionName}')
-                        await ctx.send(f':white_check_mark: {extensionName}을(를) 다시 불러왔습니다!')
-        else:
-            await bot.unload_extension(f'core.{extension}')
-            await bot.load_extension(f'core.{extension}')
-            await ctx.send(f':white_check_mark: {extension}을(를) 다시 불러왔습니다!')
-    
 # @bot.event
 # async def on_command_error(ctx, error):
 #     if isinstance(error, commands.CommandNotFound):             return
@@ -126,7 +99,7 @@ async def on_member_remove(member):
     user_res = db.DeleteUserByAuthor(member)
     if user_res: log_text += f"유저정보 제거, "
     log_text += ")"
-    
+
     await logs.SendLog(bot=bot, log_text=log_text)
 
 

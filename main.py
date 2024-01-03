@@ -1,7 +1,5 @@
-import discord, asyncio, json, random, datetime
-import sys, os
+import discord, datetime, os
 import data.Database as db
-import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
@@ -68,35 +66,6 @@ async def on_ready():
 
     change_status.start()
     await loadCore()
-
-@bot.command(name='로드', aliases=['load'])
-async def load_commands(ctx, extension):
-    if ctx.message.author.id == 383483844218585108:
-        await bot.load_extension(f'core.{extension}')
-        await ctx.send(f':white_check_mark: {extension}을(를) 로드했습니다!')
-
-@bot.command(name='언로드', aliases=['unload'])
-async def unload_commands(ctx, extension):
-    if ctx.message.author.id == 383483844218585108:
-        await bot.unload_extension(f'core.{extension}')
-        await ctx.send(f':white_check_mark: {extension}을(를) 언로드했습니다!')
-
-@bot.command(name='리로드', aliases=['reload'])
-async def reload_commands(ctx, extension=None):
-    if ctx.message.author.id == 383483844218585108:
-        if extension is None: # extension이 None이면 (그냥 !리로드 라고 썼을 때)
-            for filename in os.listdir('core'):
-                if filename.endswith('.py'):
-                    extension_name = filename[:-3]
-                    if extension_name in core_list:
-                        try: await bot.unload_extension(f'core.{extension_name}')
-                        except: pass
-                        await bot.load_extension(f'core.{extension_name}')
-                        await ctx.send(f':white_check_mark: {extension_name}을(를) 다시 불러왔습니다!')
-        else:
-            await bot.unload_extension(f'core.{extension}')
-            await bot.load_extension(f'core.{extension}')
-            await ctx.send(f':white_check_mark: {extension}을(를) 다시 불러왔습니다!')
     
 @bot.event
 async def on_command_error(ctx, error):
