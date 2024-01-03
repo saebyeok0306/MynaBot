@@ -23,14 +23,21 @@ class Youtube(commands.Cog):
         response = request.execute()
         return response.get('items', [])
 
+
     @staticmethod
     def get_video_url(video_id):
         return f'https://www.youtube.com/watch?v={video_id}'
-    
-    @staticmethod
-    async def select_video(ctx, keyword, video):
+
+    async def select_video(self, ctx, keyword, video):
         _, video_url, video_info, _ = video
-        await ctx.reply(f"### [ 🔮유튜브 검색완료 ]\n\n**{keyword} 의 검색 결과입니다.**\n{video_info}\n{video_url}", mention_author=False)
+        if ctx.author.voice and ctx.guild.voice_client:
+            music_cog = self.bot.cogs["Music"]
+            music_cog.playlist[ctx.guild.id].append({"title": video_info, "url": video_url, "author": ctx.author})
+            await ctx.reply(f"### [ 🔮유튜브 검색완료 ]\n\n**{keyword} 의 검색 결과입니다.**\n`플레이리스트에 해당 곡이 추가되었습니다!`\n{video_info}\n{video_url}",
+                            mention_author=False)
+        else:
+            await ctx.reply(f"### [ 🔮유튜브 검색완료 ]\n\n**{keyword} 의 검색 결과입니다.**\n{video_info}\n{video_url}",
+                            mention_author=False)
     
     @commands.command(name="유튜브", aliases=["유튜브검색"])
     async def 유튜브(self, ctx, *input):
@@ -53,7 +60,6 @@ class Youtube(commands.Cog):
 
         config = dotenv_values('.env')
         youtube = build('youtube', 'v3', developerKey=config['Youtube_Secret'])
-
 
         embed = discord.Embed(color=0xB22222, title="[ 🪄유튜브 검색중 ]", description=f"잠시만 기다려주세요!\n정보를 수집 중이므로 다소 시간이 걸릴 수 있습니다.")
         embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)

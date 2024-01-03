@@ -35,3 +35,6 @@ system.message.txt
 .idea
 
 data/ffmpeg
+
+# yt-dlp 정크파일 예외
+*.webm

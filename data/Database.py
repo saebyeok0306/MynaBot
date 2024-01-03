@@ -154,3 +154,48 @@ def DeleteChatByAuthor(author):
         con.close()
         return True
     return False
+
+def GetMusicByGuild(guild):
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Music WHERE guild_id = ?", (guild.id, ))
+    _music = cur.fetchone()
+
+    con.close()
+
+    return _music
+
+def GetMusic():
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Music")
+    _music = cur.fetchall()
+
+    con.close()
+
+    return _music
+
+def SaveMusicDB(guild, is_playing):
+    con = Connect()
+    cur = con.cursor()
+    if not GetMusicByGuild(guild):
+        cur.execute("INSERT INTO Music VALUES (?, ?)", (guild.id, is_playing))
+        con.close()
+        return True
+    else:
+        cur.execute("UPDATE Music SET playing=? WHERE guild_id=? ", (is_playing, guild.id))
+        con.close()
+        return False
+
+def GetMusicByGuild(guild):
+    con = Connect()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM Music WHERE guild_id=?", (guild.id, ))
+    _music = cur.fetchone()
+
+    con.close()
+
+    return _music

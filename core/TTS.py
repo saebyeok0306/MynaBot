@@ -1,5 +1,6 @@
 import discord, random, asyncio
 import data.Functions as fun
+import data.Database as db
 import data.Logs as logs
 from pathlib import Path
 import openai
@@ -64,8 +65,11 @@ class TTS(commands.Cog):
                 message_tasks.append(asyncio.create_task(self.read_message(guild_id)))
 
             else:
-                self.tts_channel[guild_id].timer += 1
                 guild = self.bot.get_guild(guild_id)
+                if guild.voice_client.is_playing():
+                    continue
+
+                self.tts_channel[guild_id].timer += 1
 
                 # 변수에는 존재하는데 실제 봇은 입장을 안한 상태인 경우
                 if guild.voice_client is None:
@@ -120,6 +124,8 @@ class TTS(commands.Cog):
         if message.channel.id not in fun.getBotChannel(self.bot, message):
             if str(message.channel.type) != "voice": return
             if vc.channel != message.channel: return
+        is_playing = db.GetMusicByGuild(message.guild)[1]
+        if is_playing: return
 
         self.tts_channel[message.guild.id].message_queue.append(message)
 

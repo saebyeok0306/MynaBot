@@ -25,7 +25,7 @@ core_list = [
     'Administrator', 'Command', 'ColorName',
     'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard',
     'Profile', 'Youtube', 'TTS', 'Message',
-    'Extension'
+    'Extension', 'Music'
 ]
 
 async def loadCore():

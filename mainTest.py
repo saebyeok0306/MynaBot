@@ -18,7 +18,8 @@ status_count = 0
 core_list = [
     'Administrator', 'Command', 'ColorName',
     'Papago', 'ChatGPT', 'ArmyCard', 'Profile',
-    'Youtube', 'TTS', 'Message', 'Extension'
+    'Youtube', 'TTS', 'Message', 'Extension',
+    'Music'
 ]
 
 async def loadCore():
