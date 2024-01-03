@@ -22,7 +22,9 @@
 * pillow
 * pynacl
 * python-dotenv
+* pytube
 * tiktoken
+* yt-dlp (youtube-dl)
 
 ---
 ## Run
