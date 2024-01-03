@@ -4,9 +4,6 @@ DB Browser for SQLite/
 # __pycache__/ 디렉토리에 있는 모든 파일을 무시
 __pycache__/
 
-# data/token.json  파일무시
-token.json
-
 # *.db 파일무시
 *.db
 
