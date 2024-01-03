@@ -23,13 +23,17 @@ jobs:
       - name: Checkout source code
         uses: actions/checkout@v4
 
+      # 2. 소스 코드 압축
       - name: Make zip file
-        run: zip -qq -r ./${{ env.ZIP_NAME }} . -x ".git/*" ".github/*" "img/*" "mainTest.py"
+        run: zip -qq -r ./${{ env.ZIP_NAME }} . -x ".git/*" ".github/*" "src/*" "mainTest.py"
         shell: bash
 
+      # 3. 압축파일 권한 수정
+      #    (Actions에서 생성한 파일은 권한을 수정해야 scp로 보낼 때 오류가 안생김)
       - name: Modify permissions of Zip file
         run: chmod o+rwx ${{ env.ZIP_NAME }}
 
+      # 4. scp로 압축파일 보내기
       - name: Copy discord bot code
         uses: appleboy/scp-action@master
         with:
@@ -39,6 +43,7 @@ jobs:
           source: "${{ env.ZIP_NAME }}"
           target: ${{ env.FOLDER_PATH }}/
 
+      # 5. 압축파일을 해제하고 docker container로 실행하기
       - name: Connect to Remote Server
         uses: appleboy/ssh-action@master
         with:
