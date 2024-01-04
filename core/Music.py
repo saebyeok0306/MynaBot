@@ -40,19 +40,6 @@ class YTDLSource(discord.PCMVolumeTransformer):
         self.title = data.get('title')
         self.url = data.get('url')
 
-    @staticmethod
-    async def get_info_from_url(url):
-        import json
-        data = ytdl.extract_info(url, download=False)
-
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
-
-        data = json.dumps(ytdl.sanitize_info(data), ensure_ascii=False)
-        print(data)
-        return data
-
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
         loop = loop or asyncio.get_event_loop()
@@ -111,7 +98,7 @@ class Music(commands.Cog):
         except Exception as e:
             print(f"파일 삭제 실패 : {e}")
 
-    @commands.command()
+    @commands.command(name="재생", aliases=["play"])
     async def 재생(self, ctx, *, url):
         """Plays from a url (almost anything youtube_dl supports)"""
 
@@ -145,21 +132,21 @@ class Music(commands.Cog):
 
                 await ctx.send(f'**Now playing** ~🎶: `{player.title}`')
 
-    @commands.command()
+    @commands.command(name="볼륨", aliases=["음량"])
     async def 볼륨(self, ctx, volume: int):
         """Changes the player's volume"""
         if ctx.author.voice is None: return
         if ctx.voice_client is None: return
 
         ctx.voice_client.source.volume = volume / 100
-        await ctx.reply(f"### [ 🎚️ 볼륨 조절 ]\n\n**봇의 볼륨을 {volume}%로 변경했어요.**", mention_author=False)
+        await ctx.reply(f"### [ 🎚️ 음량 조절 ]\n\n**봇의 음량을 {volume}%로 변경했어요.**", mention_author=False)
 
-    @commands.command()
+    @commands.command(name="정지", aliases=["스킵", "skip"])
     async def 정지(self, ctx):
         """Stops and disconnects the bot from voice"""
         is_playing = db.GetMusicByGuild(ctx.guild)[1]
         if is_playing and ctx.voice_client and ctx.voice_client.is_playing():
-            if self.current[ctx.guild.id]["author"].id != ctx.author.id and \
+            if self.current[ctx.guild.id]["author"].id != ctx.author.id or \
                                             not ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
                     color=0xB22222, title="[ 권한 없음 ]",
@@ -167,6 +154,7 @@ class Music(commands.Cog):
                 embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
                 return await ctx.reply(embed=embed)
 
+            await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
             ctx.voice_client.stop()
 
     @commands.command()
