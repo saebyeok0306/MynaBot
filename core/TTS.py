@@ -8,12 +8,14 @@ from discord.ext import commands, tasks
 from collections import deque, defaultdict
 from dotenv import dotenv_values
 
+
 class Chat:
     def __init__(self):
         self.timer = 0
         self.message_queue = deque()
         self.voice_client = None
         self.voice_channel = None
+
 
 class TTS(commands.Cog):
 
@@ -43,6 +45,7 @@ class TTS(commands.Cog):
 
             file = f"{guild_id}.mp3"
             res = self.synthesize_text(file, message)
+            # res = self.openai_tts(file, message)
 
             if type(res) is tuple and res[0] is False:
                 embed = discord.Embed(color=0xB22222, title="[ 🚨TTS 오류 ]", description=f"아래의 오류가 발생했습니다.\n{res[1]}")
@@ -50,7 +53,6 @@ class TTS(commands.Cog):
                 await self.tts_channel[guild_id].voice_channel.send(embed = embed)
                 self.delete_tts_channel.append(guild_id)
                 return
-            # res = self.openai_tts(file, message)
             if res is True:
                 vc.play(discord.FFmpegPCMAudio(source=f"{self.file_path}/{file}"), after= lambda x: os.remove(f"{self.file_path}/{file}"))
                 self.tts_channel[guild_id].timer = 0
@@ -66,6 +68,11 @@ class TTS(commands.Cog):
 
             else:
                 guild = self.bot.get_guild(guild_id)
+                channel = guild.voice_client.channel
+                if len(channel.members) == 1:
+                    self.delete_tts_channel.append(guild_id)
+                    print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
+
                 if guild.voice_client.is_playing():
                     continue
 
@@ -74,11 +81,6 @@ class TTS(commands.Cog):
                 # 변수에는 존재하는데 실제 봇은 입장을 안한 상태인 경우
                 if guild.voice_client is None:
                     await self.tts_channel[guild_id].voice_channel.connect()
-
-                channel = guild.voice_client.channel
-                if len(channel.members) == 1:
-                    self.delete_tts_channel.append(guild_id)
-                    print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
 
                 elif self.tts_channel[guild_id].timer > 600:
                     self.delete_tts_channel.append(guild_id)
