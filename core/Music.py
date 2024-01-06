@@ -146,11 +146,11 @@ class Music(commands.Cog):
         """Stops and disconnects the bot from voice"""
         is_playing = db.GetMusicByGuild(ctx.guild)[1]
         if is_playing and ctx.voice_client and ctx.voice_client.is_playing():
-            if self.current[ctx.guild.id]["author"].id != ctx.author.id or \
+            if self.current[ctx.guild.id]["author"].id != ctx.author.id and \
                                             not ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
                     color=0xB22222, title="[ 권한 없음 ]",
-                    description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current['title']}` | **{self.current['author'].display_name}님**")
+                    description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[ctx.guild.id]['title']}` | **{self.current[ctx.guild.id]['author'].display_name}님**")
                 embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
                 return await ctx.reply(embed=embed)
 
