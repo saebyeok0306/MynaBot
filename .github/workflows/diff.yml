@@ -25,7 +25,7 @@ jobs:
         latest_commit=$(git rev-parse HEAD)
 
         # Get the commit SHA of the commit before the latest commit
-        previous_commit=$(git rev-parse HEAD~1)
+        previous_commit=$(git rev-list -n 1 $latest_commit^ --)
 
         # List the changed files between the latest commit and the previous commit
         changed_files=$(git diff --name-only $previous_commit $latest_commit)
