@@ -1,9 +1,9 @@
 name: Track Changes
 
 on:
-  push:
+  workflow_dispatch:
     branches:
-      - develop
+      - '**'
 
 jobs:
   track_changes:
@@ -13,6 +13,7 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v4
       with:
+        # 최근 커밋내역을 몇 개까지 불러올지 정함.
         fetch-depth: 2
 
     - name: Check changed files
@@ -20,16 +21,11 @@ jobs:
         # 현재 브랜치 확인
         git branch
         
-        # 파일 상황 확인
-        ls -al
-        
-        git rev-list -n 3 HEAD
-        
         # Get the commit SHA of the latest commit
         latest_commit=$(git rev-parse HEAD)
 
         # Get the commit SHA of the commit before the latest commit
-        previous_commit=$(git rev-list -n 1 $latest_commit^ --)
+        previous_commit=$(git rev-parse HEAD^)
 
         # List the changed files between the latest commit and the previous commit
         changed_files=$(git diff --name-only $previous_commit $latest_commit)
