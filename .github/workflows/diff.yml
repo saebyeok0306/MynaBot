@@ -1,0 +1,35 @@
+name: Track Changes
+
+on:
+  workflow_dispatch:
+    branches:
+      - '**'
+
+jobs:
+  track_changes:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        # 최근 커밋내역을 몇 개까지 불러올지 정함.
+        fetch-depth: 2
+
+    - name: Check changed files
+      run: |
+        # 현재 브랜치 확인
+        git branch
+        
+        # Get the commit SHA of the latest commit
+        latest_commit=$(git rev-parse HEAD)
+
+        # Get the commit SHA of the commit before the latest commit
+        previous_commit=$(git rev-parse HEAD^)
+
+        # List the changed files between the latest commit and the previous commit
+        changed_files=$(git diff --name-only $previous_commit $latest_commit)
+
+        # Print the changed files
+        echo "Changed files:"
+        echo "$changed_files"
