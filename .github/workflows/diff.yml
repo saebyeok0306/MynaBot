@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout source code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
 
     - name: Check changed files
       run: |
@@ -21,7 +23,7 @@ jobs:
         # 파일 상황 확인
         ls -al
         
-        git rev-list HEAD
+        git rev-list -n 3 HEAD
         
         # Get the commit SHA of the latest commit
         latest_commit=$(git rev-parse HEAD)
