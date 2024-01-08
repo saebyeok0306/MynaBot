@@ -1,0 +1,28 @@
+name: Stop Discord Bot
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+
+env:
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  stop:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 환경 설정
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. docker container 정지하기
+      - name: Stop Docker Container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            chmod +x ./script/stop.sh
+            ./script/stop.sh
