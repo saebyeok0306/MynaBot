@@ -21,6 +21,8 @@ jobs:
         # 파일 상황 확인
         ls -al
         
+        git rev-list HEAD
+        
         # Get the commit SHA of the latest commit
         latest_commit=$(git rev-parse HEAD)
 
