@@ -32,7 +32,8 @@ jobs:
                 echo "INFO: Bot Container is removing..."
                 docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} || true
               fi
-            elif docker image inspect {{ secrets.DOCKER_IMAGE_NAME }}:latest &> /dev/null; then
+            fi
+            if docker images ${{ secrets.DOCKER_IMAGE_NAME }}:latest | grep -q "${{ secrets.DOCKER_IMAGE_NAME }}"; then
               echo "INFO: Bot Container is starting... True"
               docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db -p 80:80 ${{ secrets.DOCKER_IMAGE_NAME }}
             else
