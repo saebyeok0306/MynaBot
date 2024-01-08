@@ -15,6 +15,12 @@ jobs:
 
     - name: Check changed files
       run: |
+        # 현재 브랜치 확인
+        git branch
+        
+        # 파일 상황 확인
+        ls -al
+        
         # Get the commit SHA of the latest commit
         latest_commit=$(git rev-parse HEAD)
 
