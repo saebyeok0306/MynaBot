@@ -24,5 +24,6 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            cd ${{ secrets.APP_FOLDER_PATH }}
             chmod +x ./script/stop.sh
             ./script/stop.sh
