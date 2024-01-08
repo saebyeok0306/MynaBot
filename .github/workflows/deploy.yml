@@ -10,10 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: '3.10'
-  FOLDER_PATH: '/home/app'
   ZIP_NAME: 'discord-bot.zip'
-  DOCKER_IMAGE_NAME: 'python-discord-bot'
-  CONTAINER_NAME: 'discord-bot'
 
 jobs:
   deploy:
@@ -41,7 +38,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "${{ env.ZIP_NAME }}"
-          target: ${{ env.FOLDER_PATH }}/
+          target: ${{ secrets.APP_FOLDER_PATH }}/
 
       # 5. 압축파일을 해제하고 docker container로 실행하기
       - name: Connect to Remote Server
@@ -51,11 +48,11 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ env.FOLDER_PATH }}
+            cd ${{ secrets.APP_FOLDER_PATH }}
             unzip -o ${{ env.ZIP_NAME }}
             rm ${{ env.ZIP_NAME }}
-            docker build -t ${{ env.DOCKER_IMAGE_NAME }} .
-            docker stop ${{ env.CONTAINER_NAME }} || true
-            docker rm ${{ env.CONTAINER_NAME }} || true
-            docker run -d --name ${{ env.CONTAINER_NAME }} -v $(pwd)/db:/db -p 80:80 ${{ env.DOCKER_IMAGE_NAME }}
+            docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
+            docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
+            docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} || true
+            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db -p 80:80 ${{ secrets.DOCKER_IMAGE_NAME }}
             docker rmi $(docker images -f "dangling=true" -q) || true
