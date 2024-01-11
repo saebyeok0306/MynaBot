@@ -31,8 +31,8 @@ jobs:
 
       # 3. 압축파일 권한 수정
       #    (Actions에서 생성한 파일은 권한을 수정해야 scp로 보낼 때 오류가 안생김)
-#      - name: Modify permissions of Zip file
-#        run: chmod o+rwx ${{ env.ZIP_NAME }}
+      - name: Modify permissions of Zip file
+        run: chmod o+rwx ${{ env.ZIP_NAME }}
 
       # 4. scp로 압축파일 보내기
       - name: Copy discord bot code
