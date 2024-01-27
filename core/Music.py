@@ -1,7 +1,7 @@
 import discord, asyncio, os
 import yt_dlp as youtube_dl
 import data.Database as db
-from pytube import YouTube
+from pytube import YouTube, Playlist
 from pytube.exceptions import PytubeError
 from collections import defaultdict
 from discord.ext import commands, tasks
@@ -45,9 +45,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
 
-        if 'entries' in data:
-            # take first item from a playlist
-            data = data['entries'][0]
+        # if 'entries' in data:
+        #     # take first item from a playlist
+        #     data = data['entries'][0]
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
@@ -88,7 +88,8 @@ class Music(commands.Cog):
 
         await asyncio.gather(*music_tasks)
 
-    def play_after(self, e, guild, filename):
+    @staticmethod
+    def play_after(e, guild, filename):
         db.SaveMusicDB(guild, False)
         if e:
             return print(f'Player error: {e}')
@@ -97,6 +98,29 @@ class Music(commands.Cog):
             os.remove(filename)
         except Exception as e:
             print(f"파일 삭제 실패 : {e}")
+
+    @staticmethod
+    def parse_youtube_url(url):
+        try:
+            video = YouTube(url)
+        except PytubeError:
+            return -1, -1
+        except:
+            video = []
+            playlist = Playlist(url)
+            for play_url in playlist:
+                video.append(YouTube(play_url))
+            url = playlist
+
+        return url, video
+
+    async def add_playlist(self, ctx, url, title=None):
+        """Single Music URL"""
+        if title is None:
+            video = YouTube(url)
+            title = video.title
+        self.playlist[ctx.guild.id].append({"title": title, "url": url, "author": ctx.author})
+        await ctx.send(f'플레이리스트에 추가되었어요!\n{title}')
 
     @commands.command(name="재생", aliases=["play"])
     async def 재생(self, ctx, *, url):
@@ -113,24 +137,23 @@ class Music(commands.Cog):
             embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
             return await ctx.reply(embed=embed)
 
-        async with ctx.typing():
-            if ctx.guild.voice_client.is_playing():
-                try:
-                    video = YouTube(url)
-                    self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
-                    await ctx.send(f'플레이리스트에 추가되었어요!\n{video.title}')
-                except PytubeError:
-                    return await ctx.send(f'잘못된 URL 주소입니다!\n다른 주소로 다시 시도해주세요.')
-                except Exception as e:
-                    return await ctx.send(f'오류가 발생했습니다!\n{e}')
-            else:
-                player = await YTDLSource.from_url(url, loop=self.bot.loop, stream=False)
-                ctx.voice_client.play(player,
-                                      after=lambda e: self.play_after(e, ctx.guild, ytdl.prepare_filename(player.data)))
-                db.SaveMusicDB(ctx.guild, True)
-                self.current[ctx.guild.id] = {"title": player.title, "url": url, "author": ctx.author}
+        if not self.process_playlist.is_running():
+            self.process_playlist.start()
 
-                await ctx.send(f'**Now playing** ~🎶: `{player.title}`')
+        async with ctx.typing():
+            # url을 통해 비디오 데이터를 획득합니다.
+            url, video = self.parse_youtube_url(url)
+            if url == video == -1:
+                return await ctx.send(f'잘못된 URL 주소입니다!\n다른 주소로 다시 시도해주세요.')
+
+            # 플레이리스트인 경우
+            if type(video) is list:
+                for _url, _video in zip(url, video):
+                    await self.add_playlist(ctx, _url, _video.title)
+
+            # 아닌 경우
+            else:
+                await self.add_playlist(ctx, url, video.title)
 
     @commands.command(name="볼륨", aliases=["음량"])
     async def 볼륨(self, ctx, volume: int):
@@ -147,7 +170,7 @@ class Music(commands.Cog):
         is_playing = db.GetMusicByGuild(ctx.guild)[1]
         if is_playing and ctx.voice_client and ctx.voice_client.is_playing():
             if self.current[ctx.guild.id]["author"].id != ctx.author.id and \
-                                            not ctx.author.guild_permissions.administrator:
+                    not ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
                     color=0xB22222, title="[ 권한 없음 ]",
                     description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[ctx.guild.id]['title']}` | **{self.current[ctx.guild.id]['author'].display_name}님**")
