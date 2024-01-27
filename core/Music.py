@@ -103,24 +103,30 @@ class Music(commands.Cog):
     def parse_youtube_url(url):
         try:
             video = YouTube(url)
-        except PytubeError:
-            return -1, -1
+            return url, video
         except:
+            # Playlist로 다시 체크
+            pass
+
+        try:
             video = []
             playlist = Playlist(url)
             for play_url in playlist:
                 video.append(YouTube(play_url))
-            url = playlist
+            return playlist, video
+        except:
+            return -1, -1
+    
+    async def add_music(self, ctx, url, video):
+        """Music URL"""
+        self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
+        await ctx.send(f'플레이리스트에 추가되었어요!\n{video.title}')
 
-        return url, video
-
-    async def add_playlist(self, ctx, url, title=None):
-        """Single Music URL"""
-        if title is None:
-            video = YouTube(url)
-            title = video.title
-        self.playlist[ctx.guild.id].append({"title": title, "url": url, "author": ctx.author})
-        await ctx.send(f'플레이리스트에 추가되었어요!\n{title}')
+    async def add_playlist(self, ctx, urls, videos):
+        """Playlist URL"""
+        for url, video in zip(urls, videos):
+            self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
+        await ctx.send(f'플레이리스트에 추가되었어요!\n{videos[0].title} 외 {len(urls)-1}곡')
 
     @commands.command(name="재생", aliases=["play"])
     async def 재생(self, ctx, *, url):
@@ -148,12 +154,11 @@ class Music(commands.Cog):
 
             # 플레이리스트인 경우
             if type(video) is list:
-                for _url, _video in zip(url, video):
-                    await self.add_playlist(ctx, _url, _video.title)
+                await self.add_playlist(ctx, url, video)
 
             # 아닌 경우
             else:
-                await self.add_playlist(ctx, url, video.title)
+                await self.add_music(ctx, url, video)
 
     @commands.command(name="볼륨", aliases=["음량"])
     async def 볼륨(self, ctx, volume: int):
@@ -182,6 +187,9 @@ class Music(commands.Cog):
 
     @commands.command()
     async def 플레이리스트(self, ctx):
+        if not self.process_playlist.is_running():
+            self.process_playlist.start()
+
         guild_id = ctx.guild.id
         text = f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n"
         if not self.playlist[guild_id]:
