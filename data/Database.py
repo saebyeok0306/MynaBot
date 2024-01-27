@@ -188,14 +188,3 @@ def SaveMusicDB(guild, is_playing):
         cur.execute("UPDATE Music SET playing=? WHERE guild_id=? ", (is_playing, guild.id))
         con.close()
         return False
-
-def GetMusicByGuild(guild):
-    con = Connect()
-    cur = con.cursor()
-
-    cur.execute("SELECT * FROM Music WHERE guild_id=?", (guild.id, ))
-    _music = cur.fetchone()
-
-    con.close()
-
-    return _music
