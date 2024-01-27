@@ -12,7 +12,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'cachedir': '/data',
-    'outtmpl': '%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'outtmpl': 'data/%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -78,9 +78,13 @@ class Music(commands.Cog):
     async def process_playlist(self):
         music_tasks = []
         for guild_id in self.playlist.keys():
-            if not self.playlist[guild_id]: continue
-
             guild = self.bot.get_guild(guild_id)
+
+            if not self.playlist[guild_id]:
+                if not guild.voice_client.is_playing():
+                    db.SaveMusicDB(guild, False)
+                continue
+
             if guild.voice_client.is_playing(): continue
 
             music = self.playlist[guild_id].pop(0)
@@ -95,7 +99,7 @@ class Music(commands.Cog):
             return print(f'Player error: {e}')
 
         try:
-            os.remove(filename)
+            os.remove(f"{filename}")
         except Exception as e:
             print(f"파일 삭제 실패 : {e}")
 
@@ -169,7 +173,7 @@ class Music(commands.Cog):
         ctx.voice_client.source.volume = volume / 100
         await ctx.reply(f"### [ 🎚️ 음량 조절 ]\n\n**봇의 음량을 {volume}%로 변경했어요.**", mention_author=False)
 
-    @commands.command(name="정지", aliases=["스킵", "skip"])
+    @commands.command(name="정지", aliases=["스킵", "skip", "중지"])
     async def 정지(self, ctx):
         """Stops and disconnects the bot from voice"""
         is_playing = db.GetMusicByGuild(ctx.guild)[1]
@@ -184,6 +188,15 @@ class Music(commands.Cog):
 
             await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
             ctx.voice_client.stop()
+
+    @commands.command(name="곡랜덤", aliases=["곡셔플"])
+    async def 곡랜덤(self, ctx):
+        is_playing = db.GetMusicByGuild(ctx.guild)[1]
+        guild_id = ctx.guild.id
+        if is_playing and ctx.voice_client and ctx.voice_client.is_playing() and self.playlist[guild_id]:
+            from random import shuffle
+            shuffle(self.playlist[guild_id])
+            await ctx.reply(f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n**플레이리스트의 곡 순서를 랜덤하게 섞었어요!**", mention_author=False)
 
     @commands.command()
     async def 플레이리스트(self, ctx):
@@ -233,6 +246,21 @@ class Music(commands.Cog):
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
         await ctx.reply(embed=embed)
 
+    @commands.command(name="음악모두삭제", aliases=["음악전부삭제", "음악올삭제"])
+    async def 음악모두삭제(self, ctx):
+        guild_id = ctx.guild.id
+        if not self.playlist[guild_id]:
+            embed = discord.Embed(color=0xB22222, title="[ 🚨음악 삭제 오류 ]", description=f"플레이리스트가 비어있어요!")
+            embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+            return await ctx.reply(embed=embed)
+
+        self.playlist[guild_id] = []
+        embed = discord.Embed(
+            color=0xB22222, title="[ 🚨음악 삭제 ]",
+            description=f"플레이리스트에서 `모든` 곡을 **삭제**했어요!"
+        )
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.reply(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
