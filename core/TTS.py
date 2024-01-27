@@ -55,7 +55,7 @@ class TTS(commands.Cog):
                 self.tts_channel[guild_id].timer = 0
         except Exception as e:
             guild = self.bot.get_guild(guild_id)
-            await logs.SendLog(bot=self.bot, log_text=f"{guild.name}에서 {message}를 재생 하는데 실패했습니다.\nError: {e}")
+            await logs.SendLog(bot=self.bot, log_text=f"{guild.name}에서 {message.content}를 재생 하는데 실패했습니다.\nError: {e}")
 
     @tasks.loop(seconds=1)
     async def message_queue_process(self):
@@ -86,11 +86,11 @@ class TTS(commands.Cog):
                 if guild.voice_client.is_playing():
                     continue
 
-                if self.tts_channel[guild_id].timer > 600:
-                    self.delete_tts_channel.append(guild_id)
-                    print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
-                else:
-                    self.tts_channel[guild_id].timer += 1
+                # if self.tts_channel[guild_id].timer > 600:
+                #     self.delete_tts_channel.append(guild_id)
+                #     print(f"{guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
+                # else:
+                #     self.tts_channel[guild_id].timer += 1
 
         await asyncio.gather(*message_tasks)
 
