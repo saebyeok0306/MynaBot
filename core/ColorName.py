@@ -1,7 +1,10 @@
-import sqlite3, discord, asyncio, random, math
+import discord
+import random
+from discord.ext import commands
+
 import data.Database as db
 import utils.Utility as util
-discord.ext import commands
+
 
 class ColorName(commands.Cog):
 
