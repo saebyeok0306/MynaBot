@@ -1,6 +1,6 @@
 import discord, asyncio, json
 import openai, tiktoken
-import data.Functions as fun
+import utils.Utility as util
 import data.Database as db
 import data.Logs as logs
 from collections import defaultdict
@@ -68,7 +68,7 @@ class ChatGPT(commands.Cog):
         return False
     
     def is_allow_command(self, ctx):
-        if ctx.channel.id in fun.getBotChannel(self.bot, ctx) or\
+        if ctx.channel.id in util.get_bot_channel(self.bot, ctx) or\
            ctx.author.guild_permissions.administrator:
             return True
         

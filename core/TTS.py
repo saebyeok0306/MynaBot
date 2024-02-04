@@ -1,5 +1,5 @@
 import discord, random, asyncio
-import data.Functions as fun
+import utils.Utility as util
 import data.Database as db
 import data.Logs as logs
 from pathlib import Path
@@ -130,7 +130,7 @@ class TTS(commands.Cog):
         if message.content.startswith("!"): return
         if message.content.startswith("http://"): return
         if message.content.startswith("https://"): return
-        if message.channel.id not in fun.getBotChannel(self.bot, message):
+        if message.channel.id not in util.get_bot_channel(self.bot, message):
             if str(message.channel.type) != "voice": return
             if vc.channel != message.channel: return
         is_playing = db.GetMusicByGuild(message.guild)[1]

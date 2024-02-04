@@ -1,9 +1,8 @@
-import discord, asyncio
+import discord
 import requests
-import data.Functions as fun
+import utils.Utility as util
 from bs4 import BeautifulSoup
 from collections import OrderedDict
-from urllib.parse import quote
 from discord.ext import commands, tasks
 
 
@@ -41,7 +40,7 @@ class Crawling(commands.Cog):
             post_data.append(OrderedDict({'pid':int(post_number), 'title':post_title, 'link':post_links, 'icon':post_icon, 'date':post_date}))
         post_data.reverse()
 
-        guilds = fun.getTopicChannel(self.bot, '#크롤링마이나')
+        guilds = util.get_topic_channel(self.bot, '#크롤링마이나')
         for guild in guilds.keys():
             channels = guilds[guild]
             for channel in channels:

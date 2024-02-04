@@ -1,5 +1,4 @@
 import discord, random, asyncio, datetime
-import data.Functions as fun
 import data.Logs as logs
 from discord.ext import commands
 from PIL import Image,ImageDraw,ImageFont
