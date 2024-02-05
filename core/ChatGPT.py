@@ -1,11 +1,17 @@
-import discord, asyncio, json
-import openai, tiktoken
-import utils.Utility as util
-import utils.Database as db
-import utils.Logs as logs
 from collections import defaultdict
+
+import asyncio
+import discord
+import json
+import openai
+import tiktoken
 from discord.ext import commands
 from dotenv import dotenv_values
+
+import utils.Database as db
+import utils.Logs as logs
+import utils.Utility as util
+
 
 class Chat:
     def __init__(self):

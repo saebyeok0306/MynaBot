@@ -1,12 +1,13 @@
 from collections import defaultdict
 
-import discord, asyncio
+import asyncio
+import discord
 from discord.ext import commands, tasks
 
-import utils.Utility as util
 import utils.Logs as logs
-from core.voice_client.TTS import TTS
+import utils.Utility as util
 from core.voice_client.Music import Music
+from core.voice_client.TTS import TTS
 
 
 class State:

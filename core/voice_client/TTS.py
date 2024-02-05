@@ -148,8 +148,8 @@ class TTS:
             ssml_gender=gender_info[gender]["ssml_gender"],
         )
 
-        speed = 2.0
-        text_speed = [(10, 1.1), (20, 1.3), (30, 1.5), (40, 1.7)]
+        speed = 1.7
+        text_speed = [(10, 1.1), (20, 1.3), (40, 1.5)]
         for le, sp in text_speed:
             if text_length <= le:
                 speed = sp

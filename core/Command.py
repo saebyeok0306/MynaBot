@@ -1,8 +1,11 @@
-import discord, random, itertools
-import utils.Utility as util
-import utils.Logs as logs
-from utils.Timeout import timeout
+import discord
+import itertools
+import random
 from discord.ext import commands
+
+import utils.Logs as logs
+import utils.Utility as util
+from utils.Timeout import timeout
 
 
 class Command(commands.Cog):
