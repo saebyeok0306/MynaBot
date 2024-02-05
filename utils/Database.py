@@ -1,5 +1,4 @@
-import sqlite3, datetime
-import discord
+import sqlite3
 
 def Connect(db_path = r'db/DiscordDB.db') -> sqlite3.Connection:
     return sqlite3.connect(db_path, isolation_level = None)

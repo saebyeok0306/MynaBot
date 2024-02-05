@@ -2,7 +2,7 @@ import discord
 import random
 from discord.ext import commands
 
-import data.Database as db
+import utils.Database as db
 import utils.Utility as util
 
 

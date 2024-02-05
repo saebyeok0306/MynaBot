@@ -1,8 +1,8 @@
 import discord, asyncio, json
 import openai, tiktoken
 import utils.Utility as util
-import data.Database as db
-import data.Logs as logs
+import utils.Database as db
+import utils.Logs as logs
 from collections import defaultdict
 from discord.ext import commands
 from dotenv import dotenv_values

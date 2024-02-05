@@ -1,6 +1,5 @@
 import discord, datetime
 import utils.Utility as util
-from data.Timeout import timeout
 from discord.ext import commands
 
 class Administrator(commands.Cog):

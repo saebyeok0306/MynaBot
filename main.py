@@ -1,9 +1,12 @@
-import discord, datetime, os
-import data.Database as db
-import data.Logs as logs
+import datetime
+import discord
+import os
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
 from dotenv import load_dotenv
+
+import utils.Database as db
+import utils.Logs as logs
 
 load_dotenv(verbose=True, override=True)
 
@@ -46,8 +49,6 @@ async def on_ready():
     
     now = datetime.datetime.now()
     nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
-
-    logs.bot_log_channel = 1176773323158458370
 
     @tasks.loop(seconds=10)
     async def change_status():

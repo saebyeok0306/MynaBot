@@ -1,7 +1,7 @@
 import discord, random, itertools
 import utils.Utility as util
-import data.Logs as logs
-from data.Timeout import timeout
+import utils.Logs as logs
+from utils.Timeout import timeout
 from discord.ext import commands
 
 

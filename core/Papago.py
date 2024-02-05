@@ -1,6 +1,6 @@
 import urllib.request
 import discord, json, langid
-from data.Timeout import timeout
+from utils.Timeout import timeout
 from discord.ext import commands
 from dotenv import dotenv_values
 
