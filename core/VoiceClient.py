@@ -1,6 +1,6 @@
-from collections import defaultdict
-
 import asyncio
+import time
+
 import discord
 from discord.ext import commands, tasks
 
@@ -8,12 +8,6 @@ import utils.Logs as logs
 import utils.Utility as util
 from core.voice_client.Music import Music
 from core.voice_client.TTS import TTS
-
-
-class State:
-    def __init__(self):
-        self.message_queue = []
-        self.is_music = False
 
 
 class VoiceClient(commands.Cog, TTS, Music):
@@ -25,10 +19,10 @@ class VoiceClient(commands.Cog, TTS, Music):
             print(f'{parent_class.__name__}가 로드되었습니다.')
 
         self.bot = bot
-        self.voice_state = defaultdict(State)
+        self.delta = 0
         self.delete_state_list = []
-        TTS.__init__(self, self.bot, self.voice_state)
-        Music.__init__(self, self.bot, self.voice_state)
+        TTS.__init__(self, self.bot)
+        Music.__init__(self, self.bot)
         self.voice_client_processer.start()
 
     def cog_unload(self):
@@ -42,7 +36,7 @@ class VoiceClient(commands.Cog, TTS, Music):
         # if str(message.channel).startswith("Direct Message"): return
         if message.author.bot: return False
 
-        if self.voice_state[message.guild.id].is_music is True: return False
+        if self.current.get(message.guild.id): return False
         vc = message.guild.voice_client
         if vc is None: return False
         if message.author.voice is None: return False
@@ -54,60 +48,60 @@ class VoiceClient(commands.Cog, TTS, Music):
             if str(message.channel.type) != "voice": return False
             if vc.channel != message.channel: return False
 
-        self.voice_state[message.guild.id].message_queue.append(message)
+        self.message_queue[message.guild.id].append(message)
 
     @tasks.loop(seconds=1)
     async def voice_client_processer(self):
         """1초마다 루프하면서 voice_client와 관련된 모든 동작을 수행합니다."""
+        cur_time = time.time()
+        if cur_time - self.delta < 1:
+            return False
+
+        self.delta = cur_time
         work_tasks = []
         for voice_client in self.bot.voice_clients:
 
-            # bot.voice_clients에 등록된 길드가 voice_state에 없는 경우
-            if voice_client.guild.id not in self.voice_state.keys():
-                self.voice_state[voice_client.guild.id] = State()
-                continue
-
-            state = self.voice_state[voice_client.guild.id]
-
-            if state.is_music is True:
+            if len(voice_client.channel.members) == 1:
+                self.delete_state_list.append(voice_client.guild.id)
+                print(f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
                 continue
 
             if voice_client.is_playing():
                 continue
+
+            guild = voice_client.guild
             
             # 플레이리스트에 음악이 존재하면
-            if self.exist_playlist(voice_client.guild):
+            if self.exist_playlist(guild):
                 work_tasks.append(
                     asyncio.create_task(
-                        self.play_music(voice_client.guild)
+                        self.play_music(guild, voice_client)
                     )
                 )
                 continue
             
             # Music의 플레이리스트가 없을 때 메시지 읽기
-            if state.message_queue:
+            if self.message_queue[guild.id]:
                 work_tasks.append(
                     asyncio.create_task(
-                        self.read_message_coroutine(voice_client.guild, voice_client)
+                        self.read_message_coroutine(guild, voice_client)
                     )
                 )
                 continue
 
-            if len(voice_client.channel.members) == 1:
-                self.delete_state_list.append(voice_client.guild.id)
-                print(f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
-
-        asyncio.gather(*work_tasks)
-
         for guild_id in self.delete_state_list:
             try:
-                del self.voice_state[guild_id]
                 guild = self.bot.get_guild(guild_id)
                 if guild.voice_client:
                     await guild.voice_client.disconnect()
+
+                self.cleanup_msuic(guild_id)
+                self.cleanup_tts(guild_id)
+
             except:
                 pass
         self.delete_state_list = []
+        await asyncio.gather(*work_tasks)
 
     @commands.command(name="입장", aliases=["음성채팅입장", "음성입력", "TTS입장"])
     async def 입장(self, ctx):
@@ -131,10 +125,6 @@ class VoiceClient(commands.Cog, TTS, Music):
         if ctx.guild.voice_client:
             await ctx.guild.voice_client.disconnect()
         await ctx.author.voice.channel.connect()
-
-        # voice_state 상태 생성
-        if ctx.guild.id not in self.voice_state.keys():
-            self.voice_state[ctx.guild.id] = State()
 
         await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장 명령어를 실행했습니다.")
 
