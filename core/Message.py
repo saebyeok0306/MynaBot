@@ -1,5 +1,7 @@
-import discord, random
+import random
+
 from discord.ext import commands
+
 
 class Message(commands.Cog):
 

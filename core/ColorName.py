@@ -1,7 +1,10 @@
-import sqlite3, discord, asyncio, random, math
-import data.Database as db
-import data.Functions as fun
+import discord
+import random
 from discord.ext import commands
+
+import utils.Database as db
+import utils.Utility as util
+
 
 class ColorName(commands.Cog):
 
@@ -12,7 +15,7 @@ class ColorName(commands.Cog):
     
     @commands.command(name="색상변경", aliases=['색상수정'])
     async def 색상변경(self, ctx, *input):
-        if not ctx.channel.id in fun.getBotChannel(self.bot, ctx):
+        if not ctx.channel.id in util.get_bot_channel(self.bot, ctx):
             embed = discord.Embed(title = f':exclamation: 채널 설정 안내', description = f'{ctx.author.mention} 해당서버의 관리자께서,\n채널주제에 `#{self.bot.user.name}`를 작성해주셔야 합니다.', color = 0xff0000)
             embed.set_footer(text = f"{ctx.author.display_name} | {self.title}", icon_url = ctx.author.display_avatar)
             await ctx.channel.send(embed = embed)

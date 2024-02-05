@@ -1,8 +1,13 @@
 import urllib.request
-import discord, json, langid
-from data.Timeout import timeout
+
+import discord
+import json
+import langid
 from discord.ext import commands
 from dotenv import dotenv_values
+
+from utils.Timeout import timeout
+
 
 class Papago(commands.Cog):
 
@@ -66,7 +71,6 @@ class Papago(commands.Cog):
     def recogize_language(self, text):
         return langid.classify(text)
 
-        
     @commands.command(name="번역")
     async def 번역(self, ctx, *input):
         # kor -> eng

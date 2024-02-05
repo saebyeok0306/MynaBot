@@ -1,6 +1,5 @@
 import discord, datetime
-import data.Functions as fun
-from data.Timeout import timeout
+import utils.Utility as util
 from discord.ext import commands
 
 class Administrator(commands.Cog):
@@ -163,7 +162,7 @@ class Administrator(commands.Cog):
         if ctx.message.author.id == 383483844218585108:
             embed = self.AnnouncementEmbed(ctx, input)
 
-            guild_channels = fun.getBotChannelGuild(self.bot)
+            guild_channels = util.get_bot_channel_guild(self.bot)
             for guild in guild_channels.keys():
                 for channel in guild_channels[guild]:
                     await channel.send(embed=embed)

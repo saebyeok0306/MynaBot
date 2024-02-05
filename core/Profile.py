@@ -1,8 +1,10 @@
-import discord, random, asyncio, datetime
-import data.Functions as fun
-import data.Logs as logs
+import datetime
+import discord
+from PIL import Image, ImageDraw, ImageFont
 from discord.ext import commands
-from PIL import Image,ImageDraw,ImageFont
+
+import utils.Logs as logs
+
 
 class Profile(commands.Cog):
 

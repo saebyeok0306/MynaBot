@@ -1,6 +1,6 @@
 import discord, datetime, os
-import data.Database as db
-import data.Logs as logs
+import utils.Database as db
+import utils.Logs as logs
 from discord.ext import commands, tasks
 from dotenv import dotenv_values
 from dotenv import load_dotenv
@@ -18,17 +18,16 @@ status_count = 0
 core_list = [
     'Administrator', 'Command', 'ColorName',
     'Papago', 'ChatGPT', 'ArmyCard', 'Profile',
-    'Youtube', 'TTS', 'Message', 'Extension',
-    'Music'
+    'Message', 'Extension', 'VoiceClient', 'Youtube'
 ]
 
 async def loadCore():
     print("코어모듈을 로드합니다...")
     for filename in os.listdir('core'):
         if filename.endswith('.py'):
-            extensionName = filename[:-3]
-            if extensionName in core_list:
-                await bot.load_extension(f'core.{extensionName}')
+            extension_name = filename[:-3]
+            if extension_name in core_list:
+                await bot.load_extension(f'core.{extension_name}')
 
 
 @bot.event
@@ -39,16 +38,14 @@ async def on_ready():
     print('==============================')
 
     now = datetime.datetime.now()
-    nowTime = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
-
-    logs.bot_log_channel = 1177975720111259739
+    now_time = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
 
     @tasks.loop(seconds=10)
     async def change_status():
         global status_count
 
         if status_count == 0:
-            await bot.change_presence(activity=discord.Game(f"{nowTime}에 부팅됨!"))
+            await bot.change_presence(activity=discord.Game(f"{now_time}에 부팅됨!"))
         elif status_count == 1:
             await bot.change_presence(activity=discord.Game(f"명령어는 '!도움말'"))
         elif status_count == 2:

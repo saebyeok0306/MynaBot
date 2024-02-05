@@ -1,8 +1,12 @@
+import errno
+import os
+import signal
 from functools import wraps
-import errno, os, signal
+
 
 class TimeoutError(Exception):
     pass
+
 
 def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
     def decorator(func):

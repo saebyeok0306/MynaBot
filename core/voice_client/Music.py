@@ -1,10 +1,11 @@
-import discord, asyncio, os
-import yt_dlp as youtube_dl
-import data.Database as db
-from pytube import YouTube, Playlist
-from pytube.exceptions import PytubeError
 from collections import defaultdict
-from discord.ext import commands, tasks
+
+import asyncio
+import discord
+import os
+import yt_dlp as youtube_dl
+from discord.ext import commands
+from pytube import YouTube, Playlist
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -53,48 +54,41 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
 
 
-class Music(commands.Cog):
+class Music:
 
-    def __init__(self, bot):
-        print(f'{type(self).__name__}가 로드되었습니다.')
+    def __init__(self, bot, voice_state):
         self.bot = bot
+        self.voice_state = voice_state
         self.file_path = "./data"
         self.playlist = defaultdict(list)
         self.current = {}
-        self.process_playlist.start()
 
-    def cog_unload(self):
-        self.process_playlist.stop()
+    def exist_playlist(self, guild):
+        if self.playlist[guild.id]:
+            return True
+        else:
+            return False
 
-    async def play_music(self, guild, music):
-        player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
-        guild.voice_client.play(player, after=lambda e: self.play_after(e, guild, ytdl.prepare_filename(player.data)))
-        db.SaveMusicDB(guild, True)
-        self.current[guild.id] = music
+    async def play_music(self, guild):
+        if self.playlist[guild.id]:
+            music = self.playlist[guild.id].pop(0)
+            player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
+            guild.voice_client.play(
+                player,
+                after=lambda e: self.play_after(e, self.voice_state[guild.id], ytdl.prepare_filename(player.data))
+            )
+            self.current[guild.id] = music
+            self.voice_state[guild.id].is_music = True
 
-        await guild.voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
+            await guild.voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
+            return True
 
-    @tasks.loop(seconds=5)
-    async def process_playlist(self):
-        music_tasks = []
-        for guild_id in self.playlist.keys():
-            guild = self.bot.get_guild(guild_id)
-
-            if not self.playlist[guild_id]:
-                if not guild.voice_client.is_playing():
-                    db.SaveMusicDB(guild, False)
-                continue
-
-            if guild.voice_client.is_playing(): continue
-
-            music = self.playlist[guild_id].pop(0)
-            music_tasks.append(asyncio.create_task(self.play_music(guild, music)))
-
-        await asyncio.gather(*music_tasks)
+        else:
+            return False
 
     @staticmethod
-    def play_after(e, guild, filename):
-        db.SaveMusicDB(guild, False)
+    def play_after(e, state, filename):
+        state.is_music = False
         if e:
             return print(f'Player error: {e}')
 
@@ -120,7 +114,7 @@ class Music(commands.Cog):
             return playlist, video
         except:
             return -1, -1
-    
+
     async def add_music(self, ctx, url, video):
         """Music URL"""
         self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
@@ -130,7 +124,7 @@ class Music(commands.Cog):
         """Playlist URL"""
         for url, video in zip(urls, videos):
             self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
-        await ctx.send(f'플레이리스트에 추가되었어요!\n{videos[0].title} 외 {len(urls)-1}곡')
+        await ctx.send(f'플레이리스트에 추가되었어요!\n{videos[0].title} 외 {len(urls) - 1}곡')
 
     @commands.command(name="재생", aliases=["play"])
     async def 재생(self, ctx, *, url):
@@ -147,8 +141,6 @@ class Music(commands.Cog):
             embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
             return await ctx.reply(embed=embed)
 
-        if not self.process_playlist.is_running():
-            self.process_playlist.start()
 
         async with ctx.typing():
             # url을 통해 비디오 데이터를 획득합니다.
@@ -176,13 +168,14 @@ class Music(commands.Cog):
     @commands.command(name="정지", aliases=["스킵", "skip", "중지"])
     async def 정지(self, ctx):
         """Stops and disconnects the bot from voice"""
-        is_playing = db.GetMusicByGuild(ctx.guild)[1]
+        guild_id = ctx.guild.id
+        is_playing = self.voice_state[guild_id].is_music
         if is_playing and ctx.voice_client and ctx.voice_client.is_playing():
-            if self.current[ctx.guild.id]["author"].id != ctx.author.id and \
+            if self.current[guild_id]["author"].id != ctx.author.id and \
                     not ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
                     color=0xB22222, title="[ 권한 없음 ]",
-                    description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[ctx.guild.id]['title']}` | **{self.current[ctx.guild.id]['author'].display_name}님**")
+                    description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[guild_id]['title']}` | **{self.current[guild_id]['author'].display_name}님**")
                 embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
                 return await ctx.reply(embed=embed)
 
@@ -191,18 +184,19 @@ class Music(commands.Cog):
 
     @commands.command(name="곡랜덤", aliases=["곡셔플"])
     async def 곡랜덤(self, ctx):
-        is_playing = db.GetMusicByGuild(ctx.guild)[1]
         guild_id = ctx.guild.id
+        is_playing = self.voice_state[guild_id].is_music
+
         if is_playing and ctx.voice_client and ctx.voice_client.is_playing() and self.playlist[guild_id]:
             from random import shuffle
             shuffle(self.playlist[guild_id])
-            await ctx.reply(f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n**플레이리스트의 곡 순서를 랜덤하게 섞었어요!**", mention_author=False)
+            await ctx.reply(
+                f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n**플레이리스트의 곡 순서를 랜덤하게 섞었어요!**",
+                mention_author=False
+            )
 
     @commands.command()
     async def 플레이리스트(self, ctx):
-        if not self.process_playlist.is_running():
-            self.process_playlist.start()
-
         guild_id = ctx.guild.id
         text = f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n"
         if not self.playlist[guild_id]:
@@ -261,6 +255,3 @@ class Music(commands.Cog):
         )
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
         await ctx.reply(embed=embed)
-
-async def setup(bot):
-    await bot.add_cog(Music(bot))

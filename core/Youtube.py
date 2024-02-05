@@ -1,8 +1,12 @@
-from googleapiclient.discovery import build
-from dotenv import dotenv_values
-import discord, asyncio
-import data.Logs as logs
+import asyncio
+
+import discord
 from discord.ext import commands
+from dotenv import dotenv_values
+from googleapiclient.discovery import build
+
+import utils.Logs as logs
+
 
 class Youtube(commands.Cog):
 
@@ -30,8 +34,8 @@ class Youtube(commands.Cog):
 
     async def select_video(self, ctx, keyword, video):
         _, video_url, video_info, _ = video
-        if ctx.author.voice and ctx.guild.voice_client:
-            music_cog = self.bot.cogs["Music"]
+        if ctx.author.voice and ctx.guild.voice_client and ctx.message.channel == ctx.guild.voice_client.channel:
+            music_cog = self.bot.cogs["VoiceClient"]
             music_cog.playlist[ctx.guild.id].append({"title": video_info, "url": video_url, "author": ctx.author})
             await ctx.reply(f"### [ 🔮유튜브 검색완료 ]\n\n**{keyword} 의 검색 결과입니다.**\n`플레이리스트에 해당 곡이 추가되었습니다!`\n{video_info}\n{video_url}",
                             mention_author=False)

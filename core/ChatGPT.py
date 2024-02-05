@@ -1,11 +1,17 @@
-import discord, asyncio, json
-import openai, tiktoken
-import data.Functions as fun
-import data.Database as db
-import data.Logs as logs
 from collections import defaultdict
+
+import asyncio
+import discord
+import json
+import openai
+import tiktoken
 from discord.ext import commands
 from dotenv import dotenv_values
+
+import utils.Database as db
+import utils.Logs as logs
+import utils.Utility as util
+
 
 class Chat:
     def __init__(self):
@@ -68,7 +74,7 @@ class ChatGPT(commands.Cog):
         return False
     
     def is_allow_command(self, ctx):
-        if ctx.channel.id in fun.getBotChannel(self.bot, ctx) or\
+        if ctx.channel.id in util.get_bot_channel(self.bot, ctx) or\
            ctx.author.guild_permissions.administrator:
             return True
         
