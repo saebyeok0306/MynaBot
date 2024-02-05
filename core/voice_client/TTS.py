@@ -8,16 +8,20 @@ import utils.Logs as logs
 
 class TTS:
 
-    def __init__(self, bot, voice_state):
+    def __init__(self, bot):
         self.bot = bot
-        self.voice_state = voice_state
+        self.message_queue = defaultdict(list)
         self.is_cat = defaultdict(bool)
         self.file_path = "./data"
+
+    def cleanup_tts(self, guild_id):
+        if self.message_queue.get(guild_id):
+            del self.message_queue[guild_id]
 
     async def read_message_coroutine(self, guild, voice_client):
         message = None
         try:
-            message = self.voice_state[guild.id].message_queue.pop(0)
+            message = self.message_queue[guild.id].pop(0)
 
             file = f"{guild.id}.mp3"
             result = self.synthesize_text(file, message)

@@ -4,6 +4,7 @@ import asyncio
 import discord
 import os
 import yt_dlp as youtube_dl
+from discord import ClientException
 from discord.ext import commands
 from pytube import YouTube, Playlist
 
@@ -56,9 +57,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
 class Music:
 
-    def __init__(self, bot, voice_state):
+    def __init__(self, bot):
         self.bot = bot
-        self.voice_state = voice_state
         self.file_path = "./data"
         self.playlist = defaultdict(list)
         self.current = {}
@@ -69,31 +69,43 @@ class Music:
         else:
             return False
 
-    async def play_music(self, guild):
-        if self.playlist[guild.id]:
+    def cleanup_msuic(self, guild_id):
+        if self.current.get(guild_id):
+            del self.current[guild_id]
+        if self.playlist.get(guild_id):
+            del self.playlist[guild_id]
+
+    async def play_music(self, guild, voice_client):
+        if self.playlist[guild.id] and voice_client.is_playing() is False:
             music = self.playlist[guild.id].pop(0)
             player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
-            guild.voice_client.play(
-                player,
-                after=lambda e: self.play_after(e, self.voice_state[guild.id], ytdl.prepare_filename(player.data))
-            )
-            self.current[guild.id] = music
-            self.voice_state[guild.id].is_music = True
+            try:
+                voice_client.play(
+                    player,
+                    after=lambda error: self.play_after(error, guild.id, ytdl.prepare_filename(player.data))
+                )
+                self.current[guild.id] = music
 
-            await guild.voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
-            return True
+                await guild.voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
+                return True
+            except ClientException:
+                self.playlist[guild.id].insert(0, music)
+                return False
+            except Exception as e:
+                print(f"play_music에서 오류 발생 : {e}")
+                return False
 
         else:
             return False
 
-    @staticmethod
-    def play_after(e, state, filename):
-        state.is_music = False
+    def play_after(self, e, guild_id, filename):
         if e:
             return print(f'Player error: {e}')
 
         try:
             os.remove(f"{filename}")
+            if self.current.get(guild_id):
+                del self.current[guild_id]
         except Exception as e:
             print(f"파일 삭제 실패 : {e}")
 
@@ -169,8 +181,7 @@ class Music:
     async def 정지(self, ctx):
         """Stops and disconnects the bot from voice"""
         guild_id = ctx.guild.id
-        is_playing = self.voice_state[guild_id].is_music
-        if is_playing and ctx.voice_client and ctx.voice_client.is_playing():
+        if ctx.voice_client and ctx.voice_client.is_playing() and self.current.get(guild_id):
             if self.current[guild_id]["author"].id != ctx.author.id and \
                     not ctx.author.guild_permissions.administrator:
                 embed = discord.Embed(
@@ -181,13 +192,13 @@ class Music:
 
             await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
             ctx.voice_client.stop()
+            del self.current[guild_id]
 
     @commands.command(name="곡랜덤", aliases=["곡셔플"])
     async def 곡랜덤(self, ctx):
         guild_id = ctx.guild.id
-        is_playing = self.voice_state[guild_id].is_music
 
-        if is_playing and ctx.voice_client and ctx.voice_client.is_playing() and self.playlist[guild_id]:
+        if ctx.voice_client and self.playlist[guild_id]:
             from random import shuffle
             shuffle(self.playlist[guild_id])
             await ctx.reply(
