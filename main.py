@@ -26,9 +26,8 @@ bot.remove_command('help')
 status_count = 0
 core_list = [
     'Administrator', 'Command', 'ColorName',
-    'Papago', 'ChatGPT', 'Minecraft', 'ArmyCard',
-    'Profile', 'Youtube', 'TTS', 'Message',
-    'Extension', 'Music'
+    'Papago', 'ChatGPT', 'ArmyCard', 'Youtube',
+    'Message', 'Extension', 'VoiceClient'
 ]
 
 async def loadCore():
