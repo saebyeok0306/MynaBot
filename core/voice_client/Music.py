@@ -271,6 +271,19 @@ class Music:
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
         await ctx.reply(embed=embed, mention_author=False)
 
+    @commands.command(name="음악정보", aliases=["현재음악"])
+    async def 음악정보(self, ctx):
+        if self.is_playing_music(ctx) is False:
+            return await self.not_playing_music_message(ctx)
+
+        music = self.current[ctx.guild.id]
+        embed = discord.Embed(
+            color=0x4E8752, title=f"[ {music['title']} ]",
+            description=f"{music['author'].display_name}에 의해 등록됨.\n링크 : {music['url']}"
+        )
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.send(embed=embed)
+
     @staticmethod
     def is_join_voice_channel(ctx):
         if not ctx.author.voice: return False
