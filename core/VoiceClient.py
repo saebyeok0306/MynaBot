@@ -63,7 +63,7 @@ class VoiceClient(commands.Cog, TTS, Music):
 
             if len(voice_client.channel.members) == 1:
                 self.delete_state_list.append(voice_client.guild.id)
-                print(f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 자동으로 퇴장했습니다.")
+                logs.send_log(bot=self.bot, log_text=f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 퇴장했습니다.")
                 continue
 
             if voice_client.is_playing():
@@ -126,7 +126,7 @@ class VoiceClient(commands.Cog, TTS, Music):
             await ctx.guild.voice_client.disconnect()
         await ctx.author.voice.channel.connect()
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장 명령어를 실행했습니다.")
 
     @commands.command(name="입장이동", aliases=["이동", "음성채널이동"])
     async def 입장이동(self, ctx):

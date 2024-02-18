@@ -340,7 +340,7 @@ class ChatGPT(commands.Cog):
         await self.clean_database(ctx, key=key)
         self.save_chat_data(ctx)
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 ChatGPT 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 ChatGPT 명령어를 실행했습니다.")
             
     
     @commands.command(name="초기화", aliases=["리셋"])

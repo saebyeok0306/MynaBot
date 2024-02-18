@@ -54,7 +54,7 @@ class Command(commands.Cog):
 
         r = random.randint(1, value)
         await ctx.channel.send(f'주사위를 굴립니다...\n두둥! `{r}`입니다!')
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 주사위 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 주사위 명령어를 실행했습니다.")
 
     @commands.command(name="청소", aliases=["메시지청소", "삭제", "메시지삭제", "제거", "메시지제거", "지우기", "메시지지우기"])
     async def 청소(self, ctx, *input):
@@ -81,7 +81,7 @@ class Command(commands.Cog):
         # await ctx.channel.purge(limit=remove+1, check=is_me)
         msg = await ctx.channel.send(content=text)
         await msg.delete(delay=5)
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 청소 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 청소 명령어를 실행했습니다.")
 
     @commands.command()
     async def 핑(self, ctx):
@@ -97,7 +97,7 @@ class Command(commands.Cog):
         text = f'제 생각에는...\n**{choice}**, 이게 좋지 않을까요?!'
         await ctx.reply(content=text, mention_author=False)
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 골라줘 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 골라줘 명령어를 실행했습니다.")
 
     @commands.command(name="계산기", aliases=['계산', '계산해줘'])
     async def 계산(self, ctx, *input):
@@ -138,7 +138,7 @@ class Command(commands.Cog):
                 await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
                 await ctx.channel.send(file=file)
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 계산 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 계산 명령어를 실행했습니다.")
 
     @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
     async def 흑이(self, ctx):
@@ -198,7 +198,7 @@ class Command(commands.Cog):
                 if i != len(IPT) - 1: temp += '\n'
             res.append(temp)
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 스위치 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 스위치 명령어를 실행했습니다.")
 
         if len(res) > 16:
             embed = discord.Embed(title=f':gear: 경우의 수 (스위치)',

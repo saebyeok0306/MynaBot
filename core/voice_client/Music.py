@@ -75,7 +75,7 @@ class Music:
         if self.playlist.get(guild_id):
             del self.playlist[guild_id]
 
-    async def play_music(self, guild, voice_client):
+    async def play_music(self, guild, voice_client: discord.VoiceClient):
         if self.playlist[guild.id] and voice_client.is_playing() is False:
             music = self.playlist[guild.id].pop(0)
             player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
@@ -86,7 +86,8 @@ class Music:
                 )
                 self.current[guild.id] = music
 
-                await guild.voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
+                await voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
+                # await voice_client.channel.edit(status=f"Playing ~ {player.title} ~") # 2.4.x 이후 추가될 예정
                 return True
             except ClientException:
                 self.playlist[guild.id].insert(0, music)
@@ -142,17 +143,8 @@ class Music:
     async def 재생(self, ctx, *, url):
         """Plays from a url (almost anything youtube_dl supports)"""
 
-        if ctx.author.voice is None:
-            embed = discord.Embed(color=0xB22222, title="[ 🚨음악 재생 오류 ]", description=f"음성채팅 채널에 먼저 입장해야 합니다!")
-            embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
-            return await ctx.reply(embed=embed)
-
-        if ctx.guild.voice_client is None:
-            embed = discord.Embed(color=0xB22222, title="[ 🚨음악 재생 오류 ]",
-                                  description=f"봇이 음성채팅 채널에 먼저 입장해야 합니다!\n`!입장` 명령어를 사용하세요.")
-            embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
-            return await ctx.reply(embed=embed)
-
+        if self.is_same_channel_with_voice_client(ctx) is False:
+            return await self.not_same_channel_with_voice_client_message(ctx)
 
         async with ctx.typing():
             # url을 통해 비디오 데이터를 획득합니다.
@@ -171,8 +163,8 @@ class Music:
     @commands.command(name="볼륨", aliases=["음량"])
     async def 볼륨(self, ctx, volume: int):
         """Changes the player's volume"""
-        if ctx.author.voice is None: return
-        if ctx.voice_client is None: return
+        if self.is_same_channel_with_voice_client(ctx) is False:
+            return await self.not_same_channel_with_voice_client_message(ctx)
 
         ctx.voice_client.source.volume = volume / 100
         await ctx.reply(f"### [ 🎚️ 음량 조절 ]\n\n**봇의 음량을 {volume}%로 변경했어요.**", mention_author=False)
@@ -180,24 +172,27 @@ class Music:
     @commands.command(name="정지", aliases=["스킵", "skip", "중지"])
     async def 정지(self, ctx):
         """Stops and disconnects the bot from voice"""
-        guild_id = ctx.guild.id
-        if ctx.voice_client and ctx.voice_client.is_playing() and self.current.get(guild_id):
-            if self.current[guild_id]["author"].id != ctx.author.id and \
-                    not ctx.author.guild_permissions.administrator:
-                embed = discord.Embed(
-                    color=0xB22222, title="[ 권한 없음 ]",
-                    description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[guild_id]['title']}` | **{self.current[guild_id]['author'].display_name}님**")
-                embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
-                return await ctx.reply(embed=embed)
+        if self.is_playing_music(ctx) is False:
+            return await self.not_playing_music_message(ctx)
 
-            await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
-            ctx.voice_client.stop()
-            del self.current[guild_id]
+        guild_id = ctx.guild.id
+        if self.current[guild_id]["author"].id != ctx.author.id and not ctx.author.guild_permissions.administrator:
+            embed = discord.Embed(
+                color=0xB22222, title="[ 권한 없음 ]",
+                description=f"해당 음악을 추가한 유저만 노래를 정지할 수 있어요!\n`{self.current[guild_id]['title']}` | **{self.current[guild_id]['author'].display_name}님**")
+            embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+            return await ctx.reply(embed=embed)
+
+        await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
+        ctx.voice_client.stop()
+        del self.current[guild_id]
 
     @commands.command(name="곡랜덤", aliases=["곡셔플"])
     async def 곡랜덤(self, ctx):
-        guild_id = ctx.guild.id
+        if self.is_join_voice_channel(ctx) is False:
+            return await self.not_join_voice_channel_message(ctx)
 
+        guild_id = ctx.guild.id
         if ctx.voice_client and self.playlist[guild_id]:
             from random import shuffle
             shuffle(self.playlist[guild_id])
@@ -208,6 +203,9 @@ class Music:
 
     @commands.command()
     async def 플레이리스트(self, ctx):
+        if self.is_join_voice_channel(ctx) is False:
+            return await self.not_join_voice_channel_message(ctx)
+
         guild_id = ctx.guild.id
         text = f"### [ 플레이리스트 ({len(self.playlist[guild_id])}곡) 🎶 ]\n\n"
         if not self.playlist[guild_id]:
@@ -234,6 +232,9 @@ class Music:
             embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
             return await ctx.reply(embed=embed)
 
+        if self.is_join_voice_channel(ctx) is False:
+            return await self.not_join_voice_channel_message(ctx)
+
         _idx = idx - 1
         music = self.playlist[guild_id][_idx]
         if music['author'].id != ctx.author.id and not ctx.author.guild_permissions.administrator:
@@ -249,7 +250,7 @@ class Music:
             description=f"플레이리스트에서 `{music['title']}`곡을 **삭제**했어요!"
         )
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
-        await ctx.reply(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(name="음악모두삭제", aliases=["음악전부삭제", "음악올삭제"])
     async def 음악모두삭제(self, ctx):
@@ -259,10 +260,87 @@ class Music:
             embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
             return await ctx.reply(embed=embed)
 
+        if self.is_join_voice_channel(ctx) is False:
+            return await self.not_join_voice_channel_message(ctx)
+
         self.playlist[guild_id] = []
         embed = discord.Embed(
             color=0xB22222, title="[ 🚨음악 삭제 ]",
             description=f"플레이리스트에서 `모든` 곡을 **삭제**했어요!"
         )
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.reply(embed=embed, mention_author=False)
+
+    @commands.command(name="음악정보", aliases=["현재음악"])
+    async def 음악정보(self, ctx):
+        if self.is_playing_music(ctx) is False:
+            return await self.not_playing_music_message(ctx)
+
+        music = self.current[ctx.guild.id]
+        embed = discord.Embed(
+            color=0x4E8752, title=f"[ {music['title']} ]",
+            description=f"{music['author'].display_name}에 의해 등록됨.\n링크 : {music['url']}"
+        )
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.send(embed=embed)
+
+    @staticmethod
+    def is_join_voice_channel(ctx):
+        if not ctx.author.voice: return False
+        return True
+
+    @staticmethod
+    async def not_join_voice_channel_message(ctx):
+        embed = discord.Embed(
+            color=0xB22222, title="[ 🚨명령어 오류 ]",
+            description=f"음성채팅 채널에 먼저 입장해야 합니다!")
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
         await ctx.reply(embed=embed)
+
+    @staticmethod
+    def exist_voice_client(ctx):
+        if not ctx.voice_client: return False
+        return True
+
+    @staticmethod
+    async def not_exist_voice_client_message(ctx):
+        embed = discord.Embed(
+            color=0xB22222, title="[ 🚨명령어 오류 ]",
+            description=f"봇이 음성채팅 채널에 먼저 입장해야 합니다!\n`!입장` 명령어를 사용하세요.")
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.reply(embed=embed)
+
+    def is_same_channel_with_voice_client(self, ctx):
+        if self.exist_voice_client(ctx) is False: return False
+        if self.is_join_voice_channel(ctx) is False: return False
+        if ctx.author.voice.channel != ctx.voice_client.channel: return False
+        if ctx.message.channel != ctx.voice_client.channel: return False
+        return True
+
+    async def not_same_channel_with_voice_client_message(self, ctx):
+        if self.is_join_voice_channel(ctx) is False:
+            return await self.not_join_voice_channel_message(ctx)
+        if self.exist_voice_client(ctx) is False:
+            return await self.not_exist_voice_client_message(ctx)
+
+        embed = discord.Embed(
+            color=0xB22222, title="[ 🚨명령어 오류 ]",
+            description=f"봇과 같은 음성채널에 참여해야 합니다!")
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        return await ctx.reply(embed=embed)
+
+    def is_playing_music(self, ctx):
+        if self.is_same_channel_with_voice_client(ctx) is False: return False
+        if not ctx.voice_client.is_playing(): return False
+        if not self.current.get(ctx.guild.id): return False
+        return True
+
+    async def not_playing_music_message(self, ctx):
+        if self.is_same_channel_with_voice_client(ctx) is False:
+            return await self.not_same_channel_with_voice_client_message(ctx)
+
+        embed = discord.Embed(
+            color=0xB22222, title="[ 🚨명령어 오류 ]",
+            description=f"재생 중인 노래가 없네요.")
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        return await ctx.reply(embed=embed)
