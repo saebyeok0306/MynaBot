@@ -95,3 +95,16 @@ def get_topic_channel(bot, topic):
             if channel.topic is not None and topic in channel.topic:
                 data[guild].append(channel)
     return data
+
+
+def is_test_version():
+    import sys
+    argv_len = len(sys.argv)
+
+    if argv_len == 1:
+        return False
+
+    if "--test" in sys.argv:
+        return True
+
+    return False
