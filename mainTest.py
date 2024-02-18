@@ -86,7 +86,7 @@ async def on_member_join(member):
     if user_res: log_text += "유저정보 추가, "
     log_text += ")"
 
-    await logs.SendLog(bot=bot, log_text=log_text)
+    await logs.send_log(bot=bot, log_text=log_text)
 
 @bot.event
 async def on_member_remove(member):
@@ -98,7 +98,7 @@ async def on_member_remove(member):
     if user_res: log_text += f"유저정보 제거, "
     log_text += ")"
 
-    await logs.SendLog(bot=bot, log_text=log_text)
+    await logs.send_log(bot=bot, log_text=log_text)
 
 
 if __name__ == '__main__':

@@ -42,7 +42,7 @@ class TTS:
                 )
                 # self.tts_channel[guild_id].timer = 0
         except Exception as e:
-            await logs.SendLog(bot=self.bot, log_text=f"{guild.name}에서 {message.content}를 재생 하는데 실패했습니다.\nError: {e}")
+            await logs.send_log(bot=self.bot, log_text=f"{guild.name}에서 {message.content}를 재생 하는데 실패했습니다.\nError: {e}")
 
     @commands.command(name="흑이체")
     async def 흑이체(self, ctx):

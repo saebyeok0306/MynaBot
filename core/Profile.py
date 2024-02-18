@@ -97,7 +97,7 @@ class Profile(commands.Cog):
         file = discord.File(f"{self.path}/result.png")
         await ctx.reply(file=file, mention_author=False)
 
-        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{level})")
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{level})")
     
     
 async def setup(bot):

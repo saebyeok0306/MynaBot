@@ -129,7 +129,7 @@ class Youtube(commands.Cog):
                         await msg.delete()
                         await self.select_video(ctx, keyword, result[i])
 
-                        await logs.SendLog(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 유튜브 명령어를 실행했습니다.")
+                        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 유튜브 명령어를 실행했습니다.")
                         return
                 
                 if str(reaction) == self.sel_emoji[-3]: # prev
