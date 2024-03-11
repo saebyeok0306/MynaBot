@@ -330,7 +330,9 @@ class ChatGPT(commands.Cog):
 
         # Run GPT
         res = await self.call_chat_gpt(ctx=ctx, msg=msg, prompt=prompt, token=total_token, cnt=remove_cnt)
-        if res is False: return # 실패한 경우 return
+        if res is False:
+            self.chat_room[key].runtime = False
+            return # 실패한 경우 return
 
         response_msg = {"role":"assistant", "content":res["collected_message"]}
         self.chat_room[key].history = prompt + [response_msg]
