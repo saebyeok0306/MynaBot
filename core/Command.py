@@ -29,6 +29,7 @@ class Command(commands.Cog):
         embed.add_field(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!')
         embed.add_field(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!')
         embed.add_field(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!')
+        embed.add_field(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.')
         embed.add_field(name=f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.')
         embed.add_field(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!')
         embed.add_field(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.')
@@ -38,6 +39,14 @@ class Command(commands.Cog):
                         value=f'음성채팅에 참여한 상태에서 사용하면 마이나의 TTS 기능이 활성화돼요. 이 상태에서 음성채팅채널에서 채팅하면 음성으로 들을 수 있어요.')
         embed.add_field(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.')
         embed.add_field(name=f'!흑이체', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 야옹이체로 바뀌어요.')
+        embed.add_field(name=f'!볼륨', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30')
+        embed.add_field(name=f'!재생 `유튜브링크`', value=f'마이나가 링크의 음원을 플레이리스트에 추가해요.')
+        embed.add_field(name=f'!정지', value=f'마이나가 현재 재생중인 음악을 정지합니다.')
+        embed.add_field(name=f'!곡랜덤', value=f'플레이리스트의 음악을 랜덤하게 섞습니다.')
+        embed.add_field(name=f'!플레이리스트', value=f'현재 플레이리스트를 보여줘요.')
+        embed.add_field(name=f'!음악삭제 `번호`', value=f'플레이리스트에서 `번호`에 해당하는 음악을 삭제해요.')
+        embed.add_field(name=f'!음악모두삭제', value=f'플레이리스트에 등록된 모든 음악을 삭제해요.')
+        embed.add_field(name=f'!음악정보', value=f'현재 재생 중인 음악의 정보를 확인해요.')
         # embed.add_field(name=f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
         # embed.add_field(name='!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
         if ctx.guild.id in [631471244088311840]:
@@ -219,6 +228,39 @@ class Command(commands.Cog):
             for idx, _res in enumerate(res):
                 embed.add_field(name=f'{idx + 1}번째', value=f'{_res}')
             await ctx.channel.send(embed=embed)
+
+    @commands.command(name="서버상태", aliases=['작업관리자'])
+    async def 서버상태(self, ctx):
+        import psutil
+
+        cpu_percent = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        memory_total = round(memory.total / (1024 ** 3), 2)
+        memory_used = round(memory.used / (1024 ** 3), 2)
+        memory_percent = memory.percent
+
+        disk = psutil.disk_usage('/')
+        dist_total = round(disk.total / (1024 ** 3), 2)
+        dist_used = round(disk.used / (1024 ** 3), 2)
+        dist_percent = disk.percent
+
+        network = psutil.net_io_counters()
+        bytes_sent = round(network.bytes_sent / (1024 ** 3), 2)
+        bytes_received = round(network.bytes_recv / (1024 ** 3), 2)
+        packets_sent = network.packets_sent
+        packets_received = network.packets_recv
+
+        embed = discord.Embed(title=f'🔍 서버 상태',
+                              # description=f'현재 서버의 상태를 보여줘요.',
+                              color=0x7ad380)
+        embed.set_thumbnail(url=self.bot.user.display_avatar)
+        embed.add_field(name="CPU", value=f'현재 CPU의 사용량은 `{cpu_percent}%`로 측정돼요!')
+        embed.add_field(name="Memory", value=f'현재 RAM은 `{memory_total}GB` 중 `{memory_used}GB`({memory_percent}%)가 사용 중이에요.')
+        embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB`({dist_percent}%)가 사용 중이에요.')
+        embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며,\n패킷수로는 {packets_sent}↑{packets_received}↓으로 측정돼요!')
+        embed.set_footer(text=f"{self.bot.user.display_name}", icon_url=self.bot.user.display_avatar)
+        await ctx.channel.send(embed=embed)
+
 
 
 async def setup(bot):
