@@ -166,6 +166,8 @@ class Music:
         if self.is_same_channel_with_voice_client(ctx) is False:
             return await self.not_same_channel_with_voice_client_message(ctx)
 
+        if volume > 100: volume = 100
+        if volume < 0: volume = 0
         ctx.voice_client.source.volume = volume / 100
         await ctx.reply(f"### [ 🎚️ 음량 조절 ]\n\n**봇의 음량을 {volume}%로 변경했어요.**", mention_author=False)
 
