@@ -1,3 +1,5 @@
+import asyncio
+
 import discord
 import itertools
 import random
@@ -7,6 +9,27 @@ import utils.Logs as logs
 import utils.Utility as util
 from utils.Timeout import timeout
 
+class Guide:
+    def __init__(self, name, value, active=True, server=None):
+        self.name = name
+        self.value = value
+        self.active = active
+
+        if server is not None and type(server) is not list:
+            server = [server]
+        self.server = server
+
+    def __call__(self, server=None):
+        if self.active is False:
+            return None
+        if server is not None and self.server is not None and server not in self.server:
+            return None
+
+        from copy import copy
+        _guide = copy(self.__dict__)
+        del _guide["active"]
+        del _guide["server"]
+        return _guide
 
 class Command(commands.Cog):
 
@@ -14,44 +37,108 @@ class Command(commands.Cog):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
         self.title = "마이나"
+        self.guides = {
+            "기본적인 명령어": [
+                Guide(name=f'!프로필', value=f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.'),
+                Guide(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색할 수 있어요. 반응 버튼으로 영상을 선택할 수 있어요.'),
+                Guide(name='!주사위 `값(기본값 100)`', value=f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지'),
+                Guide(name='!청소 `값(기본값 5)`', value=f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**'),
+                Guide(name='!골라줘 `대상1` `대상2` ...', value=f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!'),
+                Guide(name=f'!색상변경 `색상`', value=f'닉네임 색상을 변경할 수 있어요!'),
+                Guide(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!'),
+                Guide(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!'),
+                Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!'),
+                Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!', server=[631471244088311840]),
+                Guide(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
+                Guide(name='!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
+            ],
+            "유즈맵 제작 도구모음": [
+                Guide(name='!계산 `수식`', value=f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
+                Guide(name=f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
+            ],
+            "마이나(ChatGPT)": [
+                Guide(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!'),
+                Guide(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.'),
+                Guide(name=f'!초기화', value=f'마이나에게 질문한 대화기록을 초기화해요.'),
+                Guide(name=f'!대화목록', value=f'마이나와 대화중인 방목록을 보여줘요.'),
+            ],
+            "음성채팅 관련 명령어": [
+                Guide(name=f'!입장',
+                      value=f'음성채팅에 참여한 상태에서 사용하면 마이나의 TTS 기능이 활성화돼요. 이 상태에서 음성채팅채널에서 채팅하면 음성으로 들을 수 있어요.'),
+                Guide(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.'),
+                Guide(name=f'!흑이체', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 야옹이체로 바뀌어요.'),
+            ],
+            "음악재생 관련 명령어": [
+                Guide(name=f'!입장',
+                      value=f'먼저 봇이 음성채팅에 참여해야 해요. 이 기능은 내가 있는 음성채팅에 마이나를 초대해요.'),
+                Guide(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.'),
+                Guide(name=f'!볼륨', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30'),
+                Guide(name=f'!재생 `유튜브링크`', value=f'마이나가 링크의 음원을 플레이리스트에 추가해요.'),
+                Guide(name=f'!정지', value=f'마이나가 현재 재생중인 음악을 정지합니다.'),
+                Guide(name=f'!곡랜덤', value=f'플레이리스트의 음악을 랜덤하게 섞습니다.'),
+                Guide(name=f'!플레이리스트', value=f'현재 플레이리스트를 보여줘요.'),
+                Guide(name=f'!음악삭제 `번호`', value=f'플레이리스트에서 `번호`에 해당하는 음악을 삭제해요.'),
+                Guide(name=f'!음악모두삭제', value=f'플레이리스트에 등록된 모든 음악을 삭제해요.'),
+                Guide(name=f'!음악정보', value=f'현재 재생 중인 음악의 정보를 확인해요.'),
+            ],
+        }
 
     @commands.command(name="도움말", aliases=["도움", "설명"])
     async def 도움말(self, ctx):
-        embed = discord.Embed(color=0xB22222, title="도움말:", description=f'{self.bot.user.name}에게 있는 명령어들을 알려드려요. By.갈대')
-        embed.set_footer(text=ctx.author, icon_url=ctx.author.display_avatar)
-        embed.add_field(name=f'!프로필', value=f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.')
-        embed.add_field(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색할 수 있어요. 반응 버튼으로 영상을 선택할 수 있어요.')
-        embed.add_field(name='!주사위 `값(기본값 100)`', value=f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지')
-        embed.add_field(name='!청소 `값(기본값 5)`', value=f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**')
-        embed.add_field(name='!골라줘 `대상1` `대상2` ...', value=f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!')
-        embed.add_field(name='!계산 `수식`', value=f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!')
-        embed.add_field(name=f'!색상변경 `색상`', value=f'닉네임 색상을 변경할 수 있어요!')
-        embed.add_field(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!')
-        embed.add_field(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!')
-        embed.add_field(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!')
-        embed.add_field(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.')
-        embed.add_field(name=f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.')
-        embed.add_field(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!')
-        embed.add_field(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.')
-        embed.add_field(name=f'!초기화', value=f'마이나에게 질문한 대화기록을 초기화해요.')
-        embed.add_field(name=f'!대화목록', value=f'마이나와 대화중인 방목록을 보여줘요.')
-        embed.add_field(name=f'!입장',
-                        value=f'음성채팅에 참여한 상태에서 사용하면 마이나의 TTS 기능이 활성화돼요. 이 상태에서 음성채팅채널에서 채팅하면 음성으로 들을 수 있어요.')
-        embed.add_field(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.')
-        embed.add_field(name=f'!흑이체', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 야옹이체로 바뀌어요.')
-        embed.add_field(name=f'!볼륨', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30')
-        embed.add_field(name=f'!재생 `유튜브링크`', value=f'마이나가 링크의 음원을 플레이리스트에 추가해요.')
-        embed.add_field(name=f'!정지', value=f'마이나가 현재 재생중인 음악을 정지합니다.')
-        embed.add_field(name=f'!곡랜덤', value=f'플레이리스트의 음악을 랜덤하게 섞습니다.')
-        embed.add_field(name=f'!플레이리스트', value=f'현재 플레이리스트를 보여줘요.')
-        embed.add_field(name=f'!음악삭제 `번호`', value=f'플레이리스트에서 `번호`에 해당하는 음악을 삭제해요.')
-        embed.add_field(name=f'!음악모두삭제', value=f'플레이리스트에 등록된 모든 음악을 삭제해요.')
-        embed.add_field(name=f'!음악정보', value=f'현재 재생 중인 음악의 정보를 확인해요.')
-        # embed.add_field(name=f'!서비스 도움말', value = f'회원가입하면 이용할 수 있는 명령어들을 모아뒀어요.')
-        # embed.add_field(name='!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!')
-        if ctx.guild.id in [631471244088311840]:
-            embed.add_field(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!')
-        await ctx.channel.send(embed=embed)
+        sel_emoji = ["↩️", "1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+        sel_key = None
+        embed = discord.Embed(color=0xB22222, title=":scroll: 도움말", description=f'{self.bot.user.name}에게 있는 명령어을 알려드려요.')
+        embed.set_footer(text=f"{ctx.author} | 도움말", icon_url=ctx.author.display_avatar)
+        msg = await ctx.channel.send(embed=embed)
+
+        while True:
+            description = f'{self.bot.user.name}에게 있는 명령어을 알려드려요.'
+            guide_list = self.guides.keys()
+            if sel_key is None:
+                description += "\n"
+                for i, key in enumerate(guide_list):
+                    description += f"\n{i+1}. {key}"
+            else:
+                description = f"`{key}`에 대한 명령어에요."
+
+            embed = discord.Embed(color=0xB22222, title=":scroll: 도움말", description=description)
+            embed.set_footer(text=f"{ctx.author} | 도움말", icon_url=ctx.author.display_avatar)
+
+            if sel_key is not None:
+                sel_guides = self.guides[sel_key]
+                for guide in sel_guides:
+                    item = guide(server=ctx.guild.id)
+                    if item is None: continue
+                    embed.add_field(**item)
+            await msg.edit(embed=embed)
+
+            if sel_key is None:
+                for i in range(len(guide_list)):
+                    await msg.add_reaction(sel_emoji[i+1])
+            else:
+                await msg.add_reaction(sel_emoji[0])
+
+            try:
+                def check(reaction, user):
+                    return str(reaction) in sel_emoji and \
+                    user == ctx.author and reaction.message.id == msg.id
+                reaction, user = await self.bot.wait_for('reaction_add', timeout=60.0, check=check)
+
+                if sel_key is None:
+                    for i, key in enumerate(guide_list):
+                        if str(reaction) == sel_emoji[i+1]:
+                            sel_key = key
+                            await msg.clear_reactions()
+                            break
+                else:
+                    if str(reaction) == sel_emoji[0]:
+                        sel_key = None
+                        await msg.clear_reactions()
+                        continue
+
+            except asyncio.TimeoutError:
+                await msg.clear_reactions()
+                return
 
     @commands.command(name="주사위", aliases=["다이스"])
     async def 주사위(self, ctx, *input):
@@ -265,3 +352,4 @@ class Command(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Command(bot))
+
