@@ -13,8 +13,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
-    'cachedir': '/data',
-    'outtmpl': 'data/%(extractor)s-%(id)s-%(title)s.%(ext)s',
+    'cachedir': '/data/temp',
+    'outtmpl': 'data/temp/%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
     'nocheckcertificate': True,
@@ -59,7 +59,7 @@ class Music:
 
     def __init__(self, bot):
         self.bot = bot
-        self.file_path = "./data"
+        self.file_path = "./data/temp"
         self.playlist = defaultdict(list)
         self.current = {}
 

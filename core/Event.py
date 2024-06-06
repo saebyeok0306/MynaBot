@@ -3,10 +3,13 @@ import os, importlib
 
 import discord
 from discord.ext import commands, tasks
+from sqlalchemy import and_
 
-import utils.Database as db
 import utils.Logs as logs
 import utils.Utility as util
+from utils.Role import *
+from utils.database.Database import SessionContext
+from utils.database.model.users import Users
 
 
 class Event(commands.Cog):
@@ -64,8 +67,18 @@ class Event(commands.Cog):
         change_status.start()
         await self.load_core()
 
-        for guild in self.bot.guilds:
-            db.SaveUserDBAtGuild(guild)
+        with SessionContext() as session:
+            for guild in self.bot.guilds:
+                for author in guild.members:
+                    # if guild.id != 966942556078354502: continue
+                    if author.bot:
+                        continue
+
+                    user = Users(_id=author.id, guild_id=author.guild.id, username=author.display_name)
+                    if session.query(Users).filter(
+                            and_(Users.id == author.id, Users.guild_id == author.guild.id)).first() is None:
+                        session.add(user)
+            session.commit()
 
     async def load_core(self):
         print("코어모듈을 로드합니다...")
@@ -77,21 +90,33 @@ class Event(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        log_text = f"{member.guild} 서버에 {member.display_name} 님이 가입했습니다. ("
-        user_res = db.SaveUserDB(member)
-        if user_res: log_text += "유저정보 추가, "
-        log_text += ")"
+        with SessionContext() as session:
+            user = Users(_id=member.id, guild_id=member.guild.id, username=member.display_name)
+            log_text = f"{member.guild} 서버에 {member.display_name} 님이 가입했습니다. ("
+            try:
+                session.add(user)
+                session.commit()
+                log_text += "유저정보 추가, "
+            except:
+                log_text += "중복된 유저정보, "
+            log_text += ")"
 
         await logs.send_log(bot=self.bot, log_text=log_text)
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         log_text = f"{member.guild} 서버에서 {member.display_name} 님이 나갔습니다. ("
-
-        role_res = await db.DeleteRoleServerByAuthor(member)
-        if role_res: log_text += f"역할 제거, "
-        user_res = db.DeleteUserByAuthor(member)
-        if user_res: log_text += f"유저정보 제거, "
+        with SessionContext() as session:
+            user = session.query(Users).filter(and_(Users.id == member.id, Users.guild_id == member.guild.id)).first()
+            if user:
+                role_res = await delete_role_server_by_author(member)
+                if role_res: log_text += f"역할 제거, "
+                try:
+                    log_text += f"유저정보 제거, "
+                    session.delete(user)
+                    session.commit()
+                except:
+                    log_text += f"유저정보 제거실패, "
         log_text += ")"
 
         await logs.send_log(bot=self.bot, log_text=log_text)
