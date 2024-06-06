@@ -4,7 +4,7 @@ from sqlalchemy.orm import sessionmaker
 
 SQLALCHMY_DATABASE_URL = "sqlite:///db/mynaApp.db"
 Base = declarative_base()
-engine = create_engine(SQLALCHMY_DATABASE_URL, echo=True)
+engine = create_engine(SQLALCHMY_DATABASE_URL)
 # Base.metadata.bind = engine
 
 Session = sessionmaker(bind=engine)
