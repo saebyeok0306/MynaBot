@@ -65,12 +65,21 @@ class ChatGPT(commands.Cog):
     def cog_unload(self):
         pass
 
+    def is_allow_user(self, ctx):
+
+        allow_users = {
+            "갈대": 383483844218585108,
+        }
+        if ctx.author.id in allow_users.values():
+            return True
+
+        return False
+
     def is_allow_guild(self, ctx):
 
         allow_guilds = {
             "유즈맵 제작공간": 631471244088311840,
             "데이터베이스": 966942556078354502,
-            "강화대전쟁": 1171793482441039963,
         }
         if ctx.guild.id in allow_guilds.values():
             return True
@@ -171,7 +180,7 @@ class ChatGPT(commands.Cog):
             except:
                 self.chat_room[key].dm = False
 
-    async def call_chat_gpt(self, ctx, msg, prompt, token=0, cnt=None):
+    async def call_chat_gpt(self, ctx, msg, prompt, token=0, cnt=None, model="gpt-3.5-turbo"):
         timeout_sec = 20
         isLong = False
         collected_message = ""
@@ -219,7 +228,7 @@ class ChatGPT(commands.Cog):
                         pass
                 return True
 
-            request_task = asyncio.create_task(requestOpenAPI(prompt, "gpt-3.5-turbo"))
+            request_task = asyncio.create_task(requestOpenAPI(prompt, model))
             timeout_task = asyncio.create_task(timeout(timeout_sec, request_task))
             await asyncio.gather(timeout_task, request_task)
 
