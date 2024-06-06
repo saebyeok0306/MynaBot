@@ -6,6 +6,7 @@ from dotenv import dotenv_values
 from dotenv import load_dotenv
 
 import utils.Utility as util
+import utils.database.Database as db
 
 load_dotenv(verbose=True, override=True)
 
@@ -21,6 +22,8 @@ if __name__ == '__main__':
     bot = commands.Bot(command_prefix=command_prefix, intents=intents)
     if test_flag is False:
         bot.remove_command('help')
+
+    db.init_db()
 
     asyncio.run(bot.load_extension(f'core.Event'))
     bot.run(token=discord_token)
