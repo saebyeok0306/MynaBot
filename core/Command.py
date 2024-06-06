@@ -66,7 +66,9 @@ class Command(commands.Cog):
                 Guide(name=f'!입장',
                       value=f'음성채팅에 참여한 상태에서 사용하면 마이나의 TTS 기능이 활성화돼요. 이 상태에서 음성채팅채널에서 채팅하면 음성으로 들을 수 있어요.'),
                 Guide(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.'),
-                Guide(name=f'!흑이체', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 야옹이체로 바뀌어요.'),
+                Guide(name=f'!흑이체', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 야옹이체로 바뀝니다.'),
+                Guide(name=f'!남성', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 남성목소리로 바뀝니다.'),
+                Guide(name=f'!여성', value=f'TTS 기능으로 텍스트를 음성으로 변환할 때 여성목소리로 바뀝니다.'),
             ],
             "음악재생 관련 명령어": [
                 Guide(name=f'!입장',
