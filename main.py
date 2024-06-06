@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 import utils.Utility as util
 import utils.database.Database as db
-from utils.database.test import test_running
 
 load_dotenv(verbose=True, override=True)
 
