@@ -36,7 +36,7 @@ class VoiceClient(commands.Cog, TTS, Music):
         # if str(message.channel).startswith("Direct Message"): return
         if message.author.bot: return False
 
-        if self.current.get(message.guild.id): return False
+        if message.guild is None or self.current.get(message.guild.id): return False
         vc = message.guild.voice_client
         if vc is None: return False
         if message.author.voice is None: return False
@@ -148,6 +148,8 @@ class VoiceClient(commands.Cog, TTS, Music):
 
         await ctx.guild.voice_client.disconnect()
         await ctx.author.voice.channel.connect()
+        await logs.send_log(bot=self.bot,
+                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장이동 명령어를 실행했습니다.")
 
 
 async def setup(bot):
