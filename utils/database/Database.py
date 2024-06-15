@@ -11,7 +11,8 @@ Session = sessionmaker(bind=engine)
 
 
 def init_db():
-    import utils.database.model
+    import utils.database.model.users
+    import utils.database.model.chats
     Base.metadata.create_all(engine)
 
 
