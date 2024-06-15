@@ -2,6 +2,7 @@ import discord
 import random
 from discord.ext import commands
 
+import utils.Logs as logs
 import utils.Utility as util
 from utils.Role import *
 
@@ -122,6 +123,8 @@ class ColorName(commands.Cog):
         )
         embed.set_footer(text=f"{ctx.author.display_name} | {self.title}", icon_url=ctx.author.display_avatar)
         await ctx.channel.send(embed=embed)
+        await logs.send_log(bot=self.bot,
+                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 색상변경 명령어를 실행했습니다.")
         return True
 
 

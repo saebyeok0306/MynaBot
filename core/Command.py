@@ -50,7 +50,8 @@ class Command(commands.Cog):
                 Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!'),
                 Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!', server=[631471244088311840]),
                 Guide(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
-                Guide(name='!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
+                Guide(name='!마크', value='디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
+                Guide(name='!건의', value='봇제작자에게 버그나 건의사항을 보낼 수 있어요!'),
             ],
             "유즈맵 제작 도구모음": [
                 Guide(name='!계산 `수식`', value=f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
@@ -83,6 +84,9 @@ class Command(commands.Cog):
                 Guide(name=f'!음악모두삭제', value=f'플레이리스트에 등록된 모든 음악을 삭제해요.'),
                 Guide(name=f'!음악정보', value=f'현재 재생 중인 음악의 정보를 확인해요.'),
             ],
+            "관리자 명령어": [
+                Guide(name=f'!관리자청소 `값(기본값 5)`', value=f'어떤 메시지든 N개를 삭제합니다.\n**！제한은 없으나 너무 큰 값은 디코서버에 무리를 줍니다.**'),
+            ]
         }
 
     @commands.command(name="도움말", aliases=["도움", "설명"])
