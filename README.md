@@ -1,7 +1,9 @@
-# discordBot Project
+# MynaBot Project
 
 디스코드 서버에 사용하기 위해 개발한 디스코드 봇입니다.<br>
-서버 운영에 도움이 되는 명령어가 다수 포함되어 있습니다.
+서버 운영에 도움이 되는 명령어가 다수 포함되어 있습니다.<br>
+
+현재는 여러 개의 서버에서 운영되고 있으며, 이를 위해 멀티서버를 고려한 코드설계로 전부 변경되었습니다.
 
 ---
 
@@ -9,7 +11,7 @@
 
 * IDE : Visual Studio Code
 * Language : Python 3.10.8
-* Database : SQLite3
+* Database : SQLite3, sqlalchemy
 
 ---
 ## Library
@@ -69,3 +71,9 @@ python main.py
 ```
 
 채팅으로 `!도움말`을 입력하면, 사용할 수 있는 명령어를 확인할 수 있습니다.
+
+## Output
+
+![YouTube Search](https://github.com/westreed/MynaBot/blob/main/src/img/8.png?raw=true)
+![YouTube Search](https://github.com/westreed/MynaBot/blob/main/src/img/9.png?raw=true)
+![ChatGPT](https://github.com/westreed/MynaBot/blob/main/src/img/10.png?raw=true)
