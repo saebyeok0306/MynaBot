@@ -56,10 +56,11 @@ GOOGLE_APPLICATION_CREDENTIALS=Google Account (TTS)
 
 ffmpeg를 설치하고 시스템 환경변수의 path에 등록해야 합니다.
 
-### 4. 파이썬 실행
+### 4. 봇 실행
 
 ```bash
 python main.py
+python main.py --test # test mode
 ```
 
 ---
