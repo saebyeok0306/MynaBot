@@ -75,8 +75,9 @@ class Command(commands.Cog):
                 Guide(name=f'!입장',
                       value=f'먼저 봇이 음성채팅에 참여해야 해요. 이 기능은 내가 있는 음성채팅에 마이나를 초대해요.'),
                 Guide(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.'),
-                Guide(name=f'!볼륨', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30'),
+                Guide(name=f'!볼륨 `값`', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30'),
                 Guide(name=f'!재생 `유튜브링크`', value=f'마이나가 링크의 음원을 플레이리스트에 추가해요.'),
+                Guide(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색하여 플레이리스트로 추가할 수 있어요.'),
                 Guide(name=f'!정지', value=f'마이나가 현재 재생중인 음악을 정지합니다.'),
                 Guide(name=f'!곡랜덤', value=f'플레이리스트의 음악을 랜덤하게 섞습니다.'),
                 Guide(name=f'!플레이리스트', value=f'현재 플레이리스트를 보여줘요.'),
@@ -96,6 +97,7 @@ class Command(commands.Cog):
         embed = discord.Embed(color=0xB22222, title=":scroll: 도움말", description=f'{self.bot.user.name}에게 있는 명령어을 알려드려요.')
         embed.set_footer(text=f"{ctx.author} | 도움말", icon_url=ctx.author.display_avatar)
         msg = await ctx.channel.send(embed=embed)
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 도움말 명령어를 실행했습니다.")
 
         while True:
             description = f'{self.bot.user.name}에게 있는 명령어을 알려드려요.'
