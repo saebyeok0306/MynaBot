@@ -1,5 +1,8 @@
+import inspect
 from collections import defaultdict
 from enum import Enum
+
+import discord
 
 from utils.database.Database import SessionContext
 from utils.database.model.authority import Authoritys
@@ -115,6 +118,13 @@ def is_test_version():
     return False
 
 
+def current_function_name():
+    frame = inspect.currentframe()
+    caller_frame = frame.f_back
+    caller_name = caller_frame.f_code.co_name
+    return caller_name
+
+
 def is_developer(author):
     if author.id == 383483844218585108:
         return True
@@ -166,3 +176,15 @@ def is_allow_channel(bot, ctx):
         return True
 
     return False
+
+
+async def is_not_allow_channel(ctx, func_name):
+    embed = discord.Embed(
+        title=f':exclamation: 채널 설정 안내',
+        description=f'{ctx.author.mention} 채널명이 `봇명령`이거나 채널주제(topic)에 `#{ctx.bot.user.name}`이 포함된 채널에서만 가능합니다. 없는 경우 해당서버의 관리자에게 부탁하셔야 합니다.',
+        color=0xff0000
+    )
+    embed.set_footer(text=f"{ctx.author.display_name} | {func_name} 명령어", icon_url=ctx.author.display_avatar)
+    msg = await ctx.channel.send(embed=embed)
+    await msg.delete(delay=10)
+    await ctx.message.delete(delay=10)

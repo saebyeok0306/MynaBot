@@ -291,9 +291,7 @@ class Command(commands.Cog):
             return
 
         if util.is_allow_channel(self.bot, ctx) is False:
-            msg = await ctx.reply(f"흑이 소환은 `봇명령` 채널에서만 가능해요.")
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
