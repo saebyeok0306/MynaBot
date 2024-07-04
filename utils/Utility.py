@@ -1,4 +1,9 @@
 from collections import defaultdict
+from enum import Enum
+
+from utils.database.Database import SessionContext
+from utils.database.model.authority import Authoritys
+from utils.database.model.commands import Commands
 
 
 def print_(num: int) -> str:
@@ -105,6 +110,59 @@ def is_test_version():
         return False
 
     if "--test" in sys.argv:
+        return True
+
+    return False
+
+
+def is_developer(author):
+    if author.id == 383483844218585108:
+        return True
+    return False
+
+
+class ROLE_TYPE(Enum):
+    GPT4 = "GPT4"
+    CLOVAX = "CLOVAX"
+    BLACKCAT = "BLACKCAT"
+    CHATGPT = "CHATGPT"
+
+
+class GUILD_COMMAND_TYPE(Enum):
+    CHATGPT = "CHATGPT"
+    BLACKCAT = "BLACKCAT"
+
+
+def is_allow_guild(ctx, role: GUILD_COMMAND_TYPE):
+    with SessionContext() as session:
+        guild_command = session.query(Commands).filter(Commands.guild_id == ctx.guild.id).first()
+        if guild_command:
+            roles = guild_command.get_roles()
+            if role.value in roles:
+                return True
+
+    return False
+
+
+def is_allow_user(ctx, role: ROLE_TYPE):
+    if is_developer(ctx.author):
+        return True
+
+    with SessionContext() as session:
+        authority = session.query(Authoritys).filter(Authoritys.id == ctx.author.id).first()
+        if authority:
+            roles = authority.get_roles()
+            if role.value in roles:
+                return True
+
+    return False
+
+
+def is_allow_channel(bot, ctx):
+    if is_developer(ctx.author):
+        return True
+
+    if ctx.channel.id in get_bot_channel(bot, ctx):
         return True
 
     return False
