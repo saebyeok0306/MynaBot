@@ -112,9 +112,7 @@ class ClovaX(commands.Cog):
             return
             
         if util.is_allow_channel(self.bot, ctx) is False:
-            msg = await ctx.reply(f"CLOVA X 관련 명령어는 `봇명령` 채널에서만 가능해요.")
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         await ctx.defer()  # 오래걸리는 함수작동과 관련된 듯

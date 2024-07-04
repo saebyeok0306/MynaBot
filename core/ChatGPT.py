@@ -205,7 +205,7 @@ class ChatGPT(commands.Cog):
                             if len(collected_message) >= 2000:
                                 isLong = True
                                 await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
-                            if (cnt > 12):
+                            if cnt > 16:
                                 cnt = 0
                                 await msg.edit(content=collected_message)
                     except:
@@ -323,9 +323,7 @@ class ChatGPT(commands.Cog):
             return
 
         if util.is_allow_channel(self.bot, ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         await ctx.defer()  # 오래걸리는 함수작동과 관련된 듯
@@ -381,11 +379,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         key = self.create_chat_unique_key(ctx.author)
@@ -418,11 +422,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="대화목록", aliases=["대화리스트"])
     async def 대화목록(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         cnt = len(self.chat_room.keys())
@@ -441,11 +451,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="대화내역", aliases=["대화기록", "대화내용"])
     async def 대화내역(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         key = self.create_chat_unique_key(ctx.author)
@@ -473,7 +489,15 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="GPT테스트")
     async def GPT테스트(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
+            await msg.delete(delay=5)
+            await ctx.message.delete(delay=5)
+            return
+
         if ctx.author.guild_permissions.administrator:
             room = self.chat_room[self.create_chat_unique_key(ctx.author)]
             await ctx.reply(room.print(), mention_author=False)
