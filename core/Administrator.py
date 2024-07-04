@@ -28,9 +28,15 @@ class Administrator(commands.Cog):
             await logs.send_log(bot=self.bot,
                                 log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 관리자청소 명령어를 실행했습니다.")
 
+        else:
+            msg = await ctx.reply(f"관리자에게만 허용된 명령어에요.", mention_author=True)
+            await msg.delete(delay=5)
+            await ctx.message.delete(delay=5)
+            return
+
     @commands.command(name="로그보기", aliases=["에러로그", "에러로그보기"])
     async def 로그보기(self, ctx, *input):
-        if ctx.message.author.id == 383483844218585108:
+        if util.is_developer(ctx.author):
             showPage = 9
             if len(input) == 1:
                 if input[0] == 'all' or input[0] == 'All':
@@ -83,7 +89,7 @@ class Administrator(commands.Cog):
 
     @commands.command(name="코드")
     async def 코드(self, ctx, *input):
-        if ctx.message.author.id == 383483844218585108:
+        if util.is_developer(ctx.author):
             text = " ".join(input)
 
             # @timeout(2, error_message='TimeoutError')
@@ -117,7 +123,7 @@ class Administrator(commands.Cog):
     @commands.command(name="SQL")
     async def SQL(self, ctx, *input):
         # if ctx.message.author.guild_permissions.administrator:
-        if ctx.message.author.id == 383483844218585108:
+        if util.is_developer(ctx.author):
             text = " ".join(input)
 
             # @timeout(2, error_message='TimeoutError')
@@ -172,13 +178,13 @@ class Administrator(commands.Cog):
 
     @commands.command(name="공지사항테스트")
     async def 공지사항테스트(self, ctx, *input):
-        if ctx.message.author.id == 383483844218585108:
+        if util.is_developer(ctx.author):
             embed = self.AnnouncementEmbed(ctx, input)
             await ctx.channel.send(embed=embed)
 
     @commands.command(name="공지사항")
     async def 공지사항(self, ctx, *input):
-        if ctx.message.author.id == 383483844218585108:
+        if util.is_developer(ctx.author):
             embed = self.AnnouncementEmbed(ctx, input)
 
             guild_channels = util.get_bot_channel_guild(self.bot)

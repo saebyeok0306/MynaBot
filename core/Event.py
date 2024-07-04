@@ -23,13 +23,14 @@ class Event(commands.Cog):
         if util.is_test_version():
             # Test Version
             self.core_list.extend([
-                'VoiceClient', 'Youtube'
+                'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
+                'Authority'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'ArmyCard',
-                'Message', 'VoiceClient', 'Youtube'
+                'Message', 'VoiceClient', 'Youtube', 'Authority'
             ])
 
     @staticmethod
