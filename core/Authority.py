@@ -32,7 +32,7 @@ class Authority(commands.Cog):
                 if role.value == input_role:
                     break
             else:
-                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {util.ROLE_TYPE}`", mention_author=False)
+                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {[role.name for role in util.ROLE_TYPE]}`", mention_author=False)
                 return
 
             with SessionContext() as session:
@@ -71,7 +71,7 @@ class Authority(commands.Cog):
                 if role.value == delete_role:
                     break
             else:
-                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {util.ROLE_TYPE}`", mention_author=False)
+                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {[role.name for role in util.ROLE_TYPE]}`", mention_author=False)
                 return
 
             with SessionContext() as session:
@@ -134,7 +134,7 @@ class Authority(commands.Cog):
                 if role.value == input_role:
                     break
             else:
-                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {util.GUILD_COMMAND_TYPE}`", mention_author=False)
+                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {[role.name for role in util.GUILD_COMMAND_TYPE]}`", mention_author=False)
                 return
 
             with SessionContext() as session:
@@ -174,7 +174,7 @@ class Authority(commands.Cog):
                 if role.value == delete_role:
                     break
             else:
-                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {util.GUILD_COMMAND_TYPE}`", mention_author=False)
+                await ctx.reply(f"해당 권한이 존재하지 않습니다.\n`ex. {[role.name for role in util.GUILD_COMMAND_TYPE]}`", mention_author=False)
                 return
 
             with SessionContext() as session:
