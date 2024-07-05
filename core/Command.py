@@ -33,7 +33,8 @@ class Guide:
         if self.user_role is not None:
             if util.is_allow_user(ctx, self.user_role) is False:
                 author_type = AuthorType.USER
-            is_skip = True
+            else:
+                is_skip = True
         if is_skip is False and self.guild_role is not None and util.is_allow_guild(ctx, self.guild_role) is False:
             author_type = AuthorType.GUILD
 
