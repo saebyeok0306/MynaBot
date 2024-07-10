@@ -36,7 +36,7 @@ jobs:
             fi
             if docker images ${{ secrets.DOCKER_IMAGE_NAME }}:latest | grep -q "${{ secrets.DOCKER_IMAGE_NAME }}"; then
               echo "INFO: Bot Container is starting... True"
-              docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db -p 80:80 ${{ secrets.DOCKER_IMAGE_NAME }}
+              docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db ${{ secrets.DOCKER_IMAGE_NAME }}
             else
               echo "ERROR: Bot Docker Image is none... False"
             fi
