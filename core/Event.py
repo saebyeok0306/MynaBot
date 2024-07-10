@@ -30,7 +30,8 @@ class Event(commands.Cog):
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'ArmyCard',
-                'Message', 'VoiceClient', 'Youtube', 'Authority'
+                'Message', 'VoiceClient', 'Youtube', 'Authority',
+                "ClovaX"
             ])
 
     @staticmethod
