@@ -195,7 +195,7 @@ class TTS:
             "FEMALE": {
                 "name": "ko-KR-Neural2-A",
                 "ssml_gender": texttospeech.SsmlVoiceGender.FEMALE,
-                "pitch": 4.0
+                "pitch": 2.0
             }
         }
 

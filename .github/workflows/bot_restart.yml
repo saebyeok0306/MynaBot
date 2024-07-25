@@ -27,4 +27,4 @@ jobs:
             cd ${{ secrets.APP_FOLDER_PATH }}
             docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
             docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} || true
-            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db -p 80:80 ${{ secrets.DOCKER_IMAGE_NAME }}
+            docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -v $(pwd)/db:/db ${{ secrets.DOCKER_IMAGE_NAME }}

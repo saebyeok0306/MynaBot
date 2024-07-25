@@ -1,4 +1,5 @@
 import asyncio
+from enum import Enum
 
 import discord
 import itertools
@@ -9,27 +10,40 @@ import utils.Logs as logs
 import utils.Utility as util
 from utils.Timeout import timeout
 
+class AuthorType(Enum):
+    ANY = 0
+    USER = 1
+    GUILD = 2
+
+
 class Guide:
-    def __init__(self, name, value, active=True, server=None):
+    def __init__(self, name, value, active=True, user_role=None, guild_role=None):
         self.name = name
         self.value = value
         self.active = active
+        self.user_role = user_role
+        self.guild_role = guild_role
 
-        if server is not None and type(server) is not list:
-            server = [server]
-        self.server = server
-
-    def __call__(self, server=None):
+    def __call__(self, ctx):
         if self.active is False:
-            return None
-        if server is not None and self.server is not None and server not in self.server:
-            return None
+            return None, None
+
+        author_type = AuthorType.ANY
+        is_skip = False
+        if self.user_role is not None:
+            if util.is_allow_user(ctx, self.user_role) is False:
+                author_type = AuthorType.USER
+            else:
+                is_skip = True
+        if is_skip is False and self.guild_role is not None and util.is_allow_guild(ctx, self.guild_role) is False:
+            author_type = AuthorType.GUILD
 
         from copy import copy
         _guide = copy(self.__dict__)
         del _guide["active"]
-        del _guide["server"]
-        return _guide
+        del _guide["user_role"]
+        del _guide["guild_role"]
+        return _guide, author_type
 
 class Command(commands.Cog):
 
@@ -48,19 +62,28 @@ class Command(commands.Cog):
                 Guide(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!'),
                 Guide(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!'),
                 Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!'),
-                Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!', server=[631471244088311840]),
+                Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!',
+                      guild_role=util.GUILD_COMMAND_TYPE.BLACKCAT, user_role=util.ROLE_TYPE.BLACKCAT),
                 Guide(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
-                Guide(name='!마크', value = '디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
+                Guide(name='!마크', value='디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
+                Guide(name='!건의', value='봇제작자에게 버그나 건의사항을 보낼 수 있어요!'),
             ],
             "유즈맵 제작 도구모음": [
                 Guide(name='!계산 `수식`', value=f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
                 Guide(name=f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
             ],
             "마이나(ChatGPT)": [
-                Guide(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!'),
-                Guide(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.'),
-                Guide(name=f'!초기화', value=f'마이나에게 질문한 대화기록을 초기화해요.'),
-                Guide(name=f'!대화목록', value=f'마이나와 대화중인 방목록을 보여줘요.'),
+                Guide(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!',
+                      guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
+                Guide(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.',
+                      guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
+                Guide(name=f'!초기화', value=f'마이나에게 질문한 대화기록을 초기화해요.',
+                      guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
+                Guide(name=f'!대화목록', value=f'마이나와 대화중인 방목록을 보여줘요.',
+                      guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
+                Guide(name=f'GPT-4 사용방법', value=f'질문을 작성할 때 `gpt4`를 포함해서 작성해보세요.',
+                      guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.GPT4),
+                Guide(name=f'!클로바야 `질문`', value=f'네이버의 CLOVA X를 활용해서 질문에 대한 답변을 해줘요!', user_role=util.ROLE_TYPE.CLOVAX),
             ],
             "음성채팅 관련 명령어": [
                 Guide(name=f'!입장',
@@ -74,8 +97,9 @@ class Command(commands.Cog):
                 Guide(name=f'!입장',
                       value=f'먼저 봇이 음성채팅에 참여해야 해요. 이 기능은 내가 있는 음성채팅에 마이나를 초대해요.'),
                 Guide(name=f'!이동', value=f'마이나를 다른 음성채팅으로 옮길 때 사용해요.'),
-                Guide(name=f'!볼륨', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30'),
+                Guide(name=f'!볼륨 `값`', value=f'마이나가 재생하는 노래의 음량을 조절해요. ex. !볼륨 30'),
                 Guide(name=f'!재생 `유튜브링크`', value=f'마이나가 링크의 음원을 플레이리스트에 추가해요.'),
+                Guide(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색하여 플레이리스트로 추가할 수 있어요.'),
                 Guide(name=f'!정지', value=f'마이나가 현재 재생중인 음악을 정지합니다.'),
                 Guide(name=f'!곡랜덤', value=f'플레이리스트의 음악을 랜덤하게 섞습니다.'),
                 Guide(name=f'!플레이리스트', value=f'현재 플레이리스트를 보여줘요.'),
@@ -83,6 +107,9 @@ class Command(commands.Cog):
                 Guide(name=f'!음악모두삭제', value=f'플레이리스트에 등록된 모든 음악을 삭제해요.'),
                 Guide(name=f'!음악정보', value=f'현재 재생 중인 음악의 정보를 확인해요.'),
             ],
+            "관리자 명령어": [
+                Guide(name=f'!관리자청소 `값(기본값 5)`', value=f'어떤 메시지든 N개를 삭제합니다.\n**！제한은 없으나 너무 큰 값은 디코서버에 무리를 줍니다.**'),
+            ]
         }
 
     @commands.command(name="도움말", aliases=["도움", "설명"])
@@ -92,6 +119,7 @@ class Command(commands.Cog):
         embed = discord.Embed(color=0xB22222, title=":scroll: 도움말", description=f'{self.bot.user.name}에게 있는 명령어을 알려드려요.')
         embed.set_footer(text=f"{ctx.author} | 도움말", icon_url=ctx.author.display_avatar)
         msg = await ctx.channel.send(embed=embed)
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 도움말 명령어를 실행했습니다.")
 
         while True:
             description = f'{self.bot.user.name}에게 있는 명령어을 알려드려요.'
@@ -109,8 +137,16 @@ class Command(commands.Cog):
             if sel_key is not None:
                 sel_guides = self.guides[sel_key]
                 for guide in sel_guides:
-                    item = guide(server=ctx.guild.id)
-                    if item is None: continue
+                    item, author_type = guide(ctx=ctx)
+                    if item is None:
+                        continue
+
+                    if author_type == AuthorType.USER:
+                        item["value"] += f"\n**개발자가 허락한 유저만 사용이 가능합니다.**"
+                    if author_type == AuthorType.GUILD:
+                        item["value"] += f"\n**개발자가 허락한 서버만 사용이 가능합니다.**"
+                    if author_type != AuthorType.ANY:
+                        item["name"] = f'~~{item["name"]}~~'
                     embed.add_field(**item)
             await msg.edit(embed=embed)
 
@@ -238,28 +274,38 @@ class Command(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 계산 명령어를 실행했습니다.")
 
+    @staticmethod
+    async def fetch_data(api_url):
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_url) as response:
+                return await response.text(), response.status
     @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
     async def 흑이(self, ctx):
-        if ctx.guild.id in [631471244088311840]:
-            if ctx.channel.id in util.get_bot_channel(self.bot, ctx):
-                import urllib.request
-                api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
-                request = urllib.request.Request(api_url)
-                response = urllib.request.urlopen(request)
-                rescode = response.getcode()
-                if rescode == 200:
-                    response_body = response.read()
-                    response_body = response_body.decode('utf-8')
-                    try:
-                        urllib.request.urlretrieve(response_body, "explain.png")
-                        file = discord.File("explain.png")
-                        await ctx.channel.send(file=file)
-                    except:
-                        await ctx.channel.send(response_body)
-            else:
-                msg = await ctx.reply(f"흑이 소환은 `봇명령` 채널에서만 가능해요.")
-                await msg.delete(delay=5)
-                await ctx.message.delete(delay=5)
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.BLACKCAT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.BLACKCAT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 흑이 명령어를 사용할 수 있어요.", mention_author=True)
+            await msg.delete(delay=5)
+            await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
+            return
+
+        api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
+        data, status_code = await self.fetch_data(api_url)
+
+        if status_code == 200:
+            try:
+                import urllib
+                urllib.request.urlretrieve(data, "blackcat.png")
+                file = discord.File("blackcat.png")
+                await ctx.channel.send(file=file)
+            except:
+                await ctx.channel.send(data)
 
     @commands.command(name="스위치", aliases=['경우의수'])
     async def 스위치(self, ctx, *input):

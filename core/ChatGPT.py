@@ -43,9 +43,21 @@ class ChatGPT(commands.Cog):
         self.chat_room = defaultdict(Chat)  # runtime, history, channel
         self.encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
         self.max_token = 3500
-        self.dolar_to_won = 1300
-        self.input_cost = (0.0015 * self.dolar_to_won) / 1000
-        self.output_cost = (0.002 * self.dolar_to_won) / 1000
+        self.dolar_to_won = 1380
+        self.cost = {
+            "gpt-3.5-turbo": {
+                "input": (0.5 * self.dolar_to_won) / 1000000,
+                "output": (1.5 * self.dolar_to_won) / 1000000
+            },
+            "gpt-4o": {
+                "input": (5.0 * self.dolar_to_won) / 1000000,
+                "output": (15.0 * self.dolar_to_won) / 1000000
+            },
+            "gpt-4-turbo": {
+                "input": (10.0 * self.dolar_to_won) / 1000000,
+                "output": (30.0 * self.dolar_to_won) / 1000000
+            }
+        }
         self.system_msg = [
             {"role": "system", "content": "You are a chatbot named '마이나'."},
             {"role": "system", "content": "Your developer is '갈대'."},
@@ -64,34 +76,6 @@ class ChatGPT(commands.Cog):
 
     def cog_unload(self):
         pass
-
-    def is_allow_user(self, ctx):
-
-        allow_users = {
-            "갈대": 383483844218585108,
-        }
-        if ctx.author.id in allow_users.values():
-            return True
-
-        return False
-
-    def is_allow_guild(self, ctx):
-
-        allow_guilds = {
-            "유즈맵 제작공간": 631471244088311840,
-            "데이터베이스": 966942556078354502,
-        }
-        if ctx.guild.id in allow_guilds.values():
-            return True
-
-        return False
-
-    def is_allow_command(self, ctx):
-        if ctx.channel.id in util.get_bot_channel(self.bot, ctx) or \
-                ctx.author.guild_permissions.administrator:
-            return True
-
-        return False
 
     def get_system_msg_index(self, ctx, key=None):
         if key is None:
@@ -221,7 +205,7 @@ class ChatGPT(commands.Cog):
                             if len(collected_message) >= 2000:
                                 isLong = True
                                 await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
-                            if (cnt > 12):
+                            if cnt > 16:
                                 cnt = 0
                                 await msg.edit(content=collected_message)
                     except:
@@ -235,10 +219,12 @@ class ChatGPT(commands.Cog):
             input_token = len(self.encoding.encode(prompt[-1]["content"])) + token
             output_token = len(self.encoding.encode(collected_message))
             total_token = input_token + output_token
-            input_won = round(self.input_cost * input_token, 4)
-            output_won = round(self.output_cost * output_token, 4)
+
+            model_cost = self.cost[model]
+            input_won = round(model_cost["input"] * input_token, 4)
+            output_won = round(model_cost["output"] * output_token, 4)
             total_won = round(input_won + output_won, 4)
-            used_record_text = f"\n> `{total_won}￦을 사용했어요."  # {input_token}+{output_token}({total_token})토큰,
+            used_record_text = f"\n> `{model}:{total_won}￦을 사용했어요."  # {input_token}+{output_token}({total_token})토큰,
             if cnt == 0:
                 used_record_text += "`"
             else:
@@ -327,11 +313,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="마이나야", aliases=["검색"])
     async def 마이나야(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         await ctx.defer()  # 오래걸리는 함수작동과 관련된 듯
@@ -346,10 +338,14 @@ class ChatGPT(commands.Cog):
             await ctx.message.delete(delay=5)
             return False
 
+        text = " ".join(input)
+        model = "gpt-3.5-turbo"
+        if 'gpt4' in text and util.is_allow_user(ctx, util.ROLE_TYPE.GPT4):
+            model = "gpt-4o"
+
         self.chat_room[key].channel = ctx.channel
         self.chat_room[key].runtime = True
 
-        text = " ".join(input)
         request_msg = {"role": "user", "content": text}
         total_token = 0
         remove_cnt = 0
@@ -365,7 +361,7 @@ class ChatGPT(commands.Cog):
         msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
 
         # Run GPT
-        res = await self.call_chat_gpt(ctx=ctx, msg=msg, prompt=prompt, token=total_token, cnt=remove_cnt)
+        res = await self.call_chat_gpt(ctx=ctx, msg=msg, prompt=prompt, token=total_token, cnt=remove_cnt, model=model)
         if res is False:
             self.chat_room[key].runtime = False
             return  # 실패한 경우 return
@@ -383,11 +379,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         key = self.create_chat_unique_key(ctx.author)
@@ -420,11 +422,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="대화목록", aliases=["대화리스트"])
     async def 대화목록(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         cnt = len(self.chat_room.keys())
@@ -443,11 +451,17 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="대화내역", aliases=["대화기록", "대화내용"])
     async def 대화내역(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
-        if self.is_allow_command(ctx) is False:
-            msg = await ctx.reply(f"ChatGPT 관련 명령어는 `봇명령` 채널에서만 가능해요.")
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
             await msg.delete(delay=5)
             await ctx.message.delete(delay=5)
+            return
+
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
             return
 
         key = self.create_chat_unique_key(ctx.author)
@@ -475,7 +489,15 @@ class ChatGPT(commands.Cog):
 
     @commands.command(name="GPT테스트")
     async def GPT테스트(self, ctx, *input):
-        if self.is_allow_guild(ctx) is False: return
+        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+
+        if allowed_user is False and allowed_guild is False:
+            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
+            await msg.delete(delay=5)
+            await ctx.message.delete(delay=5)
+            return
+
         if ctx.author.guild_permissions.administrator:
             room = self.chat_room[self.create_chat_unique_key(ctx.author)]
             await ctx.reply(room.print(), mention_author=False)

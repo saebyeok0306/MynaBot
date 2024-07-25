@@ -2,6 +2,7 @@ import discord
 import random
 from discord.ext import commands
 
+import utils.Logs as logs
 import utils.Utility as util
 from utils.Role import *
 
@@ -15,15 +16,9 @@ class ColorName(commands.Cog):
 
     @commands.command(name="색상변경", aliases=['색상수정'])
     async def 색상변경(self, ctx, *input):
-        if ctx.channel.id not in util.get_bot_channel(self.bot, ctx):
-            embed = discord.Embed(
-                title=f':exclamation: 채널 설정 안내',
-                description=f'{ctx.author.mention} 해당서버의 관리자께서,\n채널주제에 `#{self.bot.user.name}`를 작성해주셔야 합니다.',
-                color=0xff0000
-            )
-            embed.set_footer(text=f"{ctx.author.display_name} | {self.title}", icon_url=ctx.author.display_avatar)
-            await ctx.channel.send(embed=embed)
-            return False
+        if util.is_allow_channel(self.bot, ctx) is False:
+            await util.is_not_allow_channel(ctx, util.current_function_name())
+            return
 
         # if ctx.guild.id not in [631471244088311840, 966942556078354502, 740177366231285820]:
         #     embed = discord.Embed(title = f':exclamation: 닉네임 색상변경 안내', description = f'{ctx.author.mention} 색상변경 기능은 현재 디스코드 서버에서는 지원되지 않습니다.', color = 0xff0000)
@@ -122,6 +117,8 @@ class ColorName(commands.Cog):
         )
         embed.set_footer(text=f"{ctx.author.display_name} | {self.title}", icon_url=ctx.author.display_avatar)
         await ctx.channel.send(embed=embed)
+        await logs.send_log(bot=self.bot,
+                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 색상변경 명령어를 실행했습니다.")
         return True
 
 

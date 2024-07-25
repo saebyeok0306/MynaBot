@@ -8,6 +8,9 @@ from discord import ClientException
 from discord.ext import commands
 from pytube import YouTube, Playlist
 
+import utils.Logs as logs
+
+
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -132,6 +135,7 @@ class Music:
         """Music URL"""
         self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
         await ctx.send(f'플레이리스트에 추가되었어요!\n{video.title}')
+        
 
     async def add_playlist(self, ctx, urls, videos):
         """Playlist URL"""
@@ -159,6 +163,8 @@ class Music:
             # 아닌 경우
             else:
                 await self.add_music(ctx, url, video)
+        await logs.send_log(bot=self.bot,
+                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 재생 명령어를 실행했습니다.")
 
     @commands.command(name="볼륨", aliases=["음량"])
     async def 볼륨(self, ctx, volume: int):
@@ -188,6 +194,7 @@ class Music:
         await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
         ctx.voice_client.stop()
         del self.current[guild_id]
+
 
     @commands.command(name="곡랜덤", aliases=["곡셔플"])
     async def 곡랜덤(self, ctx):

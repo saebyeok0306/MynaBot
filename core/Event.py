@@ -23,13 +23,15 @@ class Event(commands.Cog):
         if util.is_test_version():
             # Test Version
             self.core_list.extend([
-                'VoiceClient', 'Youtube'
+                'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
+                'Authority'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'ArmyCard',
-                'Message', 'VoiceClient', 'Youtube'
+                'Message', 'VoiceClient', 'Youtube', 'Authority',
+                "ClovaX"
             ])
 
     @staticmethod
@@ -121,28 +123,32 @@ class Event(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=log_text)
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
-        if isinstance(error, commands.CommandNotFound):
-            return False
-        elif isinstance(error, commands.MissingRequiredArgument):
-            return False
-        elif isinstance(error, commands.BadArgument):
-            return False
-        else:
-            with open('log/error.txt', 'a', encoding='utf-8') as l:
-                now = datetime.datetime.now()
-                formatted_time = "{}-{:02d}-{:02d} {:02d}:{:02d}".format(
-                    now.year, now.month, now.day, now.hour, now.minute
-                )
-                text = f'user : {ctx.author.name}#{ctx.author.discriminator}\n'
-                text += f'cmd : {ctx.message.content}\n'
-                text += f'from : {ctx.message.guild.name}.{ctx.message.channel.name}\n'
-                text += f'error : {error}\n'
-                text += f'date : {formatted_time}'
-                text += f'\n\n'
-                l.write(text)
-            return True
+    # @commands.Cog.listener()
+    # async def on_command_error(self, ctx, error):
+    #     if isinstance(error, commands.CommandNotFound):
+    #         return False
+    #     elif isinstance(error, commands.MissingRequiredArgument):
+    #         return False
+    #     elif isinstance(error, commands.BadArgument):
+    #         return False
+    #     else:
+    #         with open('log/error.txt', 'a', encoding='utf-8') as l:
+    #             now = datetime.datetime.now()
+    #             formatted_time = "{}-{:02d}-{:02d} {:02d}:{:02d}".format(
+    #                 now.year, now.month, now.day, now.hour, now.minute
+    #             )
+    #             guild_str = ctx.message.guild.name if ctx.message.guild else ""
+    #             channel_str = ctx.message.channel.name if hasattr(ctx.message.channel, "name") else "dm"
+    #             text = f'user : {ctx.author.name}#{ctx.author.discriminator}\n'
+    #             text += f'cmd : {ctx.message.content}\n'
+    #             text += f'from : {guild_str}.{channel_str}\n'
+    #             text += f'error : {error}\n'
+    #             text += f'date : {formatted_time}'
+    #             text += f'\n\n'
+    #             l.write(text)
+    #             await logs.send_log(bot=self.bot,
+    #                                 log_text=text)
+    #         return True
 
     @commands.command(name='로드', aliases=['load'])
     async def load_commands(self, ctx, extension):
