@@ -1,17 +1,21 @@
 from collections import defaultdict
+from typing import Literal
 
 import discord, datetime
+from discord import app_commands, Interaction
+
 import utils.Utility as util
 from discord.ext import commands
 
 import utils.Logs as logs
+from main import MynaBot
 
 
 class Administrator(commands.Cog):
 
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
-        self.bot = bot
+        self.bot: MynaBot = bot
         self.suggest = defaultdict(int)
         self.timeout = defaultdict(int)
 
@@ -192,41 +196,71 @@ class Administrator(commands.Cog):
                 for channel in guild_channels[guild]:
                     await channel.send(embed=embed)
 
-    @commands.command(name="건의", aliases=["제보", "버그"])
-    async def 건의(self, ctx, *input):
+    # @commands.command(name="건의", aliases=["제보", "버그"])
+    @app_commands.command(description='개발자에게 문의사항을 전달합니다.')
+    @app_commands.describe(message='문의사항을 작성해주세요.')
+    async def 문의(self, interaction: Interaction[MynaBot], message: str):
         import time
 
         timestamp = int(time.time())
-        if self.timeout.get(ctx.author.id):
-            expired = self.timeout.get(ctx.author.id)
+        if self.timeout.get(interaction.user.id):
+            expired = self.timeout.get(interaction.user.id)
             if timestamp < expired:
-                await ctx.reply(f"{expired-timestamp}초 뒤에 다시 시도해주세요.\n악용을 방지하기 위해서 시간을 제한했습니다.")
+                await interaction.response.send_message(f"{expired-timestamp}초 뒤에 다시 시도해주세요.\n악용을 방지하기 위해서 시간을 제한했습니다.", ephemeral=True)
                 return
 
         me = self.bot.get_user(383483844218585108)
         dm = await me.create_dm()
-        text = " ".join(input)
-        guild_name = ctx.guild.name if ctx.guild else "dm"
+        guild_name = interaction.guild.name if interaction.guild else "dm"
         embed = discord.Embed(
             color=0x1e1f22,
-            title=f"[ {ctx.author.display_name}님 ]",
-            description=text
+            title=f"[ {interaction.user.display_name}님 ]",
+            description=message
         )
-        embed.set_footer(text=f"{ctx.author.display_name} | {guild_name} |  {datetime.datetime.now().strftime('%Y.%m.%d %H:%M')}",
-                         icon_url=ctx.author.display_avatar)
+        embed.set_footer(text=f"{interaction.user.display_name} | {guild_name} |  {datetime.datetime.now().strftime('%Y.%m.%d %H:%M')}",
+                         icon_url=interaction.user.display_avatar)
 
         await dm.send(embed=embed, mention_author=False)
-        expired = self.timeout.get(ctx.author.id)
+        expired = self.timeout.get(interaction.user.id)
         if expired is None:
             expired = timestamp
 
         if expired-timestamp < 60*60*24:
-            self.suggest[ctx.author.id] += 1
-            self.timeout[ctx.author.id] = timestamp + pow(2, self.suggest[ctx.author.id]+3)
+            self.suggest[interaction.user.id] += 1
+            self.timeout[interaction.user.id] = timestamp + pow(2, self.suggest[interaction.user.id]+3)
 
-        await ctx.reply(f"갈대님에게 메시지를 전송했어요!")
+        await interaction.response.send_message(f"갈대님에게 메시지를 전송했어요!", ephemeral=True)
         await logs.send_log(bot=self.bot,
-                            log_text=f"{guild_name}의 {ctx.author.display_name}님이 건의 명령어를 실행했습니다.")
+                            log_text=f"{guild_name}의 {interaction.user.display_name}님이 문의 명령어를 실행했습니다.")
+
+    @commands.command()
+    async def sync(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
+        """Sync the application commands"""
+
+        async with ctx.typing():
+            if sync_type == 'guild':
+                self.bot.tree.copy_global_to(guild=ctx.guild)  # type: ignore
+                await self.bot.tree.sync(guild=ctx.guild)
+                await ctx.reply('Synced guild !')
+                return
+
+            await self.bot.tree.sync()
+            await ctx.reply('Synced global !')
+
+    @commands.command()
+    async def unsync(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
+        """Unsync the application commands"""
+
+        async with ctx.typing():
+            if unsync_type == 'guild':
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                await ctx.reply('Un-Synced guild !')
+                return
+
+            self.bot.tree.clear_commands()  # type: ignore
+            await self.bot.tree.sync()
+            await ctx.reply('Un-Synced global !')
 
 
 async def setup(bot):
