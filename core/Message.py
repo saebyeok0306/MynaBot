@@ -1,6 +1,11 @@
 import random
+from datetime import datetime
 
 from discord.ext import commands
+from sqlalchemy import and_
+
+from utils.database.Database import SessionContext
+from utils.database.model.exp import Exp
 
 
 class Message(commands.Cog):
@@ -15,6 +20,19 @@ class Message(commands.Cog):
         if message.author.bot: return None
 
         await self.add_emoji(message)
+
+        today = datetime.today().strftime('%Y-%m-%d')
+
+        with SessionContext() as session:
+            user_exp = session.query(Exp).filter(and_(Exp.id == message.author.id, Exp.guild_id == message.guild.id)).first()
+            if user_exp is None:
+                user_exp = Exp(message.author.id, message.guild.id)
+            user_exp.chat_count += 1
+            if user_exp.today_str != today:
+                user_exp.today_str = today
+                user_exp.today_exp += 1
+            session.add(user_exp)
+            session.commit()
 
         # await bot.process_commands(message)
     

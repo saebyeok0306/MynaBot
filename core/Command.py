@@ -5,10 +5,15 @@ import discord
 import itertools
 import random
 from discord.ext import commands
+from sqlalchemy import and_
 
 import utils.Logs as logs
 import utils.Utility as util
 from utils.Timeout import timeout
+from utils.database.Database import SessionContext
+from utils.database.model.exp import Exp
+from utils.database.model.status import Status
+
 
 class AuthorType(Enum):
     ANY = 0
@@ -53,7 +58,8 @@ class Command(commands.Cog):
         self.title = "마이나"
         self.guides = {
             "기본적인 명령어": [
-                Guide(name=f'!프로필', value=f'재미로 보는 프로필이에요. 레벨은 가입날짜를 기준으로 상승해요.'),
+                Guide(name=f'!프로필', value=f'재미로 보는 프로필이에요. 레벨은 여러가지 요소를 기준으로 상승해요.'),
+                Guide(name=f'!프로필2', value=f'이전 방식으로 프로필을 보여줘요.'),
                 Guide(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색할 수 있어요. 반응 버튼으로 영상을 선택할 수 있어요.'),
                 Guide(name='!주사위 `값(기본값 100)`', value=f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지'),
                 Guide(name='!청소 `값(기본값 5)`', value=f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**'),
@@ -307,6 +313,15 @@ class Command(commands.Cog):
             except:
                 await ctx.channel.send(data)
 
+            with SessionContext() as session:
+                user_exp = session.query(Exp).filter(
+                    and_(Exp.id == ctx.author.id, Exp.guild_id == ctx.guild.id)).first()
+                if user_exp is None:
+                    user_exp = Exp(ctx.author.id, ctx.guild.id)
+                user_exp.cat_count += 1
+                session.add(user_exp)
+                session.commit()
+
     @commands.command(name="스위치", aliases=['경우의수'])
     async def 스위치(self, ctx, *input):
         OPT = False
@@ -368,6 +383,12 @@ class Command(commands.Cog):
     async def 서버상태(self, ctx):
         import psutil
 
+        boot_time = ""
+        with SessionContext() as session:
+            status = session.query(Status).first()
+            if status is not None:
+                boot_time = f"{status.boot_time}에 부팅됨!"
+
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         memory_total = round(memory.total / (1024 ** 3), 2)
@@ -393,11 +414,10 @@ class Command(commands.Cog):
         embed.add_field(name="Memory", value=f'현재 RAM은 `{memory_total}GB` 중 `{memory_used}GB`({memory_percent}%)가 사용 중이에요.')
         embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB`({dist_percent}%)가 사용 중이에요.')
         embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며,\n패킷수로는 {packets_sent}↑{packets_received}↓으로 측정돼요!')
-        embed.set_footer(text=f"{self.bot.user.display_name}", icon_url=self.bot.user.display_avatar)
+        embed.set_footer(text=f"{boot_time}", icon_url=self.bot.user.display_avatar)
         await ctx.channel.send(embed=embed)
 
-
-
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 서버상태 명령어를 실행했습니다.")
 async def setup(bot):
     await bot.add_cog(Command(bot))
 

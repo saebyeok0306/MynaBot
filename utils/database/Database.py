@@ -15,6 +15,8 @@ def init_db():
     import utils.database.model.chats
     import utils.database.model.authority
     import utils.database.model.commands
+    import utils.database.model.status
+    import utils.database.model.exp
     Base.metadata.create_all(engine)
 
 
