@@ -33,7 +33,6 @@ class Message(commands.Cog):
                 user_exp.today_exp += 1
             session.add(user_exp)
             session.commit()
-            print(f'{message.author.display_name}님이 {message.guild.name}에서 {message.content}을 보냈습니다.')
 
         # await bot.process_commands(message)
     
