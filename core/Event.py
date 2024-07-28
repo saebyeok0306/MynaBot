@@ -9,6 +9,7 @@ import utils.Logs as logs
 import utils.Utility as util
 from utils.Role import *
 from utils.database.Database import SessionContext
+from utils.database.model.status import Status
 from utils.database.model.users import Users
 
 
@@ -24,21 +25,15 @@ class Event(commands.Cog):
             # Test Version
             self.core_list.extend([
                 'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
-                'Authority'
+                'Authority', 'Message', 'Profile'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
-                'ColorName', 'Papago', 'ChatGPT', 'ArmyCard',
-                'Message', 'VoiceClient', 'Youtube', 'Authority',
-                "ClovaX"
+                'ColorName', 'Papago', 'ChatGPT', 'Message',
+                'VoiceClient', 'Youtube', 'Authority',
+                'ClovaX', 'Profile'
             ])
-
-    @staticmethod
-    def is_developer(ctx):
-        if ctx.author.id == 383483844218585108:
-            return True
-        return False
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -68,6 +63,14 @@ class Event(commands.Cog):
 
         change_status.start()
         await self.load_core()
+
+        with SessionContext() as session:
+            status = session.query(Status).first()
+            if status is None:
+                status = Status()
+            status.boot_time = f"{now_time}"
+            session.add(status)
+            session.commit()
 
         with SessionContext() as session:
             for guild in self.bot.guilds:
@@ -152,7 +155,7 @@ class Event(commands.Cog):
 
     @commands.command(name='로드', aliases=['load'])
     async def load_commands(self, ctx, extension):
-        if not self.is_developer(ctx): return
+        if not util.is_developer(ctx.author): return
         if type(self).__name__ == extension: return
 
         try:
@@ -165,7 +168,7 @@ class Event(commands.Cog):
 
     @commands.command(name='언로드', aliases=['unload'])
     async def unload_commands(self, ctx, extension):
-        if not self.is_developer(ctx): return
+        if not util.is_developer(ctx.author): return
         if type(self).__name__ == extension: return
 
         try:
@@ -178,7 +181,7 @@ class Event(commands.Cog):
 
     @commands.command(name='리로드', aliases=['reload'])
     async def reload_commands(self, ctx, extension=None):
-        if not self.is_developer(ctx): return
+        if not util.is_developer(ctx.author): return
 
         if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
             for filename in os.listdir('core'):
