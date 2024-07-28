@@ -4,11 +4,14 @@ from enum import Enum
 import discord
 import itertools
 import random
+
+from discord import app_commands, Interaction
 from discord.ext import commands
 from sqlalchemy import and_
 
 import utils.Logs as logs
 import utils.Utility as util
+from main import MynaBot
 from utils.Timeout import timeout
 from utils.database.Database import SessionContext
 from utils.database.model.exp import Exp
@@ -286,101 +289,114 @@ class Command(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(api_url) as response:
                 return await response.text(), response.status
-    @commands.command(name="흑이", aliases=['흑', '냥나메', '노나메', '노냥메', 'noname01'])
-    async def 흑이(self, ctx):
-        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.BLACKCAT)
-        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.BLACKCAT)
+
+    @app_commands.command(description='귀여운 흑이를 볼 수 있어요.')
+    async def 흑이(self, interaction: Interaction[MynaBot]):
+        await interaction.response.defer()
+        allowed_user = util.is_allow_user_interaction(interaction, util.ROLE_TYPE.BLACKCAT)
+        allowed_guild = util.is_allow_guild_interaction(interaction, util.GUILD_COMMAND_TYPE.BLACKCAT)
 
         if allowed_user is False and allowed_guild is False:
-            msg = await ctx.reply(f"관리자가 허용한 서버만 흑이 명령어를 사용할 수 있어요.", mention_author=True)
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await interaction.followup.send(f"관리자가 허용한 서버만 흑이 명령어를 사용할 수 있어요.", ephemeral=True)
             return
-
-        if util.is_allow_channel(self.bot, ctx) is False:
-            await util.is_not_allow_channel(ctx, util.current_function_name())
+        if util.is_allow_channel_interaction(self.bot, interaction) is False:
+            await util.is_not_allow_channel_interaction(self.bot, interaction, util.current_function_name())
             return
 
         api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
         data, status_code = await self.fetch_data(api_url)
-
         if status_code == 200:
             try:
                 import urllib
                 urllib.request.urlretrieve(data, "blackcat.png")
                 file = discord.File("blackcat.png")
-                await ctx.channel.send(file=file)
+                await interaction.followup.send(file=file)
             except:
-                await ctx.channel.send(data)
+                await interaction.followup.send(data)
 
             with SessionContext() as session:
                 user_exp = session.query(Exp).filter(
-                    and_(Exp.id == ctx.author.id, Exp.guild_id == ctx.guild.id)).first()
+                    and_(Exp.id == interaction.user.id, Exp.guild_id == interaction.guild.id)).first()
                 if user_exp is None:
-                    user_exp = Exp(ctx.author.id, ctx.guild.id)
+                    user_exp = Exp(interaction.user.id, interaction.guild.id)
                 user_exp.cat_count += 1
                 session.add(user_exp)
                 session.commit()
+                return
+        await interaction.followup.send("흑이를 소환하는데 실패했어요...")
 
-    @commands.command(name="스위치", aliases=['경우의수'])
-    async def 스위치(self, ctx, *input):
+    @app_commands.command(description='스위치 트리거를 사용했을 때 나올 수 있는 경우의 수를 표기합니다.')
+    @app_commands.describe(switches='스위치의 갯수를 입력하거나 스위치의 이름을 입력해주세요. (이름은 `콤마,`를 기준으로 구분합니다.)')
+    async def 스위치(self, interaction: Interaction[MynaBot], switches: str):
         OPT = False
         IPT = []
-        if len(input) >= 10:
-            OPT = True
-        elif len(input) == 1 and input[0].isdigit():
-            if int(input[0]) < 10:
-                IPT = range(int(input[0]))
+        print_type = None
+        try:
+            switches = int(switches)
+            if switches < 10:
+                IPT = range(switches)
+                print_type = "INT"
             else:
                 OPT = True
-        elif len(input) >= 2:
-            IPT = input
-        else:
-            OPT = True
+        except:
+            switches = list(map(lambda x : x.strip(), switches.split(',')))
+            if len(switches) >= 10:
+                OPT = True
+                print_type = "STR"
+            if len(switches) >= 2:
+                IPT = switches
+            else:
+                OPT = True
 
         if OPT is True:
             embed = discord.Embed(title=f':x: 경우의 수 (스위치)',
-                                  description=f'{ctx.author.mention} 사용할 스위치의 갯수를 입력해주세요.\n혹은 스위치 갯수가 10개이상이면 안됩니다.',
+                                  description=f'{interaction.user.mention} 사용할 스위치의 갯수를 입력해주세요.\n혹은 스위치 갯수가 10개이상이면 안됩니다.',
                                   color=0xffc0cb)
-            embed.set_footer(text=f"{ctx.author.display_name} | 경우의 수", icon_url=ctx.author.display_avatar)
-            await ctx.channel.send(embed=embed)
+            embed.set_footer(text=f"{interaction.user.display_name} | 경우의 수", icon_url=interaction.user.display_avatar)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
             return False
+
         res = []
         for c in list(itertools.chain.from_iterable(itertools.combinations(IPT, r) for r in range(len(IPT) + 1))):
             temp = ''
             for i in range(len(IPT)):
                 le = IPT[i]
                 if le not in c:
-                    temp += (f'Switch("{le}", Set);')
+                    if print_type == "INT": temp += f'Switch({le}, Set);'
+                    else: temp += f'Switch("{le}", Set);'
                 else:
-                    temp += (f'Switch("{le}", Cleared);')
-                if i != len(IPT) - 1: temp += '\n'
+                    if print_type == "INT": temp += f'Switch({le}, Cleared);'
+                    else: temp += f'Switch("{le}", Cleared);'
+                if i != len(IPT) - 1:
+                    temp += '\n'
             res.append(temp)
-
-        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 스위치 명령어를 실행했습니다.")
+        await logs.send_log(
+            bot=self.bot,
+            log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 스위치 명령어를 실행했습니다."
+        )
 
         if len(res) > 16:
             embed = discord.Embed(title=f':gear: 경우의 수 (스위치)',
-                                  description=f'{ctx.author.mention} 경우의 수입니다. 너무 많아서 텍스트파일로 업로드해요!\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.',
+                                  description=f'{interaction.user.mention} 경우의 수입니다. 너무 많아서 텍스트파일로 업로드해요!\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.',
                                   color=0xffc0cb)
-            embed.set_footer(text=f"{ctx.author.display_name} | 경우의 수", icon_url=ctx.author.display_avatar)
-            await ctx.channel.send(embed=embed)
+            embed.set_footer(text=f"{interaction.user.display_name} | 경우의 수", icon_url=interaction.user.display_avatar)
             with open('text.txt', 'w', encoding='utf-8') as l:
                 for idx, _res in enumerate(res):
                     l.write(f"{idx + 1}번째\n{_res}\n\n")
             file = discord.File("text.txt")
-            await ctx.channel.send(file=file)
+            await interaction.response.send_message(embed=embed, file=file, ephemeral=True)
         else:
             embed = discord.Embed(title=f':gear: 경우의 수 (스위치)',
-                                  description=f'{ctx.author.mention} 경우의 수입니다.\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.',
+                                  description=f'{interaction.user.mention} 경우의 수입니다.\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.',
                                   color=0xffc0cb)
-            embed.set_footer(text=f"{ctx.author.display_name} | 경우의 수", icon_url=ctx.author.display_avatar)
+            embed.set_footer(text=f"{interaction.user.display_name} | 경우의 수", icon_url=interaction.user.display_avatar)
             for idx, _res in enumerate(res):
                 embed.add_field(name=f'{idx + 1}번째', value=f'{_res}')
-            await ctx.channel.send(embed=embed)
+            await interaction.response.send_message(embed=embed, ephemeral=True)
 
-    @commands.command(name="서버상태", aliases=['작업관리자'])
-    async def 서버상태(self, ctx):
+
+    @app_commands.command(description='봇서버의 상태를 확인합니다.')
+    async def 서버상태(self, interaction: Interaction[MynaBot]) -> None:
         import psutil
 
         boot_time = ""
@@ -415,9 +431,15 @@ class Command(commands.Cog):
         embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB`({dist_percent}%)가 사용 중이에요.')
         embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며,\n패킷수로는 {packets_sent}↑{packets_received}↓으로 측정돼요!')
         embed.set_footer(text=f"{boot_time}", icon_url=self.bot.user.display_avatar)
-        await ctx.channel.send(embed=embed)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
-        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 서버상태 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 서버상태 명령어를 실행했습니다.")
+
+    @app_commands.command(description='description123')
+    @app_commands.describe(a='Input A', b='Input B')
+    async def test(self, interaction: Interaction[MynaBot], a: str, b: str) -> None:
+        await interaction.response.send_message(f'{a} + {b} = {a + b}', ephemeral=True)
+
 async def setup(bot):
     await bot.add_cog(Command(bot))
 

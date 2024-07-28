@@ -86,6 +86,15 @@ def get_bot_channel(bot, message):
     return bot_channel
 
 
+def get_bot_channel_interaction(bot, interaction: discord.Interaction):
+    bot_channel = []
+    channels = interaction.guild.text_channels
+    for channel in channels:
+        if channel.topic is not None and f'#{bot.user.name}' in channel.topic:
+            bot_channel.append(channel.id)
+    return bot_channel
+
+
 def get_bot_channel_guild(bot):
     bot_channel = {}
     for guild in bot.guilds:
@@ -131,6 +140,10 @@ def is_developer(author):
     return False
 
 
+def developer(interaction: discord.Interaction):
+    return interaction.user.id == 383483844218585108
+
+
 class ROLE_TYPE(Enum):
     GPT4 = "GPT4"
     CLOVAX = "CLOVAX"
@@ -154,12 +167,37 @@ def is_allow_guild(ctx, role: GUILD_COMMAND_TYPE):
     return False
 
 
+def is_allow_guild_interaction(interaction, role: GUILD_COMMAND_TYPE):
+    with SessionContext() as session:
+        guild_command = session.query(Commands).filter(Commands.guild_id == interaction.guild.id).first()
+        if guild_command:
+            roles = guild_command.get_roles()
+            if role.value in roles:
+                return True
+
+    return False
+
+
 def is_allow_user(ctx, role: ROLE_TYPE):
     if is_developer(ctx.author):
         return True
 
     with SessionContext() as session:
         authority = session.query(Authoritys).filter(Authoritys.id == ctx.author.id).first()
+        if authority:
+            roles = authority.get_roles()
+            if role.value in roles:
+                return True
+
+    return False
+
+
+def is_allow_user_interaction(interaction, role: ROLE_TYPE):
+    if developer(interaction):
+        return True
+
+    with SessionContext() as session:
+        authority = session.query(Authoritys).filter(Authoritys.id == interaction.user.id).first()
         if authority:
             roles = authority.get_roles()
             if role.value in roles:
@@ -178,6 +216,16 @@ def is_allow_channel(bot, ctx):
     return False
 
 
+def is_allow_channel_interaction(bot, interaction):
+    if developer(interaction):
+        return True
+
+    if interaction.channel.id in get_bot_channel_interaction(bot, interaction):
+        return True
+
+    return False
+
+
 async def is_not_allow_channel(ctx, func_name):
     embed = discord.Embed(
         title=f':exclamation: 채널 설정 안내',
@@ -188,3 +236,13 @@ async def is_not_allow_channel(ctx, func_name):
     msg = await ctx.channel.send(embed=embed)
     await msg.delete(delay=10)
     await ctx.message.delete(delay=10)
+
+
+async def is_not_allow_channel_interaction(bot, interaction, func_name):
+    embed = discord.Embed(
+        title=f':exclamation: 채널 설정 안내',
+        description=f'{interaction.user.mention} 채널명이 `봇명령`이거나 채널주제(topic)에 `#{bot.user.name}`이 포함된 채널에서만 가능합니다. 없는 경우 해당서버의 관리자에게 부탁하셔야 합니다.',
+        color=0xff0000
+    )
+    embed.set_footer(text=f"{interaction.user.display_name} | {func_name} 명령어", icon_url=interaction.user.display_avatar)
+    await interaction.followup.send(embed=embed, ephemeral=True)
