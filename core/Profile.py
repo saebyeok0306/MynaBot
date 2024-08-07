@@ -1,10 +1,14 @@
+from typing import Literal
+
 import datetime
 import discord
 from PIL import Image, ImageDraw, ImageFont
+from discord import app_commands, Interaction
 from discord.ext import commands
 from sqlalchemy import and_
 
 import utils.Logs as logs
+from main import MynaBot
 from utils.database.Database import SessionContext
 from utils.database.model.exp import Exp
 
@@ -92,7 +96,46 @@ class Profile(commands.Cog):
             "visit_exp": visit_exp
         }
 
-    @commands.command(name="프로필2", aliases=["내정보2", "Profile2", "profile2", "정보2"])
+    def get_profile_interaction(self, interaction: Interaction[MynaBot]):
+        username = interaction.user.display_name
+        join_date = interaction.user.joined_at  # datetime
+        join_date = join_date.replace(tzinfo=None)
+        today = datetime.datetime.now()
+        d_day = today - join_date + datetime.timedelta(days=1)
+
+        cat_exp = 0
+        chat_exp = 0
+        visit_exp = 0
+        with SessionContext() as session:
+            user_exp = session.query(Exp).filter(and_(Exp.id == interaction.user.id, Exp.guild_id == interaction.guild.id)).first()
+            if user_exp is not None:
+                chat_exp = user_exp.chat_count
+                cat_exp = user_exp.cat_count * 2
+                visit_exp = user_exp.today_exp * 100
+
+        exp = d_day.days + cat_exp + chat_exp + visit_exp
+        level = self.GetLevel(exp)
+        need_exp = self.exp[level]
+        prev_exp = self.exp[level - 1 if level > 0 else 0]
+        cur_exp = exp - prev_exp
+        diff_exp = need_exp - prev_exp
+
+        return {
+            "username": username,
+            "join_date": join_date,
+            "days": d_day.days,
+            "exp": exp,
+            "level": level,
+            "need_exp": need_exp,
+            "prev_exp": prev_exp,
+            "cur_exp": cur_exp,
+            "diff_exp": diff_exp,
+            "chat_exp": chat_exp,
+            "cat_exp": cat_exp,
+            "visit_exp": visit_exp
+        }
+
+    @commands.command()
     async def 프로필2(self, ctx):
         import os
         
@@ -130,23 +173,26 @@ class Profile(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{profile_data['level']})")
 
-    @commands.command(name="프로필", aliases=["내정보", "Profile", "profile", "정보"])
-    async def 프로필(self, ctx):
-        profile_data = self.get_profile(ctx)
+    @app_commands.command(description='내 프로필을 확인할 수 있어요.')
+    @app_commands.describe(flag='내 프로필 정보를 다른사람도 볼 수 있게 공개할지 선택합니다.')
+    async def 프로필(self, interaction: Interaction[MynaBot], flag: Literal['공개', '비공개'] = '비공개'):
+        profile_data = self.get_profile_interaction(interaction)
         exp_percent = int(round(profile_data['cur_exp'] / profile_data['diff_exp'], 3)*100)
-        embed = discord.Embed(title=f"{ctx.author.display_name}님의 프로필", color=0x5d73ac)
-        embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        embed = discord.Embed(title=f"{interaction.user.display_name}님의 프로필", color=0x5d73ac)
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
         embed.add_field(name="Level", value=f"Lv.{profile_data['level']}")
         embed.add_field(name="Join", value=f"{profile_data['join_date'].strftime('%Y.%m.%d')} D+{profile_data['days']}")
         embed.add_field(name="Exp", value=f"{profile_data['exp']}/{profile_data['need_exp']} ({exp_percent}%)")
         embed.add_field(name="JoinExp", value=f"{profile_data['days']} Exp")
         embed.add_field(name="ChatExp", value=f"{profile_data['chat_exp'] + profile_data['visit_exp']} Exp")
         embed.add_field(name="EtcExp", value=f"{profile_data['cat_exp']} Exp")
-        embed.set_footer(text=f"{ctx.author} | 프로필", icon_url=ctx.author.display_avatar)
-        await ctx.reply(embed=embed, mention_author=False)
+        embed.set_footer(text=f"{interaction.user} | 프로필", icon_url=interaction.user.display_avatar)
+
+        flag = False if flag == '공개' else True
+        await interaction.response.send_message(embed=embed, ephemeral=flag)
 
         await logs.send_log(bot=self.bot,
-                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{profile_data['level']})")
+                            log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{profile_data['level']})")
 
 
 async def setup(bot):

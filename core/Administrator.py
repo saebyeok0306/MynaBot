@@ -234,34 +234,37 @@ class Administrator(commands.Cog):
                             log_text=f"{guild_name}의 {interaction.user.display_name}님이 문의 명령어를 실행했습니다.")
 
     @commands.command()
-    async def sync(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
+    async def 싱크(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
         """Sync the application commands"""
 
         async with ctx.typing():
             if sync_type == 'guild':
                 self.bot.tree.copy_global_to(guild=ctx.guild)  # type: ignore
                 await self.bot.tree.sync(guild=ctx.guild)
-                await ctx.reply('Synced guild !')
+                msg = await ctx.reply(f'{ctx.guild.name} 서버에서 명령어 동기화를 진행합니다.')
+                await msg.delete(delay=5)
                 return
 
             await self.bot.tree.sync()
-            await ctx.reply('Synced global !')
+            msg = await ctx.reply('전역 명령어 동기화를 진행합니다.')
+            await msg.delete(delay=5)
 
     @commands.command()
-    async def unsync(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
+    async def 언싱크(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
         """Unsync the application commands"""
 
         async with ctx.typing():
             if unsync_type == 'guild':
                 self.bot.tree.clear_commands(guild=ctx.guild)
                 await self.bot.tree.sync(guild=ctx.guild)
-                await ctx.reply('Un-Synced guild !')
+                msg = await ctx.reply(f'{ctx.guild.name} 서버에서 명령어 동기화를 해제합니다.')
+                await msg.delete(delay=5)
                 return
 
             self.bot.tree.clear_commands()  # type: ignore
             await self.bot.tree.sync()
-            await ctx.reply('Un-Synced global !')
-
+            msg = await ctx.reply('전역 명령어 동기화를 해제합니다.')
+            await msg.delete(delay=5)
 
 async def setup(bot):
     await bot.add_cog(Administrator(bot))
