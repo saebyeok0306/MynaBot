@@ -242,29 +242,33 @@ class Command(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 골라줘 명령어를 실행했습니다.")
 
-    @commands.command(name="계산기", aliases=['계산', '계산해줘'])
-    async def 계산(self, ctx, *input):
-        text = " ".join(input)
+    # @commands.command(name="계산기", aliases=['계산', '계산해줘'])
+    @app_commands.command(description='Python 문법으로 간단하게 코드을 실행할 수 있어요.')
+    @app_commands.describe(code='Python 문법에 맞게 작성하면 코드를 실행해줘요.')
+    async def 계산(self, interaction: Interaction[MynaBot], code: str):
 
         @timeout(1)
-        def Calculate(_text_):
-            for _check_ in ['self', 'import', 'print', 'Quitter', '_', 'eval', 'exec']:
-                if _check_ in _text_:
+        def Calculate(_text_code_):
+            for _check_excption_ in ('self', 'import', 'print', 'Quitter', '_', 'eval', 'exec', 'global', '_text_code_', '_check_excption_'):
+                if _check_excption_ in _text_code_:
                     return False
-            return str(eval(_text_))
+            return str(eval(_text_code_))
 
         result = False
         try:
-            result = Calculate(text)
+            result = Calculate(code)
         except Exception as e:
             if type(e).__name__ == 'TimeoutError':
-                await ctx.channel.send(f'연산시간이 1초를 넘겨서 정지시켰어요.\n입력값 : {text}')
+                await interaction.response.send_message(f'연산시간이 1초를 넘겨서 정지시켰어요.\n입력값 : {code}', ephemeral=True)
+                # await ctx.channel.send(f'연산시간이 1초를 넘겨서 정지시켰어요.\n입력값 : {code}')
             else:
-                await ctx.channel.send(f'수식에 오류가 있어요.\n에러 : {e}')
-            return 0
+                await interaction.response.send_message(f'수식에 오류가 있어요.\n에러 : {e}', ephemeral=True)
+                # await ctx.channel.send(f'수식에 오류가 있어요.\n에러 : {e}')
+            return
 
         if result is False:
-            await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {text}')
+            await interaction.response.send_message(f'수식에 오류가 있어요.\n에러 : {code}', ephemeral=True)
+            # await ctx.channel.send(f'수식에 오류가 있어요.\n입력값 : {code}')
         else:
             # 결과 보내기
             if len(result) <= 1500:
@@ -272,16 +276,18 @@ class Command(commands.Cog):
                     result = f"{result} ({util.print_(int(result))})"
                 except:
                     pass
-                await ctx.channel.send(f'```{result}```')
+                await interaction.response.send_message(f'```{result}```')
+                # await ctx.channel.send(f'```{result}```')
             # 메시지의 길이가 1500을 넘기는 경우
             else:
                 with open('text.txt', 'w', encoding='utf-8') as l:
                     l.write(result)
                 file = discord.File("text.txt")
-                await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
-                await ctx.channel.send(file=file)
+                # await ctx.channel.send(f'실행 결과가 너무 길어서 파일로 출력했어요.')
+                # await ctx.channel.send(file=file)
+                await interaction.response.send_message(f'실행 결과가 너무 길어서 파일로 출력했어요.', file=file)
 
-        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 계산 명령어를 실행했습니다.")
+        await logs.send_log(bot=self.bot, log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 계산 명령어를 실행했습니다.")
 
     @staticmethod
     async def fetch_data(api_url):
@@ -427,19 +433,15 @@ class Command(commands.Cog):
                               color=0x7ad380)
         embed.set_thumbnail(url=self.bot.user.display_avatar)
         embed.add_field(name="CPU", value=f'현재 CPU의 사용량은 `{cpu_percent}%`로 측정돼요!')
-        embed.add_field(name="Memory", value=f'현재 RAM은 `{memory_total}GB` 중 `{memory_used}GB`({memory_percent}%)가 사용 중이에요.')
-        embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB`({dist_percent}%)가 사용 중이에요.')
-        embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며,\n패킷수로는 {packets_sent}↑{packets_received}↓으로 측정돼요!')
+        embed.add_field(name="Memory", value=f'현재 RAM은 `{memory_total}GB` 중 `{memory_used}GB `({memory_percent}%)가 사용 중이에요.')
+        embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB `({dist_percent}%)가 사용 중이에요.')
+        embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며, 패킷수로는 {packets_sent}↑ {packets_received}↓으로 측정돼요!')
+        embed.add_field(name="Bot", value=f"{len(self.bot.guilds)} 서버에 {self.bot.user.name}이 참여하고 있으며, 총 {sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용 중이에요.")
         embed.set_footer(text=f"{boot_time}", icon_url=self.bot.user.display_avatar)
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
         await logs.send_log(bot=self.bot, log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 서버상태 명령어를 실행했습니다.")
 
-    @app_commands.command(description='description123')
-    @app_commands.describe(a='Input A', b='Input B')
-    async def test(self, interaction: Interaction[MynaBot], a: str, b: str) -> None:
-        await interaction.response.send_message(f'{a} + {b} = {a + b}', ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Command(bot))
-
