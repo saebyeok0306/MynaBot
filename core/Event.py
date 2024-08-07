@@ -18,21 +18,20 @@ class Event(commands.Cog):
     def __init__(self, bot):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
-        self.status_count = 0
-        self.core_list = ['Administrator', 'Command']
+        self.core_list = ['Administrator', 'Command', 'Profile']
 
         if util.is_test_version():
             # Test Version
             self.core_list.extend([
                 'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
-                'Authority', 'Message', 'Profile'
+                'Authority', 'Message'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
-                'ClovaX', 'Profile'
+                'ClovaX'
             ])
 
     @commands.Cog.listener()
@@ -45,26 +44,14 @@ class Event(commands.Cog):
         now = datetime.datetime.now()
         now_time = f"{now.year}.{now.month:02}.{now.day:02} {now.hour:02}:{now.minute:02d}"
 
-        @tasks.loop(seconds=10)
-        async def change_status():
-            if self.status_count == 0:
-                await self.bot.change_presence(activity=discord.Game(f"{now_time}에 부팅됨!"))
-            elif self.status_count == 1:
-                await self.bot.change_presence(activity=discord.Game(f"명령어는 '!도움말'"))
-            elif self.status_count == 2:
-                await self.bot.change_presence(activity=discord.Game(f"{len(self.bot.guilds)} 서버에 마이나봇이 있음!"))
-            else:
-                await self.bot.change_presence(
-                    activity=discord.Game(f"{sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용"))
+        await self.bot.change_presence(
+                activity=discord.Game(f"{sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용")
+        )
 
-            self.status_count += 1
-            if self.status_count > 3:
-                self.status_count = 0
-
-        change_status.start()
         await self.load_core()
 
         with SessionContext() as session:
+            # FIXME: boot_time 제대로 갱신이 안됨
             status = session.query(Status).first()
             if status is None:
                 status = Status()
