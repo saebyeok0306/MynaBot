@@ -29,7 +29,7 @@ class MynaBot(commands.Bot):
     async def setup_hook(self):
         try:
             self.owner_id = int(config['OWNER_ID'])  # type: ignore
-        except ValueError:
+        except KeyError:
             self.bot_app_info = await self.application_info()
             self.owner_id = self.bot_app_info.owner.id
 
