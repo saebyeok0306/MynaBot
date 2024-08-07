@@ -1,5 +1,6 @@
 import asyncio
 from enum import Enum
+from typing import Literal
 
 import discord
 import itertools
@@ -61,25 +62,25 @@ class Command(commands.Cog):
         self.title = "마이나"
         self.guides = {
             "기본적인 명령어": [
-                Guide(name=f'!프로필', value=f'재미로 보는 프로필이에요. 레벨은 여러가지 요소를 기준으로 상승해요.'),
+                Guide(name=f'/프로필', value=f'재미로 보는 프로필이에요. 레벨은 여러가지 요소를 기준으로 상승해요.'),
                 Guide(name=f'!프로필2', value=f'이전 방식으로 프로필을 보여줘요.'),
                 Guide(name=f'!유튜브 `검색어`', value=f'유튜브 영상을 검색할 수 있어요. 반응 버튼으로 영상을 선택할 수 있어요.'),
                 Guide(name='!주사위 `값(기본값 100)`', value=f'주사위를 굴립니다. 범위:1~100  값을 입력하면 1~값까지'),
                 Guide(name='!청소 `값(기본값 5)`', value=f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**'),
                 Guide(name='!골라줘 `대상1` `대상2` ...', value=f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!'),
                 Guide(name=f'!색상변경 `색상`', value=f'닉네임 색상을 변경할 수 있어요!'),
-                Guide(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!'),
-                Guide(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!'),
-                Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!'),
+                Guide(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!', active=False),
+                Guide(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!', active=False),
+                Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!', active=False),
                 Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!',
                       guild_role=util.GUILD_COMMAND_TYPE.BLACKCAT, user_role=util.ROLE_TYPE.BLACKCAT),
-                Guide(name=f'!서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
+                Guide(name=f'/서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
                 Guide(name='!마크', value='디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
-                Guide(name='!건의', value='봇제작자에게 버그나 건의사항을 보낼 수 있어요!'),
+                Guide(name='/문의', value='봇 개발자에게 버그나 문의사항을 보낼 수 있어요!'),
             ],
             "유즈맵 제작 도구모음": [
-                Guide(name='!계산 `수식`', value=f'수식을 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
-                Guide(name=f'!스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
+                Guide(name='/계산 `코드`', value=f'코드를 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
+                Guide(name=f'/스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
             ],
             "마이나(ChatGPT)": [
                 Guide(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!',
@@ -242,7 +243,6 @@ class Command(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 골라줘 명령어를 실행했습니다.")
 
-    # @commands.command(name="계산기", aliases=['계산', '계산해줘'])
     @app_commands.command(description='Python 문법으로 간단하게 코드을 실행할 수 있어요.')
     @app_commands.describe(code='Python 문법에 맞게 작성하면 코드를 실행해줘요.')
     async def 계산(self, interaction: Interaction[MynaBot], code: str):
@@ -332,8 +332,10 @@ class Command(commands.Cog):
         await interaction.followup.send("흑이를 소환하는데 실패했어요...")
 
     @app_commands.command(description='스위치 트리거를 사용했을 때 나올 수 있는 경우의 수를 표기합니다.')
-    @app_commands.describe(switches='스위치의 갯수를 입력하거나 스위치의 이름을 입력해주세요. (이름은 `콤마,`를 기준으로 구분합니다.)')
-    async def 스위치(self, interaction: Interaction[MynaBot], switches: str):
+    @app_commands.describe(switches='스위치의 갯수를 입력하거나 스위치의 이름을 입력해주세요. (이름은 `콤마,`를 기준으로 구분합니다.)',
+                           flag='내 프로필 정보를 다른사람도 볼 수 있게 공개할지 선택합니다.')
+    async def 스위치(self, interaction: Interaction[MynaBot], switches: str, flag: Literal['공개', '비공개'] = '비공개'):
+        flag = False if flag == '공개' else True
         OPT = False
         IPT = []
         print_type = None
@@ -359,7 +361,7 @@ class Command(commands.Cog):
                                   description=f'{interaction.user.mention} 사용할 스위치의 갯수를 입력해주세요.\n혹은 스위치 갯수가 10개이상이면 안됩니다.',
                                   color=0xffc0cb)
             embed.set_footer(text=f"{interaction.user.display_name} | 경우의 수", icon_url=interaction.user.display_avatar)
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            await interaction.response.send_message(embed=embed, ephemeral=flag)
             return False
 
         res = []
@@ -390,7 +392,7 @@ class Command(commands.Cog):
                 for idx, _res in enumerate(res):
                     l.write(f"{idx + 1}번째\n{_res}\n\n")
             file = discord.File("text.txt")
-            await interaction.response.send_message(embed=embed, file=file, ephemeral=True)
+            await interaction.response.send_message(embed=embed, file=file, ephemeral=flag)
         else:
             embed = discord.Embed(title=f':gear: 경우의 수 (스위치)',
                                   description=f'{interaction.user.mention} 경우의 수입니다.\nTEP를 사용해서 조건에 붙여넣기해서 쓰시면 좋습니다.',
@@ -398,11 +400,11 @@ class Command(commands.Cog):
             embed.set_footer(text=f"{interaction.user.display_name} | 경우의 수", icon_url=interaction.user.display_avatar)
             for idx, _res in enumerate(res):
                 embed.add_field(name=f'{idx + 1}번째', value=f'{_res}')
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
+            await interaction.response.send_message(embed=embed, ephemeral=flag)
 
     @app_commands.command(description='봇서버의 상태를 확인합니다.')
-    async def 서버상태(self, interaction: Interaction[MynaBot]) -> None:
+    @app_commands.describe(flag='내 프로필 정보를 다른사람도 볼 수 있게 공개할지 선택합니다.')
+    async def 서버상태(self, interaction: Interaction[MynaBot], flag: Literal['공개', '비공개'] = '비공개') -> None:
         import psutil
 
         boot_time = ""
@@ -436,9 +438,11 @@ class Command(commands.Cog):
         embed.add_field(name="Memory", value=f'현재 RAM은 `{memory_total}GB` 중 `{memory_used}GB `({memory_percent}%)가 사용 중이에요.')
         embed.add_field(name="Disk", value=f'현재 Disk는 `{dist_total}GB` 중 `{dist_used}GB `({dist_percent}%)가 사용 중이에요.')
         embed.add_field(name="Network", value=f'현재 Network는 `{bytes_sent}GB`↑`{bytes_received}GB`↓ 전송/수신 했으며, 패킷수로는 {packets_sent}↑ {packets_received}↓으로 측정돼요!')
-        embed.add_field(name="Bot", value=f"{len(self.bot.guilds)} 서버에 {self.bot.user.name}이 참여하고 있으며, 총 {sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용 중이에요.")
+        embed.add_field(name="Bot", value=f"{len(self.bot.guilds)} 서버에 {self.bot.user.name}봇이 참여하고 있으며, 총 {sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용 중이에요.")
         embed.set_footer(text=f"{boot_time}", icon_url=self.bot.user.display_avatar)
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        flag = False if flag == '공개' else True
+        await interaction.response.send_message(embed=embed, ephemeral=flag)
 
         await logs.send_log(bot=self.bot, log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 서버상태 명령어를 실행했습니다.")
 
