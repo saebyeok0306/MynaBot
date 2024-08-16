@@ -5,12 +5,14 @@ import discord
 import json
 import openai
 import tiktoken
+from discord import app_commands, Interaction
 from discord.ext import commands
 from dotenv import dotenv_values
 from sqlalchemy import and_
 
 import utils.Logs as logs
 import utils.Utility as util
+from main import MynaBot
 from utils.database.Database import SessionContext
 from utils.database.model.chats import Chats
 
@@ -41,7 +43,8 @@ class ChatGPT(commands.Cog):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
         self.chat_room = defaultdict(Chat)  # runtime, history, channel
-        self.encoding = tiktoken.encoding_for_model("gpt-3.5-turbo")
+        self.support_image = ["png", "jpeg", "webp", "gif"]
+        self.encoding = tiktoken.encoding_for_model("gpt-4o")
         self.max_token = 3500
         self.dolar_to_won = 1380
         self.cost = {
@@ -52,6 +55,10 @@ class ChatGPT(commands.Cog):
             "gpt-4o": {
                 "input": (5.0 * self.dolar_to_won) / 1000000,
                 "output": (15.0 * self.dolar_to_won) / 1000000
+            },
+            "gpt-4o-mini": {
+                "input": (0.15 * self.dolar_to_won) / 1000000,
+                "output": (0.6 * self.dolar_to_won) / 1000000
             },
             "gpt-4-turbo": {
                 "input": (10.0 * self.dolar_to_won) / 1000000,
@@ -77,9 +84,9 @@ class ChatGPT(commands.Cog):
     def cog_unload(self):
         pass
 
-    def get_system_msg_index(self, ctx, key=None):
+    def get_system_msg_index(self, interaction: Interaction[MynaBot], key=None):
         if key is None:
-            key = self.create_chat_unique_key(ctx.author)
+            key = self.create_chat_unique_key(interaction.user)
         room = self.chat_room[key]
 
         for idx, msg in enumerate(room.history):
@@ -105,15 +112,15 @@ class ChatGPT(commands.Cog):
     def create_key(id, guild_id):
         return id + guild_id
 
-    def create_chat_unique_key(self, author):
+    def create_chat_unique_key(self, author: discord.Member):
         id = author.id
         guild_id = author.guild.id
 
         return self.create_key(id, guild_id)
 
-    def save_chat_data(self, ctx, key=None):
+    def save_chat_data(self, interaction: Interaction[MynaBot], key=None):
         if key is None:
-            key = self.create_chat_unique_key(ctx.author)
+            key = self.create_chat_unique_key(interaction.user)
         room = self.chat_room[key]
         history = str(json.dumps({"data": room.history}, ensure_ascii=False))
         database = str(json.dumps({"data": room.database}, ensure_ascii=False))
@@ -121,13 +128,13 @@ class ChatGPT(commands.Cog):
         # cur.execute("UPDATE Chat SET history=?, data=? WHERE id=? AND guild_id=? ", (history, database, *author_id))
         with SessionContext() as session:
             prev_chat = session.query(Chats).filter(
-                and_(Chats.id == ctx.author.id, Chats.guild_id == ctx.author.guild.id)).first()
+                and_(Chats.id == interaction.user.id, Chats.guild_id == interaction.user.guild.id)).first()
             if prev_chat:
                 prev_chat.history = history
                 prev_chat.data = database
                 session.add(prev_chat)
             else:
-                new_chat = Chats(_id=ctx.author.id, guild_id=ctx.author.guild.id, history=history, data=database)
+                new_chat = Chats(_id=interaction.user.id, guild_id=interaction.user.guild.id, history=history, data=database)
                 session.add(new_chat)
             session.commit()
 
@@ -153,21 +160,24 @@ class ChatGPT(commands.Cog):
             self.chat_room[key].history = history["data"]
             self.chat_room[key].database = database["data"]
 
-    async def create_dm(self, ctx, key=None):
+    async def create_dm(self, interaction: Interaction[MynaBot], key=None):
         if key is None:
-            key = self.create_chat_unique_key(ctx.author)
+            key = self.create_chat_unique_key(interaction.user)
 
         can_dm = self.chat_room[key].dm
         if can_dm is None or can_dm is False:
             try:
-                self.chat_room[key].dm = await ctx.author.create_dm()
+                self.chat_room[key].dm = await interaction.user.create_dm()
             except:
                 self.chat_room[key].dm = False
 
-    async def call_chat_gpt(self, ctx, msg, prompt, token=0, cnt=None, model="gpt-3.5-turbo"):
+    async def call_chat_gpt(
+            self, interaction: Interaction[MynaBot], msg, user_message, prompt, token=0, cnt=None, model="gpt-4o-mini",
+            content_type=None, content=None):
         timeout_sec = 20
         isLong = False
         collected_message = ""
+
         try:
             async def timeout(sec, request_task):
                 nonlocal msg, collected_message
@@ -187,13 +197,16 @@ class ChatGPT(commands.Cog):
 
                 config = dotenv_values('.env')
                 client = openai.AsyncOpenAI(api_key=config["OpenAI_Secret"])
-                competion = await client.chat.completions.create(
-                    model=model_engine,
-                    messages=prompt,
-                    temperature=0.4,
-                    stream=True,
-                    # request_timeout=60,
-                )
+                try:
+                    competion = await client.chat.completions.create(
+                        model=model_engine,
+                        messages=prompt,
+                        temperature=0.4,
+                        stream=True,
+                        # request_timeout=60,
+                    )
+                except Exception as e:
+                    print(f"run error : {e}")
 
                 cnt = 0
                 async for chunk in competion:
@@ -208,7 +221,8 @@ class ChatGPT(commands.Cog):
                             if cnt > 16:
                                 cnt = 0
                                 await msg.edit(content=collected_message)
-                    except:
+                    except Exception as e:
+                        print(e)
                         pass
                 return True
 
@@ -216,10 +230,13 @@ class ChatGPT(commands.Cog):
             timeout_task = asyncio.create_task(timeout(timeout_sec, request_task))
             await asyncio.gather(timeout_task, request_task)
 
-            input_token = len(self.encoding.encode(prompt[-1]["content"])) + token
+            if content:
+                if content_type.startswith("image"):
+                    collected_message += f"\n{content.url}\n"
+
+            input_token = len(self.encoding.encode(user_message)) + token
             output_token = len(self.encoding.encode(collected_message))
             total_token = input_token + output_token
-
             model_cost = self.cost[model]
             input_won = round(model_cost["input"] * input_token, 4)
             output_won = round(model_cost["output"] * output_token, 4)
@@ -232,16 +249,19 @@ class ChatGPT(commands.Cog):
 
             if not isLong and len(collected_message + used_record_text) >= 2000:
                 isLong = True
-                await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
+                # await msg.edit(content="답변이 너무 길어서 파일로 올릴게요.")
 
             if isLong is False:
+                # await interaction.response.send_message(f"{collected_message}{used_record_text}")
                 await msg.edit(content=collected_message + used_record_text)
             else:
                 with open('result.txt', 'w', encoding='utf-8') as l:
                     l.write(collected_message)
                 file = discord.File("result.txt")
-                await msg.reply(f"{ctx.author.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}")
-                await ctx.channel.send(file=file)
+                # await interaction.response.send_message(f"{interaction.user.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}", file=file)
+                await msg.edit(content=f"{interaction.user.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}")
+                await interaction.response.send_message(file=file)
+                # await ctx.channel.send(file=file)
 
             return {
                 "collected_message": collected_message,
@@ -251,54 +271,67 @@ class ChatGPT(commands.Cog):
             }
 
         except asyncio.CancelledError as e:
-            await ctx.reply(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!", mention_author=True)
+            await interaction.response.send_message(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!", ephemeral=True)
+            # await ctx.reply(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!", mention_author=True)
         except Exception as e:
-            await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", mention_author=True)
+            await interaction.response.send_message(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", ephemeral=True)
+            # await ctx.reply(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}", mention_author=True)
 
         return False
 
-    async def clean_database(self, ctx, key=None):
+    async def clean_database(self, interaction: Interaction[MynaBot], key=None):
         if key is None:
-            key = self.create_chat_unique_key(ctx.author)
+            key = self.create_chat_unique_key(interaction.user)
         room = self.chat_room[key]
 
         if len(room.database) >= 40:
-            await self.create_dm(ctx, key=key)
+            await self.create_dm(interaction, key=key)
             if room.dm:
                 # dm이 있는 경우
                 try:
-                    await room.dm.send(f"{ctx.author.display_name}님과의 대화기록입니다.")
+                    await room.dm.send(f"{interaction.user.display_name}님과의 대화기록입니다.")
                     await room.dm.send(file=room.makeChatRecord())
-                    await ctx.reply(f"저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.", mention_author=False)
+                    await interaction.followup.send(f"저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.", ephemeral=True)
+                    # await ctx.reply(f"저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.", mention_author=False)
                 except:
                     room.dm = False
-                    await ctx.reply(
-                        f"{ctx.author.display_name}님과의 대화기록입니다. 저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.",
-                        mention_author=False)
+                    await interaction.followup.send(f"저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.", ephemeral=True)
+                    # await ctx.reply(
+                    #     f"{ctx.author.display_name}님과의 대화기록입니다. 저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.",
+                    #     mention_author=False)
                     await room.channel.send(file=room.makeChatRecord())
             else:
                 # dm이 없는 경우
-                await ctx.reply(
-                    f"{ctx.author.display_name}님과의 대화기록입니다. 저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.",
-                    mention_author=False)
+                await interaction.followup.send(f"저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.", ephemeral=True)
+                # await ctx.reply(
+                #     f"{ctx.author.display_name}님과의 대화기록입니다. 저장된 대화기록이 너무 많아서 초기화했어요!\n마이나와 대화 중인 내용은 여전히 유효해요.",
+                #     mention_author=False)
                 await room.channel.send(file=room.makeChatRecord())
 
-            system_msg_count = self.get_system_msg_index(ctx, key=key) + 1
+            system_msg_count = self.get_system_msg_index(interaction, key=key) + 1
             history_count = len(room.history) - system_msg_count
             self.chat_room[key].database = room.database[-history_count:]
 
-    def history_queue(self, ctx, key=None):
+    def history_queue(self, interaction: Interaction[MynaBot], key=None):
         if key is None:
-            key = self.create_chat_unique_key(ctx.author)
+            key = self.create_chat_unique_key(interaction.user)
         room = self.chat_room[key]
         total_token = 0
         tokens = []
         rev_cnt = 0
-        system_msg_idx = self.get_system_msg_index(ctx) + 1
+        system_msg_idx = self.get_system_msg_index(interaction) + 1
 
         length = len(room.history)
         for idx in range(length):
-            _token = len(self.encoding.encode(room.history[idx]["content"]))
+            content = room.history[idx]["content"]
+            _token = 0
+            if isinstance(content, list):
+                for c in content:
+                    if c["type"] == "text":
+                        _token = len(self.encoding.encode(c["text"]))
+                        break
+            else:
+                _token = len(self.encoding.encode(room.history[idx]["content"]))
             total_token += _token
             tokens.append(_token)
 
@@ -311,71 +344,96 @@ class ChatGPT(commands.Cog):
 
         return rev_cnt, total_token
 
-    @commands.command(name="마이나야", aliases=["검색"])
-    async def 마이나야(self, ctx, *input):
-        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
-        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
+    # @commands.command(name="마이나야", aliases=["검색"])
+    @app_commands.command(description='ChatGPT를 활용하여 질문을 합니다.')
+    @app_commands.describe(message="질문할 내용을 입력합니다.", file="파일도 함께 첨부하여 질문할 수 있습니다.")
+    async def 마이나야(self, interaction: Interaction[MynaBot], message: str, file: discord.Attachment = None):
+        allowed_user = util.is_allow_user_interaction(interaction, util.ROLE_TYPE.CHATGPT)
+        allowed_guild = util.is_allow_guild_interaction(interaction, util.GUILD_COMMAND_TYPE.CHATGPT)
 
         if allowed_user is False and allowed_guild is False:
-            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await interaction.response.send_message(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", ephemeral=True)
+            # msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
+            # await msg.delete(delay=5)
+            # await ctx.message.delete(delay=5)
             return
 
-        if util.is_allow_channel(self.bot, ctx) is False:
-            await util.is_not_allow_channel(ctx, util.current_function_name())
+        if util.is_allow_channel_interaction(self.bot, interaction) is False:
+            await util.is_not_allow_channel_interaction(interaction, util.current_function_name())
             return
 
-        await ctx.defer()  # 오래걸리는 함수작동과 관련된 듯
-        key = self.create_chat_unique_key(ctx.author)
+        await interaction.response.defer()  # 오래걸리는 함수작동과 관련된 듯
+        key = self.create_chat_unique_key(interaction.user)
         if key not in self.chat_room:
             # 대화 기록이 없을 때
-            self.chat_room[key].userdata = ctx.author
+            self.chat_room[key].userdata = interaction.user
 
         if self.chat_room[key].runtime is True:
-            msg = await ctx.reply("죄송합니다, 질문은 하나씩만 답변가능해요.\n이전 질문에 대한 답변이 완료되었을 때 시도해주세요.", mention_author=True)
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
+            await interaction.followup.send("죄송합니다, 질문은 하나씩만 답변가능해요.\n이전 질문에 대한 답변이 완료되었을 때 시도해주세요.")
+            # msg = await ctx.reply("죄송합니다, 질문은 하나씩만 답변가능해요.\n이전 질문에 대한 답변이 완료되었을 때 시도해주세요.", mention_author=True)
+            # await msg.delete(delay=5)
+            # await ctx.message.delete(delay=5)
             return False
 
-        text = " ".join(input)
-        model = "gpt-3.5-turbo"
-        if 'gpt4' in text and util.is_allow_user(ctx, util.ROLE_TYPE.GPT4):
+        model = "gpt-4o-mini" # "gpt-3.5-turbo"
+        if 'gpt4' in message and util.is_allow_user_interaction(interaction, util.ROLE_TYPE.GPT4):
             model = "gpt-4o"
 
-        self.chat_room[key].channel = ctx.channel
-        self.chat_room[key].runtime = True
-
-        request_msg = {"role": "user", "content": text}
+        request_msg = {"role": "user", "content": message}
         total_token = 0
         remove_cnt = 0
 
+        if file:
+            request_msg["content"] = [
+                {"type": "text", "text": f"{message}"},
+            ]
+            if file.content_type.startswith("image"):
+                if file.content_type.split("/")[1] not in self.support_image:
+                    await interaction.followup.send(f"현재 마이나는 {', '.join(self.support_image)} 확장자만 지원해요.")
+                    return
+                request_msg["content"].append({"type": "image_url", "image_url": {"url": f"{file.url}"}})
+            else:
+                await interaction.followup.send("현재 마이나는 이미지 파일 분석만 지원해요.")
+                return
+
+        self.chat_room[key].channel = interaction.channel
+        self.chat_room[key].runtime = True
+
         # History
         if self.chat_room[key].history:
-            remove_cnt, total_token = self.history_queue(ctx, key=key)  # history가 max token을 넘기지 않도록 조절.
+            remove_cnt, total_token = self.history_queue(interaction, key=key)  # history가 max token을 넘기지 않도록 조절.
             prompt = self.chat_room[key].history + [request_msg]
         else:
             prompt = self.system_msg + [
-                {"role": "system", "content": f"The user you are talking to has the name '{ctx.author.display_name}'."},
-                request_msg]
-        msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
+                {"role": "system", "content": f"The user you are talking to has the name '{interaction.user.display_name}'."}, request_msg]
+        # msg = await ctx.channel.send("네, 잠시만 기다려주세요...")
+
+        msg = await interaction.followup.send("네, 잠시만 기다려주세요...")
 
         # Run GPT
-        res = await self.call_chat_gpt(ctx=ctx, msg=msg, prompt=prompt, token=total_token, cnt=remove_cnt, model=model)
-        if res is False:
+        try:
+            res = await self.call_chat_gpt(
+                interaction=interaction, msg=msg, user_message=message, prompt=prompt, token=total_token,cnt=remove_cnt,
+                model=model, content_type=file.content_type if file else None, content=file if file else None)
+            if res is False:
+                self.chat_room[key].runtime = False
+                return  # 실패한 경우 return
+        except Exception as e:
+            print("ChatGPT Running Error : ", e)
             self.chat_room[key].runtime = False
-            return  # 실패한 경우 return
+            msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}")
+            return
 
         response_msg = {"role": "assistant", "content": res["collected_message"]}
         self.chat_room[key].history = prompt + [response_msg]
         self.chat_room[key].database.extend([request_msg, response_msg])
         self.chat_room[key].runtime = False
 
-        await self.clean_database(ctx, key=key)
-        self.save_chat_data(ctx)
+        await self.clean_database(interaction, key=key)
+        self.save_chat_data(interaction)
 
         await logs.send_log(bot=self.bot,
-                            log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 ChatGPT 명령어를 실행했습니다.")
+                            log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 ChatGPT 명령어를 실행했습니다.")
 
     @commands.command(name="초기화", aliases=["리셋"])
     async def 초기화(self, ctx, *input):
@@ -486,21 +544,6 @@ class ChatGPT(commands.Cog):
             # dm이 없는 경우
             await ctx.reply(f"{ctx.author.display_name}님과의 대화기록입니다.", mention_author=False)
             await room.channel.send(file=room.makeChatRecord())
-
-    @commands.command(name="GPT테스트")
-    async def GPT테스트(self, ctx, *input):
-        allowed_user = util.is_allow_user(ctx, util.ROLE_TYPE.CHATGPT)
-        allowed_guild = util.is_allow_guild(ctx, util.GUILD_COMMAND_TYPE.CHATGPT)
-
-        if allowed_user is False and allowed_guild is False:
-            msg = await ctx.reply(f"관리자가 허용한 서버만 ChatGPT 명령어를 사용할 수 있어요.", mention_author=True)
-            await msg.delete(delay=5)
-            await ctx.message.delete(delay=5)
-            return
-
-        if ctx.author.guild_permissions.administrator:
-            room = self.chat_room[self.create_chat_unique_key(ctx.author)]
-            await ctx.reply(room.print(), mention_author=False)
 
 
 async def setup(bot):
