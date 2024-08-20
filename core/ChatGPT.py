@@ -229,7 +229,11 @@ class ChatGPT(commands.Cog):
 
             request_task = asyncio.create_task(requestOpenAPI(prompt, model))
             timeout_task = asyncio.create_task(timeout(timeout_sec, request_task))
-            await asyncio.gather(timeout_task, request_task)
+            _, result = await asyncio.gather(timeout_task, request_task)
+
+            if result is False:
+                await msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!")
+                return False
 
             if content:
                 if content_type.startswith("image"):
@@ -376,11 +380,14 @@ class ChatGPT(commands.Cog):
         if 'gpt4' in message and util.is_allow_user_interaction(interaction, util.ROLE_TYPE.GPT4):
             model = "gpt-4o"
 
-        request_msg = {"role": "user", "content": [{"type": "text", "text": f"{message}"},]}
+        request_msg = {"role": "user", "content": message}
         total_token = 0
         remove_cnt = 0
 
         if file:
+            request_msg["content"] = [
+                {"type": "text", "text": f"{message}"},
+            ]
             if file.content_type.startswith("image"):
                 if file.content_type.split("/")[1] not in self.support_image:
                     await interaction.followup.send(f"현재 마이나는 {', '.join(self.support_image)} 확장자만 지원해요.")

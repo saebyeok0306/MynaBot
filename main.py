@@ -1,10 +1,14 @@
 import asyncio
+from typing import Any
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import Context, errors
+from discord.ext.commands._types import BotT
 from dotenv import dotenv_values
 from dotenv import load_dotenv
 
+import utils.Logs as logs
 import utils.Utility as util
 import utils.database.Database as db
 
@@ -38,6 +42,19 @@ class MynaBot(commands.Bot):
 
     async def start(self, token) -> None:
         return await super().start(token, reconnect=True)  # type: ignore
+
+    async def on_command_error(self, context: Context[BotT], exception: errors.CommandError, /) -> None:
+        import traceback
+        # 오류 메시지를 터미널에 출력
+        await logs.send_log(self, f"An error occurred: {exception}")
+        # 로그를 통해서 더 많은 정보를 확인하고 싶으면 logging 모듈을 사용할 수도 있습니다.
+        traceback.print_exception(type(exception), exception, exception.__traceback__)
+
+    async def on_error(self, event_method: str, /, *args: Any, **kwargs: Any) -> None:
+        import traceback
+        # 이벤트 핸들러에서 발생한 오류를 처리
+        await logs.send_log(self, f"An error occurred in {event_method}:\n{traceback.format_exc()}")
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
