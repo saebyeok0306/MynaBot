@@ -26,6 +26,7 @@ class Minecraft(commands.Cog):
         embed.add_field(name='설치순서1', value='Modrinth App을 다운로드 받고 로그인한다.\n(링크 : https://modrinth.com/app)')
         embed.add_field(name='설치순서2', value='서버모드 파일링크에서 다운 받아서 실행한다.')
         embed.add_field(name='설치순서3', value='Modrinth App에 등록된 모드팩으로 실행한다.')
+        embed.add_field(name='서버운영', value='평일은 오후 6시, 주말에는 오전 12시에 서버가 열리며, 새벽 0시에 닫힙니다.')
         await ctx.channel.send(embed=embed)
 
 
