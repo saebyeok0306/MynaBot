@@ -198,7 +198,7 @@ class ChatGPT(commands.Cog):
                 config = dotenv_values('.env')
                 client = openai.AsyncOpenAI(api_key=config["OpenAI_Secret"])
                 try:
-                    competion = await client.chat.completions.create(
+                    completion = await client.chat.completions.create(
                         model=model_engine,
                         messages=prompt,
                         temperature=0.4,
@@ -206,10 +206,11 @@ class ChatGPT(commands.Cog):
                         # request_timeout=60,
                     )
                 except Exception as e:
-                    print(f"run error : {e}")
+                    await logs.send_log(self.bot, f"ChatGPT API 요청 중 오류가 발생했습니다.\n{e}")
+                    return False
 
                 cnt = 0
-                async for chunk in competion:
+                async for chunk in completion:
                     cnt += 1
                     try:
                         chunk_message = chunk.choices[0].delta.content or ""
@@ -222,7 +223,7 @@ class ChatGPT(commands.Cog):
                                 cnt = 0
                                 await msg.edit(content=collected_message)
                     except Exception as e:
-                        print(e)
+                        await logs.send_log(self.bot, f"ChatGPT API 요청 중 오류가 발생했습니다.\n{e}")
                         pass
                 return True
 
@@ -258,10 +259,8 @@ class ChatGPT(commands.Cog):
                 with open('result.txt', 'w', encoding='utf-8') as l:
                     l.write(collected_message)
                 file = discord.File("result.txt")
-                # await interaction.response.send_message(f"{interaction.user.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}", file=file)
                 await msg.edit(content=f"{interaction.user.display_name}님의 질문에 해당하는 답변이에요.{used_record_text}")
                 await interaction.response.send_message(file=file)
-                # await ctx.channel.send(file=file)
 
             return {
                 "collected_message": collected_message,
@@ -408,7 +407,7 @@ class ChatGPT(commands.Cog):
         # Run GPT
         try:
             res = await self.call_chat_gpt(
-                interaction=interaction, msg=msg, user_message=message, prompt=prompt, token=total_token,cnt=remove_cnt,
+                interaction=interaction, msg=msg, user_message=message, prompt=prompt, token=total_token, cnt=remove_cnt,
                 model=model, content_type=file.content_type if file else None, content=file if file else None)
             if res is False:
                 self.chat_room[key].runtime = False
