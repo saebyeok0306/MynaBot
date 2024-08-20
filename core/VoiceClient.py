@@ -63,7 +63,7 @@ class VoiceClient(commands.Cog, TTS, Music):
 
             if len(voice_client.channel.members) == 1:
                 self.delete_state_list.append(voice_client.guild.id)
-                logs.send_log(bot=self.bot, log_text=f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 퇴장했습니다.")
+                await logs.send_log(bot=self.bot, log_text=f"{voice_client.guild.name} 서버의 음성채팅에서 봇이 퇴장했습니다.")
                 continue
 
             if voice_client.is_playing():

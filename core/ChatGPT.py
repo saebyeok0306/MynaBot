@@ -379,14 +379,11 @@ class ChatGPT(commands.Cog):
         if 'gpt4' in message and util.is_allow_user_interaction(interaction, util.ROLE_TYPE.GPT4):
             model = "gpt-4o"
 
-        request_msg = {"role": "user", "content": message}
+        request_msg = {"role": "user", "content": [{"type": "text", "text": f"{message}"},]}
         total_token = 0
         remove_cnt = 0
 
         if file:
-            request_msg["content"] = [
-                {"type": "text", "text": f"{message}"},
-            ]
             if file.content_type.startswith("image"):
                 if file.content_type.split("/")[1] not in self.support_image:
                     await interaction.followup.send(f"현재 마이나는 {', '.join(self.support_image)} 확장자만 지원해요.")
@@ -421,7 +418,7 @@ class ChatGPT(commands.Cog):
         except Exception as e:
             print("ChatGPT Running Error : ", e)
             self.chat_room[key].runtime = False
-            msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}")
+            await msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}")
             return
 
         response_msg = {"role": "assistant", "content": res["collected_message"]}
