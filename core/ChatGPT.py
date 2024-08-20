@@ -271,9 +271,9 @@ class ChatGPT(commands.Cog):
             }
 
         except asyncio.CancelledError as e:
-            await msg.edit(f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!")
+            await msg.edit(content=f"죄송합니다, {timeout_sec}초 동안 응답이 없어서 종료했어요.\n명령을 다시 시도해주세요!")
         except Exception as e:
-            await msg.edit(f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}")
+            await msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n`!초기화` 명령어로 대화내역을 초기화해주세요!\n{e}")
 
         return False
 
