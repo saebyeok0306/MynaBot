@@ -249,3 +249,15 @@ async def is_not_allow_channel_interaction(bot, interaction, func_name):
     )
     embed.set_footer(text=f"{interaction.user.display_name} | {func_name} 명령어", icon_url=interaction.user.display_avatar)
     await interaction.followup.send(embed=embed, ephemeral=True)
+
+
+def merge_type_text(content: list):
+    temp = []
+    for part in content:
+        match part["type"]:
+            case "text":
+                temp.append(f"{part['text']}")
+            case "image_url":
+                temp.append(part["image_url"]["url"])
+
+    return "\n".join(temp)

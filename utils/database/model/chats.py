@@ -9,8 +9,8 @@ class Chats(Base):
 
     id = Column(Integer, primary_key=True)
     guild_id = Column(Integer, primary_key=True)
-    history = Column(JSON, nullable=True)
-    data = Column(JSON, nullable=True)
+    history = Column(String, nullable=True)
+    data = Column(String, nullable=True)
 
     __table_args__ = (
         PrimaryKeyConstraint('id', 'guild_id'),

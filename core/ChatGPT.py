@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 
 import asyncio
@@ -33,8 +34,13 @@ class Chat:
         with open('text.txt', 'w', encoding='utf-8') as l:
             l.write(f"{self.userdata.display_name}님과의 대화내역")
             for line in self.database:
+                talk_name = self.userdata.display_name if line['role'] == 'user' else '마이나봇'
+                talk_content = line['content']
+                if isinstance(talk_content, list) and len(talk_content) > 1:
+                    print(talk_content)
+                    talk_content = util.merge_type_text(talk_content)
                 l.write(
-                    f"\n{f'{self.userdata.display_name}' if line['role'] == 'user' else '마이나봇'} : {line['content']}")
+                    f"\n{talk_name} : {talk_content}")
         return discord.File("text.txt")
 
 
@@ -425,9 +431,17 @@ class ChatGPT(commands.Cog):
             await msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}")
             return
 
+        merge_request_type_msg = copy.deepcopy(request_msg)
+        if isinstance(merge_request_type_msg["content"], list) and len(merge_request_type_msg["content"]) > 1:
+            merge_request_type_msg["content"] = util.merge_type_text(merge_request_type_msg["content"])
+
+        prompt[-1] = merge_request_type_msg
+
         response_msg = {"role": "assistant", "content": res["collected_message"]}
         self.chat_room[key].history = prompt + [response_msg]
-        self.chat_room[key].database.extend([request_msg, response_msg])
+
+        # Database
+        self.chat_room[key].database.extend([merge_request_type_msg, response_msg])
         self.chat_room[key].runtime = False
 
         await self.clean_database(interaction, key=key)
@@ -455,6 +469,7 @@ class ChatGPT(commands.Cog):
         if key in self.chat_room:
             await self.create_dm(ctx, key=key)
             room = self.chat_room[key]
+            if room.channel is None: room.channel = ctx.channel
             if room.dm:
                 # dm이 있는 경우
                 try:
