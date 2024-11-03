@@ -31,7 +31,7 @@ class Event(commands.Cog):
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
-                'ClovaX', 'RoleIcon'
+                'ClovaX', 'RoleIcon', 'Commit'
             ])
 
     @commands.Cog.listener()
