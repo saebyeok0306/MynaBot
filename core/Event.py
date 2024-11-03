@@ -24,14 +24,14 @@ class Event(commands.Cog):
             # Test Version
             self.core_list.extend([
                 'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
-                'Authority', 'Message'
+                'Authority', 'Message', 'RoleIcon'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
-                'ClovaX'
+                'ClovaX', 'RoleIcon'
             ])
 
     @commands.Cog.listener()
