@@ -134,16 +134,17 @@ class RoleIcon(commands.Cog):
             img = img.resize((256, 256))
 
             # 둥근 사각형 마스크 생성
+            rounded_img = Image.new("RGBA", (256, 256), (255, 255, 255, 0))
             mask = Image.new("L", (256, 256), 0)
             draw = ImageDraw.Draw(mask)
             draw.rounded_rectangle((0, 0, 256, 256), radius=50, fill=255)
 
-            # 마스크를 이미지에 적용
-            img.putalpha(mask)
+            # 원본 이미지를 투명한 배경 위에 마스크와 함께 합성
+            rounded_img.paste(img, (0, 0), mask=mask)
 
             # 이미지를 바이트로 변환
             img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format="PNG")
+            rounded_img.save(img_byte_arr, format="PNG")
             img_byte_arr.seek(0)
         
         # 역할 아이콘 수정
