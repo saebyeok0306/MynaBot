@@ -54,6 +54,7 @@ class Guide:
         del _guide["guild_role"]
         return _guide, author_type
 
+
 class Command(commands.Cog):
 
     def __init__(self, bot):
@@ -69,10 +70,11 @@ class Command(commands.Cog):
                 Guide(name='!청소 `값(기본값 5)`', value=f'내가 작성한 메시지 N개를 삭제합니다. **！최대 20개**'),
                 Guide(name='!골라줘 `대상1` `대상2` ...', value=f'스페이스바 간격으로 구분된 대상들 중에서 하나를 선택해줘요!'),
                 Guide(name=f'!색상변경 `색상`', value=f'닉네임 색상을 변경할 수 있어요!'),
+                Guide(name=f'!아이콘', value=f'닉네임 옆에 아이콘을 추가하거나 변경할 수 있어요!\n-# # 서버의 부스트 단계가 최소 2단계 이상이어야 해요.'),
                 Guide(name=f'!번역 `내용`', value=f'언어를 인식해서 한국어는 영어로, 한국어가 아닌 언어는 한국어로 번역해줘요!', active=False),
                 Guide(name=f'!한영번역 `내용`', value=f'한국어를 영어로 번역해줘요!', active=False),
                 Guide(name=f'!영한번역 `내용`', value=f'영어를 한국어로 번역해줘요!', active=False),
-                Guide(name=f'!흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!',
+                Guide(name=f'/흑이', value=f'노나메님의 ~~납치~~하고 싶은 흑이사진이 나와요!',
                       guild_role=util.GUILD_COMMAND_TYPE.BLACKCAT, user_role=util.ROLE_TYPE.BLACKCAT),
                 Guide(name=f'/서버상태', value=f'현재 서버의 상태를 확인할 수 있어요.'),
                 Guide(name='!마크', value='디코방에서 운영되고 있는 서버주소를 알려줘요!', active=False),
@@ -83,7 +85,7 @@ class Command(commands.Cog):
                 Guide(name=f'/스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
             ],
             "마이나(ChatGPT)": [
-                Guide(name=f'!마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!',
+                Guide(name=f'/마이나야 `질문`', value=f'ChatGPT를 활용해서 질문에 대한 답변을 해줘요!',
                       guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
                 Guide(name=f'!대화내용', value=f'마이나와 대화한 기록을 확인할 수 있어요.',
                       guild_role=util.GUILD_COMMAND_TYPE.CHATGPT, user_role=util.ROLE_TYPE.CHATGPT),
