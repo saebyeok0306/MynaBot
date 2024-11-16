@@ -1,9 +1,10 @@
 import io
 from typing import Union
 
+import PIL.Image
 import aiohttp
 import discord
-from PIL import Image
+from PIL import Image, ImageDraw
 from discord.ext import commands
 
 
@@ -124,12 +125,26 @@ class RoleIcon(commands.Cog):
 
         # 이미지를 256x256으로 리사이징
         with Image.open(io.BytesIO(image_data)) as img:
-            img = img.convert("RGBA")  # 투명 배경 유지
+            img: PIL.Image.Image = img.convert("RGBA")  # 투명 배경 유지
+            # 정사각형으로 자르기
+            size = min(img.size)
+            img = img.crop((0, 0, size, size))
+            
+            # 이미지 크기를 256x256으로 리사이징
             img = img.resize((256, 256))
+
+            # 둥근 사각형 마스크 생성
+            rounded_img = Image.new("RGBA", (256, 256), (255, 255, 255, 0))
+            mask = Image.new("L", (256, 256), 0)
+            draw = ImageDraw.Draw(mask)
+            draw.rounded_rectangle((0, 0, 256, 256), radius=50, fill=255)
+
+            # 원본 이미지를 투명한 배경 위에 마스크와 함께 합성
+            rounded_img.paste(img, (0, 0), mask=mask)
 
             # 이미지를 바이트로 변환
             img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format="PNG")
+            rounded_img.save(img_byte_arr, format="PNG")
             img_byte_arr.seek(0)
         
         # 역할 아이콘 수정
