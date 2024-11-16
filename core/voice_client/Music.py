@@ -6,10 +6,12 @@ import os
 import yt_dlp as youtube_dl
 from discord import ClientException
 from discord.ext import commands
+from dotenv import dotenv_values
 from pytube import YouTube, Playlist
 
 import utils.Logs as logs
 
+config = dotenv_values('.env')
 
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -27,6 +29,13 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'auto',
     'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
+    'extractor_args': {
+        'youtube': {
+            'player-client': 'web',
+            'po_token': config['PO_TOKEN']
+        }
+    },
+    'cookiefile': 'cookies.env'
 }
 
 ffmpeg_options = {
@@ -56,6 +65,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         filename = data['url'] if stream else ytdl.prepare_filename(data)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+
+
+class Video:
+    def __init__(self, title):
+        self.title = title
 
 
 class Music:
@@ -116,19 +130,22 @@ class Music:
     @staticmethod
     def parse_youtube_url(url):
         try:
-            video = YouTube(url)
-            return url, video
-        except:
-            # Playlist로 다시 체크
-            pass
-
-        try:
-            video = []
-            playlist = Playlist(url)
-            for play_url in playlist:
-                video.append(YouTube(play_url))
-            return playlist, video
-        except:
+            data = ytdl.extract_info(url, download=False)
+            if 'entries' in data:
+                data = data['entries']
+            else:
+                data = [data]
+            print(f"music num : {len(data)}")
+            urls = []
+            videos = []
+            for _data in data:
+                title = _data.get("title")
+                urls.append(_data.get("original_url"))
+                videos.append(Video(title))
+                print(f"title : {title}")
+            return urls, videos
+        except Exception as e:
+            print(e)
             return -1, -1
 
     async def add_music(self, ctx, url, video):
