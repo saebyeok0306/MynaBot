@@ -8,6 +8,7 @@ import utils.Logs as logs
 import utils.Utility as util
 from core.voice_client.Music import Music
 from core.voice_client.TTS import TTS
+from main import MynaBot
 
 
 class VoiceClient(commands.Cog, TTS, Music):
@@ -18,15 +19,27 @@ class VoiceClient(commands.Cog, TTS, Music):
             if parent_class.__name__ == "Cog": continue
             print(f'{parent_class.__name__}가 로드되었습니다.')
 
-        self.bot = bot
+        self.bot: MynaBot = bot
         self.delta = 0
         self.delete_state_list = []
+        self.server_voice_client_state = {}
         TTS.__init__(self, self.bot)
         Music.__init__(self, self.bot)
         self.voice_client_processer.start()
 
     def cog_unload(self):
         self.voice_client_processer.stop()
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
+        if member == self.bot.user:
+            if self.server_voice_client_state.get(member.guild.id):
+                if before.channel is not None and after.channel is None:
+                    try:
+                        await before.channel.connect()
+                        await logs.send_log(self.bot, f"{member.guild.name} 서버에서 음성채팅 재연결에 성공했습니다.")
+                    except Exception as e:
+                        await logs.send_log(self.bot, f"{member.guild.name} 서버에서 음성채팅 채널에 재연결하는데 실패했습니다.\n{e}")
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -70,7 +83,7 @@ class VoiceClient(commands.Cog, TTS, Music):
                 continue
 
             guild = voice_client.guild
-            
+
             # 플레이리스트에 음악이 존재하면
             if self.exist_playlist(guild):
                 work_tasks.append(
@@ -79,7 +92,7 @@ class VoiceClient(commands.Cog, TTS, Music):
                     )
                 )
                 continue
-            
+
             # Music의 플레이리스트가 없을 때 메시지 읽기
             if self.message_queue[guild.id]:
                 work_tasks.append(
@@ -93,6 +106,8 @@ class VoiceClient(commands.Cog, TTS, Music):
             try:
                 guild = self.bot.get_guild(guild_id)
                 if guild.voice_client:
+                    if self.server_voice_client_state.get(guild_id):
+                        del self.server_voice_client_state[guild_id]
                     await guild.voice_client.disconnect()
 
                 self.cleanup_msuic(guild_id)
@@ -104,7 +119,7 @@ class VoiceClient(commands.Cog, TTS, Music):
         await asyncio.gather(*work_tasks)
 
     @commands.command(name="입장", aliases=["음성채팅입장", "음성입력", "TTS입장"])
-    async def 입장(self, ctx):
+    async def 입장(self, ctx: commands.Context):
 
         if ctx.author.voice is None:
             embed = discord.Embed(color=0xB22222, title="[ 🚨음성채널 오류 ]", description=f"음성채팅 채널에 먼저 입장해야 합니다!")
@@ -125,6 +140,7 @@ class VoiceClient(commands.Cog, TTS, Music):
         if ctx.guild.voice_client:
             await ctx.guild.voice_client.disconnect()
         await ctx.author.voice.channel.connect()
+        self.server_voice_client_state[ctx.guild.id] = True
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장 명령어를 실행했습니다.")
 
@@ -150,6 +166,22 @@ class VoiceClient(commands.Cog, TTS, Music):
         await ctx.author.voice.channel.connect()
         await logs.send_log(bot=self.bot,
                             log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 입장이동 명령어를 실행했습니다.")
+
+    @commands.command(name="퇴장")
+    async def 퇴장(self, ctx: commands.Context):
+        if not util.is_server_manager(ctx.author):
+            return
+        if ctx.guild.voice_client is None or ctx.author.voice is None:
+            return
+        if ctx.author.voice.channel != ctx.guild.voice_client.channel:
+            return
+
+        embed = discord.Embed(color=0xB22222, title="[ 관리자명령 ]", description=f"음성채팅 채널에서 {self.bot.user.display_name} 봇이 퇴장합니다.")
+        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
+        await ctx.reply(embed=embed, mention_author=False)
+        del self.server_voice_client_state[ctx.guild.id]
+        await ctx.guild.voice_client.disconnect()
+        await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name} 서버의 음성채팅에서 봇이 퇴장했습니다.")
 
 
 async def setup(bot):

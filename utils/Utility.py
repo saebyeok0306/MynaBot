@@ -146,6 +146,12 @@ def developer(interaction: discord.Interaction):
     return interaction.user.id == 383483844218585108
 
 
+def is_server_manager(member: discord.Member):
+    if member.guild_permissions.administrator:
+        return True
+    return False
+
+
 class ROLE_TYPE(Enum):
     GPT4 = "GPT4"
     CLOVAX = "CLOVAX"
