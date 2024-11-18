@@ -7,7 +7,6 @@ import yt_dlp as youtube_dl
 from discord import ClientException
 from discord.ext import commands
 from dotenv import dotenv_values
-from pytube import YouTube, Playlist
 
 import utils.Logs as logs
 
@@ -31,7 +30,7 @@ ytdl_format_options = {
     'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
     'extractor_args': {
         'youtube': {
-            'player-client': 'web',
+            'player-client': 'web,default',
             'po_token': config['PO_TOKEN']
         }
     },
