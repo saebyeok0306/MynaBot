@@ -38,7 +38,7 @@ class MynaBot(commands.Bot):
             self.owner_id = self.bot_app_info.owner.id
 
     async def on_ready(self) -> None:
-        await self.tree.sync()
+        ...
 
     async def start(self, token) -> None:
         return await super().start(token, reconnect=True)  # type: ignore
