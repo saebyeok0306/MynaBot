@@ -236,6 +236,8 @@ class Administrator(commands.Cog):
 
     @commands.command()
     async def 싱크(self, ctx: Context):
+        if not util.is_developer(ctx.author):
+            return
         for guild in self.bot.guilds:
             self.bot.tree.copy_global_to(guild=guild)
             await self.bot.tree.sync(guild=guild)
@@ -245,12 +247,49 @@ class Administrator(commands.Cog):
 
     @commands.command()
     async def 언싱크(self, ctx: Context):
+        if not util.is_developer(ctx.author):
+            return
         for guild in self.bot.guilds:
             self.bot.tree.clear_commands(guild=guild)
             await self.bot.tree.sync(guild=guild)
         msg = await ctx.reply(f'명령어 동기화를 해제합니다.')
         await msg.delete(delay=10)
         await ctx.message.delete(delay=10)
+
+    @commands.command()
+    async def 싱크2(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
+        """Sync the application commands"""
+        if not util.is_developer(ctx.author):
+            return
+        async with ctx.typing():
+            if sync_type == 'guild':
+                self.bot.tree.copy_global_to(guild=ctx.guild)  # type: ignore
+                await self.bot.tree.sync(guild=ctx.guild)
+                msg = await ctx.reply(f'{ctx.guild.name} 서버에서 명령어 동기화를 진행합니다.')
+                await msg.delete(delay=5)
+                return
+
+            await self.bot.tree.sync()
+            msg = await ctx.reply('전역 명령어 동기화를 진행합니다.')
+            await msg.delete(delay=5)
+
+    @commands.command()
+    async def 언싱크2(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
+        """Unsync the application commands"""
+        if not util.is_developer(ctx.author):
+            return
+        async with ctx.typing():
+            if unsync_type == 'guild':
+                self.bot.tree.clear_commands(guild=ctx.guild)
+                await self.bot.tree.sync(guild=ctx.guild)
+                msg = await ctx.reply(f'{ctx.guild.name} 서버에서 명령어 동기화를 해제합니다.')
+                await msg.delete(delay=5)
+                return
+
+            self.bot.tree.clear_commands()  # type: ignore
+            await self.bot.tree.sync()
+            msg = await ctx.reply('전역 명령어 동기화를 해제합니다.')
+            await msg.delete(delay=5)
 
 
 async def setup(bot):
