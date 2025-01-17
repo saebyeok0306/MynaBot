@@ -235,29 +235,7 @@ class Administrator(commands.Cog):
                             log_text=f"{guild_name}의 {interaction.user.display_name}님이 문의 명령어를 실행했습니다.")
 
     @commands.command()
-    async def 싱크(self, ctx: Context):
-        if not util.is_developer(ctx.author):
-            return
-        for guild in self.bot.guilds:
-            self.bot.tree.copy_global_to(guild=guild)
-            await self.bot.tree.sync(guild=guild)
-        msg = await ctx.reply(f'명령어 동기화가 완료되었습니다.')
-        await msg.delete(delay=10)
-        await ctx.message.delete(delay=10)
-
-    @commands.command()
-    async def 언싱크(self, ctx: Context):
-        if not util.is_developer(ctx.author):
-            return
-        for guild in self.bot.guilds:
-            self.bot.tree.clear_commands(guild=guild)
-            await self.bot.tree.sync(guild=guild)
-        msg = await ctx.reply(f'명령어 동기화를 해제합니다.')
-        await msg.delete(delay=10)
-        await ctx.message.delete(delay=10)
-
-    @commands.command()
-    async def 싱크2(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
+    async def 싱크(self, ctx: commands.Context[MynaBot], sync_type: Literal['guild', 'global']):
         """Sync the application commands"""
         if not util.is_developer(ctx.author):
             return
@@ -274,7 +252,7 @@ class Administrator(commands.Cog):
             await msg.delete(delay=5)
 
     @commands.command()
-    async def 언싱크2(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
+    async def 언싱크(self, ctx: commands.Context[MynaBot], unsync_type: Literal['guild', 'global']) -> None:
         """Unsync the application commands"""
         if not util.is_developer(ctx.author):
             return

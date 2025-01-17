@@ -38,9 +38,7 @@ class MynaBot(commands.Bot):
             self.owner_id = self.bot_app_info.owner.id
 
     async def on_ready(self) -> None:
-        for guild in self.guilds:
-            self.tree.copy_global_to(guild=guild)
-            await self.tree.sync(guild=guild)
+        await self.tree.sync()
 
     async def start(self, token) -> None:
         return await super().start(token, reconnect=True)  # type: ignore
