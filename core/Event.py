@@ -1,12 +1,13 @@
 import datetime
-import os, importlib
+import os
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 from sqlalchemy import and_
 
 import utils.Logs as logs
 import utils.Utility as util
+from main import MynaBot
 from utils.Role import *
 from utils.database.Database import SessionContext
 from utils.database.model.status import Status
@@ -15,9 +16,9 @@ from utils.database.model.users import Users
 
 class Event(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot: MynaBot):
         print(f'{type(self).__name__}가 로드되었습니다.')
-        self.bot = bot
+        self.bot: MynaBot = bot
         self.core_list = ['Administrator', 'Command', 'Profile']
 
         if util.is_test_version():
@@ -48,7 +49,10 @@ class Event(commands.Cog):
                 activity=discord.Game(f"{sum(map(lambda x: x.member_count, self.bot.guilds))} 명이 이용")
         )
 
+        # load core modules
         await self.load_core()
+        # sync slash commands
+        await self.bot.tree.sync()
 
         with SessionContext() as session:
             # FIXME: boot_time 제대로 갱신이 안됨
