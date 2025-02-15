@@ -39,6 +39,13 @@ class Message(commands.Cog):
 
         # await bot.process_commands(message)
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
+        if user.bot: return None
+
+        if self.bot.BCFlag:
+            await reaction.clear()
+
     async def add_emoji(self, message):
         if message.guild.id not in [631471244088311840]: return
 
