@@ -22,6 +22,8 @@ class MynaBot(commands.Bot):
     def __init__(self, test_flag: bool) -> None:
         super().__init__(command_prefix='!!' if test_flag else '!', case_insensitive=True,
                          intents=discord.Intents.all())
+        self.BCFlag = False
+        self.BC_LIST = []
 
         if test_flag is False:
             self.remove_command('help')

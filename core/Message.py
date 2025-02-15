@@ -1,6 +1,7 @@
 import random
 from datetime import datetime
 
+import discord
 from discord.ext import commands
 from sqlalchemy import and_
 
@@ -16,10 +17,12 @@ class Message(commands.Cog):
         self.bot = bot
     
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         if message.author.bot: return None
 
         await self.add_emoji(message)
+        if self.bot.BCFlag:
+            await self.버엄령(message)
 
         today = datetime.today().strftime('%Y-%m-%d')
 
@@ -35,7 +38,7 @@ class Message(commands.Cog):
             session.commit()
 
         # await bot.process_commands(message)
-    
+
     async def add_emoji(self, message):
         if message.guild.id not in [631471244088311840]: return
 
@@ -53,6 +56,20 @@ class Message(commands.Cog):
             await message.add_reaction('<a:molu:968521092476051526>')
         elif '아?루' == text or '아!루' == text:
             await message.add_reaction('<a:aru:968710530376282212>')
+
+    async def 버엄령(self, message: discord.Message):
+        if message.guild.id != 631471244088311840: return
+        import re
+
+        pattern = r'<:[^:]+:\d+>|<a:[^:]+:\d+>'
+        chk = False
+        for sid in self.bot.BC_LIST:
+            if message.author.id == int(sid):
+                chk = True
+                break
+        if chk:
+            if len(message.content) == 0 or len(re.findall(pattern, message.content)) > 0:
+                await message.delete()
 
 async def setup(bot):
     await bot.add_cog(Message(bot))
