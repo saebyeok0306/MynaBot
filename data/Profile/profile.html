@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 카드 v3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* 기본 폰트 및 박스 크기 계산 방식 설정 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /*
+         * [핵심] Body 배경을 투명하게 유지하고, 크기를 카드에 맞춥니다.
+         */
+        body {
+            background-color: transparent; /* 요청대로 배경 투명 처리 */
+            font-family: 'Noto Sans KR', sans-serif;
+
+            /* 이미지로 변환할 영역을 카드 크기에 맞게 조절 */
+            width: fit-content;
+            /* padding: 20px; 카드 주변의 최종 여백 */
+        }
+
+        /* 프로필 카드 전체 컨테이너 */
+        .profile-card {
+            display: flex;
+            width: 900px; /* 변경된 가로 크기 */
+            height: 493px; /* 변경된 세로 크기 (비례 유지: 285 / 520 * 900 = 약 493) */
+
+            /* 카드 자체에 깊이감 있는 그라데이션 배경 적용 */
+            background: linear-gradient(135deg, #4e3452, #21242d);
+
+            border-radius: 20px;
+            padding: 50px; /* 비례적으로 조정 (30px * 1.73 = 약 52px, 반올림) */
+            border: 1px solid #4a4e57;
+            color: #f0f0f0;
+        }
+
+        /* 프로필 사진 영역 */
+        .profile-picture-container {
+            max-width: 173px; /* 비례적으로 조정 (100px * 1.73 = 약 173px) */
+            flex-shrink: 0;
+            margin-right: 52px; /* 비례적으로 조정 (30px * 1.73 = 약 52px, 반올림) */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .profile-picture {
+            margin: 0 auto 0 auto;
+            width: 173px; /* 비례적으로 조정 */
+            height: 173px; /* 비례적으로 조정 */
+            border-radius: 50%;
+            border: 3px solid #00d9ff;
+            object-fit: cover;
+            /* 사진에 네온 효과(Glow) 추가 */
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.6), 0 0 20px rgba(142, 196, 88, 0.4) inset;
+            background-color: #282828;
+        }
+
+        .profile-etc {
+            font-size: 21px; /* 비례적으로 조정 (12px * 1.73 = 약 21px) */
+            text-align: center;
+            color: #a0a5b3;
+            font-weight: 500;
+        }
+
+
+        /* 프로필 정보 전체 영역 */
+        .profile-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 이름과 레벨이 있는 헤더 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 26px; /* 비례적으로 조정 (15px * 1.73 = 약 26px) */
+        }
+
+        .username {
+            font-size: 45px; /* 비례적으로 조정 (26px * 1.73 = 약 45px) */
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 415px; /* 비례적으로 조정 (240px * 1.73 = 약 415px) */
+        }
+
+        .level {
+            background: linear-gradient(45deg, #ae00ff, #e100ff);
+            color: #ffffff;
+            padding: 10px 21px; /* 비례적으로 조정 (6px * 1.73 = 약 10px, 12px * 1.73 = 약 21px) */
+            border-radius: 14px; /* 비례적으로 조정 (8px * 1.73 = 약 14px) */
+            font-size: 24px; /* 비례적으로 조정 (14px * 1.73 = 약 24px) */
+            font-weight: 700;
+            box-shadow: 0 0 12px rgba(192, 0, 255, 0.7);
+        }
+
+        /* 경험치 바 */
+        .xp-container {
+            margin-bottom: 35px; /* 비례적으로 조정 (20px * 1.73 = 약 35px) */
+        }
+
+        .xp-bar-bg {
+            width: 100%;
+            height: 17px; /* 비례적으로 조정 (10px * 1.73 = 약 17px) */
+            background-color: rgba(0, 0, 0, 0.4);
+            border-radius: 8px; /* 비례적으로 조정 (5px * 1.73 = 약 9px) */
+            overflow: hidden;
+            border: 1px solid #2d3036;
+        }
+
+        .xp-bar-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00d9ff, #a6ffcb);
+            border-radius: 7px; /* 비례적으로 조정 (4px * 1.73 = 약 7px) */
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.7);
+        }
+
+        .xp-bottom {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .xp-join {
+            font-size: 22px; /* 비례적으로 조정 (13px * 1.73 = 약 22px) */
+            margin-top: 10px; /* 비례적으로 조정 (6px * 1.73 = 약 10px) */
+            color: #a0a5b3;
+            font-weight: 500;
+        }
+
+        .xp-text {
+            font-size: 22px; /* 비례적으로 조정 */
+            text-align: right;
+            margin-top: 10px; /* 비례적으로 조정 */
+            color: #a0a5b3;
+            font-weight: 500;
+        }
+
+        .profile-area {
+            display: flex;
+            flex-direction: row;
+            gap: 17px; /* 비례적으로 조정 (10px * 1.73 = 약 17px) */
+        }
+
+        .profile-item {
+            width: 100%;
+        }
+
+        /* 업적 리스트 */
+        .item-title {
+            font-size: 28px; /* 비례적으로 조정 (16px * 1.73 = 약 28px) */
+            font-weight: 700;
+            color: #ffffff;
+            padding-bottom: 14px; /* 비례적으로 조정 (8px * 1.73 = 약 14px) */
+            border-bottom: 1px solid #4a4e57;
+            margin-bottom: 21px; /* 비례적으로 조정 (12px * 1.73 = 약 21px) */
+        }
+
+        .item-list {
+            list-style-type: none;
+            display: flex; /* ul을 Flex 컨테이너로 만듭니다. */
+            flex-direction: column;
+            flex-wrap: wrap;
+            height: 134px; /* 비례적으로 조정 (78px * 1.73 = 약 135px) */
+        }
+
+        .item-list li {
+            font-size: 24px; /* 비례적으로 조정 (14px * 1.73 = 약 24px) */
+            margin-bottom: 10px; /* 비례적으로 조정 (6px * 1.73 = 약 10px) */
+            color: #c0c5d3;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-card">
+        <div class="profile-picture-container">
+            <img src="{{profile}}" alt="" class="profile-picture">
+            <div class="profile-etc">
+                <div>Join {{joinExp}} Exp</div>
+                <div>Chat {{chatExp}} Exp</div>
+                <div>Etc {{etcExp}} Exp</div>
+            </div>
+        </div>
+
+        <div class="profile-info">
+
+            <div class="header">
+                <h1 class="username">{{username}}님</h1>
+                <span class="level">Lv. {{level}}</span>
+            </div>
+
+            <div class="xp-container">
+                <div class="xp-bar-bg">
+                    <div class="xp-bar-progress" style="width: {{expPercent}}%;"></div>
+                </div>
+                <div class="xp-bottom">
+                    <div class="xp-join">{{joinDate}}</div>
+                    <div class="xp-text">{{exp}} / {{needExp}} XP</div>
+                </div>
+            </div>
+
+            <div class="profile-area">
+                <div class="profile-item">
+                    <h2 class="item-title">업적 ({{achieveCnt}})</h2>
+                    <ul class="item-list">
+                        {{achieveList}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

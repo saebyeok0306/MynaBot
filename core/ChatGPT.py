@@ -149,22 +149,26 @@ class ChatGPT(commands.Cog):
             res = session.query(Chats).all()
             if res is None: return False
 
-        for _res in res:
-            id = _res.id
-            guild_id = _res.guild_id
-            history = _res.history
-            database = _res.data
+            for _res in res:
+                _id = _res.id
+                guild_id = _res.guild_id
+                history = _res.history
+                database = _res.data
 
-            history = json.loads(history)
-            database = json.loads(database)
+                try:
+                    history = json.loads(history)
+                    database = json.loads(database)
 
-            guild = self.bot.get_guild(guild_id)
-            author = guild.get_member(id)
+                    guild = self.bot.get_guild(guild_id)
+                    author = guild.get_member(_id)
 
-            key = self.create_key(id, guild_id)
-            self.chat_room[key].userdata = author
-            self.chat_room[key].history = history["data"]
-            self.chat_room[key].database = database["data"]
+                    key = self.create_key(_id, guild_id)
+                    self.chat_room[key].userdata = author
+                    self.chat_room[key].history = history["data"]
+                    self.chat_room[key].database = database["data"]
+                except Exception:
+                    continue
+            return True
 
     async def create_dm(self, interaction: Interaction[MynaBot], key=None):
         if key is None:

@@ -1,10 +1,12 @@
+import datetime
+import io
 from typing import Literal
 
-import datetime
 import discord
 from PIL import Image, ImageDraw, ImageFont
 from discord import app_commands, Interaction
 from discord.ext import commands
+from playwright.async_api import async_playwright
 from sqlalchemy import and_
 
 import utils.Logs as logs
@@ -173,23 +175,104 @@ class Profile(commands.Cog):
 
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{profile_data['level']})")
 
-    @app_commands.command(description='내 프로필을 확인할 수 있어요.')
-    @app_commands.describe(flag='내 프로필 정보를 다른사람도 볼 수 있게 공개할지 선택합니다.')
-    async def 프로필(self, interaction: Interaction[MynaBot], flag: Literal['공개', '비공개'] = '비공개'):
-        profile_data = self.get_profile_interaction(interaction)
-        exp_percent = int(round(profile_data['cur_exp'] / profile_data['diff_exp'], 3)*100)
-        embed = discord.Embed(title=f"{interaction.user.display_name}님의 프로필", color=0x5d73ac)
-        embed.set_thumbnail(url=interaction.user.display_avatar.url)
+    @commands.command()
+    async def 프로필3(self, ctx):
+        profile_data = self.get_profile(ctx)
+        exp_percent = int(round(profile_data['cur_exp'] / profile_data['diff_exp'], 3) * 100)
+        embed = discord.Embed(title=f"{ctx.author.display_name}님의 프로필", color=0x5d73ac)
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
         embed.add_field(name="Level", value=f"Lv.{profile_data['level']}")
         embed.add_field(name="Join", value=f"{profile_data['join_date'].strftime('%Y.%m.%d')} D+{profile_data['days']}")
         embed.add_field(name="Exp", value=f"{profile_data['exp']}/{profile_data['need_exp']} ({exp_percent}%)")
         embed.add_field(name="JoinExp", value=f"{profile_data['days']} Exp")
         embed.add_field(name="ChatExp", value=f"{profile_data['chat_exp'] + profile_data['visit_exp']} Exp")
         embed.add_field(name="EtcExp", value=f"{profile_data['cat_exp']} Exp")
-        embed.set_footer(text=f"{interaction.user} | 프로필", icon_url=interaction.user.display_avatar)
+        embed.set_footer(text=f"{ctx.author} | 프로필", icon_url=ctx.author.display_avatar)
 
-        flag = False if flag == '공개' else True
-        await interaction.response.send_message(embed=embed, ephemeral=flag)
+        await ctx.reply(embed=embed, mention_author=False)
+
+    @app_commands.command(description='내 프로필을 확인할 수 있어요.')
+    @app_commands.describe(flag='내 프로필 정보를 다른사람도 볼 수 있게 공개할지 선택합니다.')
+    async def 프로필(self, interaction: Interaction[MynaBot], flag: Literal['공개', '비공개'] = '비공개'):
+        try:
+            flag = False if flag == '공개' else True
+            profile_data = self.get_profile_interaction(interaction)
+            exp_percent = int(round(profile_data['cur_exp'] / profile_data['diff_exp'], 3)*100)
+
+            achieve_list = []
+            achieve_text = ""
+
+            if achieve_list:
+                for achieve in achieve_list:
+                    achieve_text += f"<li>{achieve}</li>"
+            else:
+                achieve_text = "<li>♟️ 비어있네요.</li>"
+
+
+            with open("data/Profile/profile.html", "r", encoding="utf-8") as f:
+                html = f.read()
+                html = html.replace("{{profile}}", interaction.user.display_avatar.url)
+                html = html.replace("{{joinExp}}", f"{profile_data['days']:,}")
+                html = html.replace("{{chatExp}}", f"{profile_data['chat_exp'] + profile_data['visit_exp']:,}")
+                html = html.replace("{{etcExp}}", f"{profile_data['cat_exp']:,}")
+                html = html.replace("{{username}}", interaction.user.display_name)
+                html = html.replace("{{level}}", f"{profile_data['level']}")
+                html = html.replace("{{joinDate}}", f"{profile_data['join_date'].strftime('%Y.%m.%d')} D+{profile_data['days']}")
+                html = html.replace("{{exp}}", f"{profile_data['exp']:,}")
+                html = html.replace("{{needExp}}", f"{profile_data['need_exp']:,}")
+                html = html.replace("{{expPercent}}", f"{exp_percent:,}")
+                html = html.replace("{{achieveCnt}}", f"{len(achieve_list)}")
+                html = html.replace("{{achieveList}}", achieve_text)
+
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=True)
+                page = await browser.new_page()
+                await page.set_viewport_size({"width": 1000, "height": 1000})
+                # page.goto(file_uri, wait_until="networkidle")
+                await page.set_content(html)
+
+                img_bytes = await page.screenshot(type="png", omit_background=True)
+                await browser.close()
+
+            img = Image.open(io.BytesIO(img_bytes))
+            pixels = img.load()
+            width, height = img.size
+            max_x, max_y = 0, 0
+
+            for _x in range(width - 1, -1, -1):
+                for _y in range(height - 1, -1, -1):
+                    pixel = pixels[_x, _y]
+                    if pixel[3] == 0:
+                        continue
+
+                    if max_x < _x:
+                        max_x = _x
+                    if max_y < _y:
+                        max_y = _y
+
+            img_cropped = img.crop((0, 0, max_x + 1, max_y + 1))
+            print(max_x, max_y)
+            with io.BytesIO() as image_byte_array:
+                img_cropped.save(image_byte_array, format='PNG')  # Save the image to the BytesIO object
+                image_byte_array.seek(0)  # Rewind the buffer to the beginning
+                await interaction.response.send_message(
+                    file=discord.File(image_byte_array, filename='cropped_image.png'), ephemeral=flag)
+            # await interaction.response.send_message(file=discord.File(io.BytesIO(img)), ephemeral=flag)
+        except Exception as e:
+            print(e)
+
+        # embed = discord.Embed(title=f"{interaction.user.display_name}님의 프로필", color=0x5d73ac)
+        # embed.set_thumbnail(url=interaction.user.display_avatar.url)
+        # embed.add_field(name="Level", value=f"Lv.{profile_data['level']}")
+        # embed.add_field(name="Join", value=f"{profile_data['join_date'].strftime('%Y.%m.%d')} D+{profile_data['days']}")
+        # embed.add_field(name="Exp", value=f"{profile_data['exp']}/{profile_data['need_exp']} ({exp_percent}%)")
+        # embed.add_field(name="JoinExp", value=f"{profile_data['days']} Exp")
+        # embed.add_field(name="ChatExp", value=f"{profile_data['chat_exp'] + profile_data['visit_exp']} Exp")
+        # embed.add_field(name="EtcExp", value=f"{profile_data['cat_exp']} Exp")
+        # embed.set_footer(text=f"{interaction.user} | 프로필", icon_url=interaction.user.display_avatar)
+        #
+        # flag = False if flag == '공개' else True
+        # await interaction.response.send_message(embed=embed, ephemeral=flag)
 
         await logs.send_log(bot=self.bot,
                             log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 프로필 명령어를 실행했습니다. (Lv.{profile_data['level']})")
