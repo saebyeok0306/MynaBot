@@ -269,33 +269,6 @@ class Administrator(commands.Cog):
             msg = await ctx.reply('전역 명령어 동기화를 해제합니다.')
             await msg.delete(delay=5)
 
-    @commands.command()
-    async def 버엄령(self, ctx: commands.Context[MynaBot], ids: Optional[str] = None) -> None:
-        if not util.is_developer(ctx.author):
-            return
-
-        flag = self.bot.BCFlag
-        self.bot.BCFlag = not flag
-
-        if flag:
-            await ctx.reply("버엄령을 중지합니다.", mention_author=False)
-        else:
-            if ids:
-                id_list = list(map(lambda x: x.strip(), ids.split(",")))
-                with open('data/BC.txt', 'w', encoding='utf-8') as l:
-                    l.write("\n".join(id_list))
-            else:
-                with open('data/BC.txt', 'r', encoding='utf-8') as f:
-                    id_list = f.read().split('\n')
-            self.bot.BC_LIST.clear()
-            self.bot.BC_LIST.extend(id_list)
-            msg = "버엄령을 시작합니다.\n대상은"
-            for sid in id_list:
-                target = ctx.guild.get_member(int(sid))
-                msg += f" {target.display_name}"
-            msg += "입니다."
-            await ctx.reply(msg, mention_author=False)
-
 
 
 async def setup(bot):
