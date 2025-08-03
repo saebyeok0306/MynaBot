@@ -81,7 +81,7 @@ class Edac(commands.Cog):
     async def get_answer_from_rag_async(self, query):
         return await asyncio.to_thread(self.sync_get_answer_from_rag, query)
 
-    def split_message(self, text:str, max_length=2000):
+    def split_message(self, text:str, max_length=1950):
         """문자열을 디스코드 메시지 길이에 맞게 분할"""
         lines = text.split('\n')
         chunks = []
