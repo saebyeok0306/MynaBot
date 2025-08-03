@@ -25,14 +25,14 @@ class Event(commands.Cog):
             # Test Version
             self.core_list.extend([
                 'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
-                'Authority', 'Message', 'RoleIcon'
+                'Authority', 'Message', 'RoleIcon', 'Edac'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
-                'ClovaX', 'RoleIcon', 'Commit'
+                'ClovaX', 'RoleIcon', 'Commit', 'Edac'
             ])
 
     @commands.Cog.listener()
@@ -55,7 +55,6 @@ class Event(commands.Cog):
         await self.bot.tree.sync()
 
         with SessionContext() as session:
-            # FIXME: boot_time 제대로 갱신이 안됨
             status = session.query(Status).first()
             if status is None:
                 status = Status()
