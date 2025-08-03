@@ -81,6 +81,8 @@ class Command(commands.Cog):
                 Guide(name='/문의', value='봇 개발자에게 버그나 문의사항을 보낼 수 있어요!'),
             ],
             "유즈맵 제작 도구모음": [
+                Guide(name='/질문하기 `내용`', value=f'질문할 내용을 작성하면, {self.bot.user.name}가 다양한 문서를 기반으로 답변해줘요!',
+                      guild_role=util.GUILD_COMMAND_TYPE.EUD),
                 Guide(name='/계산 `코드`', value=f'코드를 작성해서 넣으면, {self.bot.user.name}가 계산해서 알려줘요!'),
                 Guide(name=f'/스위치 `갯수` or `이름1 이름2 이름3 ...`', value=f'스위치를 N개 사용했을 때\n나올 수 있는 경우의 수를 표기합니다.'),
             ],
