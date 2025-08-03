@@ -122,9 +122,8 @@ class Edac(commands.Cog):
                 return True
 
     @app_commands.command(description='AI + RAG 기술을 활용하여 카페에 있는 원하는 강의글을 베이스로 질문에 답변합니다.')
-    @app_commands.describe(message="궁금한 내용을 입력합니다.", flag="내용을 모두에게 공개할지 여부를 정합니다.")
-    async def 질문하기(self, interaction: Interaction[MynaBot], message: str, flag: Literal['공개', '비공개'] = '비공개'):
-        flag = False if flag == '공개' else True
+    @app_commands.describe(message="궁금한 내용을 입력합니다.")
+    async def 질문하기(self, interaction: Interaction[MynaBot], message: str):
         allowed_guild = util.is_allow_guild_interaction(interaction, util.GUILD_COMMAND_TYPE.EUD)
 
         if allowed_guild is False:
@@ -176,7 +175,7 @@ class Edac(commands.Cog):
 
             answer_chunks = self.split_message(f"🧠 **마이나의 답변:**\n\n{answer}")
             for chunk in answer_chunks:
-                await interaction.followup.send(chunk, ephemeral=flag)
+                await interaction.followup.send(content=chunk)
 
         except Exception as e:
             print(f"검색 중 오류 발생! {e}")
