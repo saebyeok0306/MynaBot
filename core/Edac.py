@@ -85,15 +85,45 @@ class Edac(commands.Cog):
         """문자열을 디스코드 메시지 길이에 맞게 분할"""
         lines = text.split('\n')
         chunks = []
-        current = ""
+        buffer = ''
+        in_code_block = False
+        code_block_language = ''
+
+
         for line in lines:
-            if len(current) + len(line) + 1 > max_length:
-                chunks.append(current)
-                current = line
+            is_code_fence = line.strip().startswith("```")
+            line_with_newline = line + '\n'
+
+            # Handle code block start or end
+            if is_code_fence:
+                if not in_code_block:
+                    # START of code block
+                    in_code_block = True
+                    code_block_language = line.strip()[3:].strip()
+                    if buffer and not buffer.endswith('\n\n'):
+                        buffer += '\n'  # Ensure code block starts on new line
+                else:
+                    # END of code block
+                    in_code_block = False
+
+            if len(buffer) + len(line_with_newline) > max_length:
+                if in_code_block:
+                    # Close code block in current chunk
+                    buffer += f"\n```"
+                    chunks.append(buffer)
+                    # Start new chunk with code block reopened
+                    buffer = f"```{code_block_language}\n{line_with_newline}"
+                else:
+                    chunks.append(buffer)
+                    buffer = line_with_newline
             else:
-                current += "\n" + line if current else line
-        if current:
-            chunks.append(current)
+                buffer += line_with_newline
+
+        if buffer:
+            if in_code_block:
+                buffer += "\n```"
+            chunks.append(buffer)
+
         return chunks
 
     async def check_usage(self, interaction: Interaction[MynaBot]):
