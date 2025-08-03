@@ -302,16 +302,17 @@ class Command(commands.Cog):
 
     @app_commands.command(description='귀여운 흑이를 볼 수 있어요.')
     async def 흑이(self, interaction: Interaction[MynaBot]):
-        await interaction.response.defer()
         allowed_user = util.is_allow_user_interaction(interaction, util.ROLE_TYPE.BLACKCAT)
         allowed_guild = util.is_allow_guild_interaction(interaction, util.GUILD_COMMAND_TYPE.BLACKCAT)
 
         if allowed_user is False and allowed_guild is False:
-            await interaction.followup.send(f"관리자가 허용한 서버만 흑이 명령어를 사용할 수 있어요.", ephemeral=True)
+            await interaction.response.send_message(f"관리자가 허용한 서버만 흑이 명령어를 사용할 수 있어요.", ephemeral=True)
             return
         if util.is_allow_channel_interaction(self.bot, interaction) is False:
             await util.is_not_allow_channel_interaction(self.bot, interaction, util.current_function_name())
             return
+
+        await interaction.response.defer()
 
         api_url = "http://ajwmain.iptime.org/7Z2R7J2064qUIOygleunkCDqt4Dsl6zsmrQg6rKA7J2AIOqzoOyWkeydtCEh/black_cat.php"
         data, status_code = await self.fetch_data(api_url)
