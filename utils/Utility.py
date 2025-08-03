@@ -163,6 +163,7 @@ class GUILD_COMMAND_TYPE(Enum):
     CHATGPT = "CHATGPT"
     BLACKCAT = "BLACKCAT"
     MINECRAFT = "MINECRAFT"
+    EUD = "EUD"
 
 
 def is_allow_guild(ctx, role: GUILD_COMMAND_TYPE):

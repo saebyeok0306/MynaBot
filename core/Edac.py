@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+from typing import Literal
 
 import discord
 from discord import app_commands, Interaction
@@ -123,27 +124,30 @@ class Edac(commands.Cog):
     @app_commands.command(description='AI + RAG 기술을 활용하여 카페에 있는 원하는 강의글을 베이스로 질문에 답변합니다.')
     @app_commands.describe(message="궁금한 내용을 입력합니다.")
     async def 질문하기(self, interaction: Interaction[MynaBot], message: str):
-        try:
-            if not interaction.channel.topic or "EUD" not in interaction.channel.topic:
-                channels = interaction.guild.text_channels
+        allowed_guild = util.is_allow_guild_interaction(interaction, util.GUILD_COMMAND_TYPE.EUD)
 
-                allow_channel = None
-                for channel in channels:
-                    if channel.topic and "EUD" in channel.topic:
-                        allow_channel = channel
-                        break
+        if allowed_guild is False:
+            await interaction.response.send_message(f"개발자가 허용한 서버만 질문하기 명령어를 사용할 수 있어요.", ephemeral=True)
+            return
 
-                if allow_channel is None:
-                    await interaction.response.send_message(content=f"사용할 수 없는 명령어입니다. 관리자에게 문의해주세요.\n-# 채널 토픽에 `EUD`가 포함된 채널에서만 사용할 수 있습니다.", ephemeral=True)
-                else:
-                    await interaction.response.send_message(content=f"{allow_channel.name} 채널에서 사용할 수 있습니다.", ephemeral=True)
+        if not interaction.channel.topic or "EUD" not in interaction.channel.topic:
+            channels = interaction.guild.text_channels
 
-                return
+            allow_channel = None
+            for channel in channels:
+                if channel.topic and "EUD" in channel.topic:
+                    allow_channel = channel
+                    break
 
-            if not await self.check_usage(interaction):
-                return
-        except Exception as e:
-            print(e)
+            if allow_channel is None:
+                await interaction.response.send_message(content=f"사용할 수 없는 명령어입니다. 관리자에게 문의해주세요.\n-# 채널 토픽에 `EUD`가 포함된 채널에서만 사용할 수 있습니다.", ephemeral=True)
+            else:
+                await interaction.response.send_message(content=f"{allow_channel.name} 채널에서 사용할 수 있습니다.", ephemeral=True)
+
+            return
+
+        if not await self.check_usage(interaction):
+            return
 
         await interaction.response.defer()
         await logs.send_log(bot=self.bot,
@@ -171,7 +175,7 @@ class Edac(commands.Cog):
 
             answer_chunks = self.split_message(f"🧠 **마이나의 답변:**\n\n{answer}")
             for chunk in answer_chunks:
-                await interaction.followup.send(chunk)
+                await interaction.followup.send(content=chunk)
 
         except Exception as e:
             print(f"검색 중 오류 발생! {e}")
