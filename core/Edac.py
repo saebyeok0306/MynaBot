@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timedelta
 
 import discord
 from discord import app_commands, Interaction
@@ -32,10 +33,11 @@ class Edac(commands.Cog):
     def __init__(self, bot: MynaBot):
         print(f'{type(self).__name__}가 로드되었습니다.')
         self.bot = bot
+        self.usage_per_cnt = 10
+        self.usage_list = {}
 
     def get_retriever(self):
         denv = dotenv_values(".env")
-        print("--- 벡터 데이터베이스 연결 ---")
         client = MongoClient(denv["MONGODB_URL"])
         db_name = "rag"
         collection_name = "edac-rag"
@@ -54,7 +56,7 @@ class Edac(commands.Cog):
 
     def get_rag_chain(self):
         retriever = self.get_retriever()
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.5)
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
         rag_prompt = PromptTemplate.from_template(prompt_template)
 
         # 체인 구성: {input -> retriever -> docs -> context formatting -> prompt -> llm -> output}
@@ -93,13 +95,59 @@ class Edac(commands.Cog):
             chunks.append(current)
         return chunks
 
+    async def check_usage(self, interaction: Interaction[MynaBot]):
+        user_id = interaction.user.id
+        user_usage = self.usage_list.get(user_id)
+
+        if util.developer(interaction):
+            return True
+
+        if user_usage is None:
+            now = datetime.now()
+            self.usage_list[user_id] = {"cnt": 1, "date": now, "can_date": now + timedelta(hours=3)}
+            return True
+
+        if user_usage["cnt"] < self.usage_per_cnt:
+            user_usage["cnt"] += 1
+            return True
+        else:
+            can_date = user_usage["can_date"]
+
+            if can_date >= datetime.now():
+                await interaction.response.send_message(content=f"🔥 {interaction.user.display_name}님에게 부여된 사용량이 모두 소진되었습니다.\n> {can_date.strftime('%Y.%m.%d %H:%M:%S')}에 제한이 풀립니다.")
+                return False
+            else:
+                self.usage_list[user_id] = {"cnt": 1, "date": datetime.now()}
+                return True
+
     @app_commands.command(description='AI + RAG 기술을 활용하여 카페에 있는 원하는 강의글을 베이스로 질문에 답변합니다.')
     @app_commands.describe(message="궁금한 내용을 입력합니다.")
     async def 질문하기(self, interaction: Interaction[MynaBot], message: str):
-        await interaction.response.defer()
+        try:
+            if not interaction.channel.topic or "EUD" not in interaction.channel.topic:
+                channels = interaction.guild.text_channels
 
+                allow_channel = None
+                for channel in channels:
+                    if channel.topic and "EUD" in channel.topic:
+                        allow_channel = channel
+                        break
+
+                if allow_channel is None:
+                    await interaction.response.send_message(content=f"사용할 수 없는 명령어입니다. 관리자에게 문의해주세요.\n-# 채널 토픽에 `EUD`가 포함된 채널에서만 사용할 수 있습니다.", ephemeral=True)
+                else:
+                    await interaction.response.send_message(content=f"{allow_channel.name} 채널에서 사용할 수 있습니다.", ephemeral=True)
+
+                return
+
+            if not await self.check_usage(interaction):
+                return
+        except Exception as e:
+            print(e)
+
+        await interaction.response.defer()
         await logs.send_log(bot=self.bot,
-                            log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 강의 검색 명령어를 실행했습니다.")
+                            log_text=f"{interaction.guild.name}의 {interaction.user.display_name}님이 질문하기 명령어를 실행했습니다.")
         
         try:
             answer, sources = await self.get_answer_from_rag_async(message)
@@ -116,12 +164,19 @@ class Edac(commands.Cog):
 
                 answer += source_text
 
+            user_usage = self.usage_list.get(interaction.user.id)
+            if user_usage is not None:
+                can_date = user_usage["can_date"]
+                answer += f"> {interaction.user.display_name}님은 {can_date.strftime('%Y.%m.%d %H:%M:%S')}까지 남은 사용량이 {self.usage_per_cnt - user_usage['cnt']}회 남았습니다."
+
             answer_chunks = self.split_message(f"🧠 **마이나의 답변:**\n\n{answer}")
             for chunk in answer_chunks:
                 await interaction.followup.send(chunk)
 
         except Exception as e:
             print(f"검색 중 오류 발생! {e}")
+            await logs.send_log(bot=self.bot,
+                                log_text=f"질문하기 명령어에서 오류가 발생했습니다. {e}")
 
 async def setup(bot):
     await bot.add_cog(Edac(bot))
