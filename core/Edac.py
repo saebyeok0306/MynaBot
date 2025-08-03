@@ -93,7 +93,7 @@ class Edac(commands.Cog):
             chunks.append(current)
         return chunks
 
-    @app_commands.command(description='AI를 활용하여 카페에 있는 원하는 강의글을 베이스로 질문에 답변합니다.')
+    @app_commands.command(description='AI + RAG 기술을 활용하여 카페에 있는 원하는 강의글을 베이스로 질문에 답변합니다.')
     @app_commands.describe(message="궁금한 내용을 입력합니다.")
     async def 질문하기(self, interaction: Interaction[MynaBot], message: str):
         await interaction.response.defer()
