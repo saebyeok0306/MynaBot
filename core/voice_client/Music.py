@@ -6,11 +6,8 @@ import os
 import yt_dlp as youtube_dl
 from discord import ClientException
 from discord.ext import commands
-from dotenv import dotenv_values
 
 import utils.Logs as logs
-
-config = dotenv_values('.env')
 
 # Suppress noise about console usage from errors
 # youtube_dl.utils.bug_reports_message = lambda: ''
@@ -27,14 +24,7 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0',  # bind to ipv4 since ipv6 addresses cause issues sometimes
-    'extractor_args': {
-        'youtube': {
-            'player-client': 'web,default',
-            'po_token': config['PO_TOKEN']
-        }
-    },
-    'cookiefile': 'cookies.env'
+    'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
 ffmpeg_options = {
