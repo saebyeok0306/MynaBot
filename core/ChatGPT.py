@@ -52,7 +52,7 @@ class ChatGPT(commands.Cog):
         self.support_image = ["png", "jpeg", "webp", "gif"]
         self.encoding = tiktoken.encoding_for_model("gpt-4o")
         self.max_token = 3500
-        self.dolar_to_won = 1380
+        self.dolar_to_won = 1450
         self.cost = {
             "gpt-3.5-turbo": {
                 "input": (0.5 * self.dolar_to_won) / 1000000,
@@ -69,6 +69,14 @@ class ChatGPT(commands.Cog):
             "gpt-4-turbo": {
                 "input": (10.0 * self.dolar_to_won) / 1000000,
                 "output": (30.0 * self.dolar_to_won) / 1000000
+            },
+            "gpt-4.1-mini": {
+                "input": (0.4 * self.dolar_to_won) / 1000000,
+                "output": (1.6 * self.dolar_to_won) / 1000000
+            },
+            "gpt-5-mini": {
+                "input": (0.25 * self.dolar_to_won) / 1000000,
+                "output": (2.0 * self.dolar_to_won) / 1000000
             }
         }
         self.system_msg = [
@@ -386,9 +394,9 @@ class ChatGPT(commands.Cog):
             # await ctx.message.delete(delay=5)
             return False
 
-        model = "gpt-4o-mini" # "gpt-3.5-turbo"
-        if 'gpt4' in message and util.is_allow_user_interaction(interaction, util.ROLE_TYPE.GPT4):
-            model = "gpt-4o"
+        model = "gpt-4.1-mini" # "gpt-3.5-turbo"
+        # if 'gpt4' in message and util.is_allow_user_interaction(interaction, util.ROLE_TYPE.GPT4):
+        #     model = "gpt-4o"
 
         request_msg = {"role": "user", "content": message}
         total_token = 0

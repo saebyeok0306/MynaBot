@@ -24,7 +24,7 @@ class Event(commands.Cog):
         if util.is_test_version():
             # Test Version
             self.core_list.extend([
-                'VoiceClient', 'Youtube', 'ClovaX', 'ChatGPT',
+                'VoiceClient', 'Youtube', 'ChatGPT',
                 'Authority', 'Message', 'RoleIcon', 'Edac'
             ])
         else:
@@ -32,7 +32,7 @@ class Event(commands.Cog):
             self.core_list.extend([
                 'ColorName', 'Papago', 'ChatGPT', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
-                'ClovaX', 'RoleIcon', 'Commit', 'Edac'
+                'RoleIcon', 'Commit', 'Edac'
             ])
 
     @commands.Cog.listener()
