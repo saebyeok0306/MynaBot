@@ -24,13 +24,13 @@ class Event(commands.Cog):
         if util.is_test_version():
             # Test Version
             self.core_list.extend([
-                'VoiceClient', 'Youtube', 'ChatGPT',
+                'VoiceClient', 'Youtube', 'Gemini',
                 'Authority', 'Message', 'RoleIcon', 'Edac'
             ])
         else:
             # Deploy Version
             self.core_list.extend([
-                'ColorName', 'Papago', 'ChatGPT', 'Message',
+                'ColorName', 'Papago', 'Gemini', 'Message',
                 'VoiceClient', 'Youtube', 'Authority',
                 'RoleIcon', 'Commit', 'Edac'
             ])

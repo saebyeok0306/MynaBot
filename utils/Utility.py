@@ -157,6 +157,7 @@ class ROLE_TYPE(Enum):
     CLOVAX = "CLOVAX"
     BLACKCAT = "BLACKCAT"
     CHATGPT = "CHATGPT"
+    GEMINI = "GEMINI"
 
 
 class GUILD_COMMAND_TYPE(Enum):
@@ -164,6 +165,7 @@ class GUILD_COMMAND_TYPE(Enum):
     BLACKCAT = "BLACKCAT"
     MINECRAFT = "MINECRAFT"
     EUD = "EUD"
+    GEMINI = "GEMINI"
 
 
 def is_allow_guild(ctx, role: GUILD_COMMAND_TYPE):
