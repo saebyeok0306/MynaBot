@@ -108,6 +108,18 @@ class Gemini(commands.Cog):
         pass
 
     @staticmethod
+    def to_genai_content(content: list) -> list[types.Content]:
+        result = []
+        for c in content:
+            parts = [types.Part.from_text(text=c.get("content", ""))]
+            if c.get("file"):
+                for _file in c.get("file", []):
+                    parts.append(types.Part.from_uri(file_uri=_file.get("url", ""), mime_type=_file.get("mime_type", "")))
+            result.append(types.Content(role=c.get("role", ""), parts=parts))
+
+        return result
+
+    @staticmethod
     def hide_string(input_string):
         # 입력 문자열의 길이를 확인합니다.
         length = len(input_string)
@@ -161,31 +173,20 @@ class Gemini(commands.Cog):
             self.usage_list[user_id] = {"cnt": 1, "date": now, "can_date": now + timedelta(hours=3)}
             return True
 
-    def to_genai_content(self, content: list) -> list[types.Content]:
-        result = []
-        for c in content:
-            parts = [types.Part.from_text(text=c["content"])]
-            if c.get("file"):
-                parts.append(types.Part.from_uri(file_uri=c["file"]["url"], mime_type=c["file"]["mime_type"]))
-            result.append(types.Content(role=c["role"], parts=parts))
-
-        return result
-
-    def through_gemini(self, user_message, model="gemini-3-flash-preview"):
+    async def thinking_gemini(self, user_message, model="gemini-3-flash-preview"):
         config = dotenv_values('.env')
         client = genai.Client(api_key=config["GOOGLE_API_KEY"])
 
-        response = client.models.generate_content(
-            model=model,
-            config=types.GenerateContentConfig(system_instruction=self.through_msg),
-            contents=user_message
-        )
-
-        # usage = response.usage_metadata
         intent = "TEXT_ONLY"
         reason = ""
-
         try:
+            response = client.models.generate_content(
+                model=model,
+                config=types.GenerateContentConfig(system_instruction=self.through_msg),
+                contents=user_message
+            )
+
+            # usage = response.usage_metadata
             result = json.loads(response.text)
             print(result)
 
@@ -195,8 +196,8 @@ class Gemini(commands.Cog):
 
             reason = result.get("reason", "")
 
-        except Exception:
-            pass
+        except Exception as e:
+            await logs.send_log(self.bot, f"Gemini Thinking API 요청 중 오류가 발생했습니다.\n{e}")
 
         return {"intent": intent, "reason": reason}
 
@@ -231,7 +232,7 @@ class Gemini(commands.Cog):
         }
 
 
-    async def call_nanobanana(self, interaction: Interaction[MynaBot], message: discord.Message, system_message, record_message,
+    async def call_nanobanana(self, interaction: Interaction[MynaBot], message: discord.Message, system_message, image_message,
                               deleted_record=None, remain_usage=None, model="gemini-2.5-flash-image"):
         try:
             config = dotenv_values('.env')
@@ -239,7 +240,7 @@ class Gemini(commands.Cog):
 
             response = client.models.generate_content(
                 model=model,
-                contents=record_message
+                contents=image_message
             )
 
             usage_result = self.get_cost_message(model, response.usage_metadata, remain_usage)
@@ -332,7 +333,8 @@ class Gemini(commands.Cog):
                         last_usage = chunk.usage_metadata
                 return True
 
-            config = types.GenerateContentConfig(system_instruction=system_message)
+            search_tool = types.Tool(google_search=types.GoogleSearch())
+            config = types.GenerateContentConfig(system_instruction=system_message, tools=[search_tool])
 
             request_task = asyncio.create_task(call_gemini(model, config, user_message))
             timeout_task = asyncio.create_task(timeout(timeout_sec, request_task))
@@ -417,8 +419,8 @@ class Gemini(commands.Cog):
             tokens.append(_token)
 
         while total_token > self.max_token and len(room.history) > 0:
-            record = room.history.pop()
-            _token = tokens.pop()
+            record = room.history.pop(0)
+            _token = tokens.pop(0)
             total_token -= _token
             rev_cnt += 1
             print(f"기록이 삭제됩니다. {_token}토큰, {record}")
@@ -463,7 +465,6 @@ class Gemini(commands.Cog):
         through_message = [types.Content(role="user", parts=copy.deepcopy(request_parts))]
 
         if file:
-            print(file.content_type)
             content_type = file.content_type.split(";")[0]
             record_message["file"] = []
             if content_type.startswith("image"):
@@ -489,6 +490,7 @@ class Gemini(commands.Cog):
                 return
 
         request_message = types.Content(role="user", parts=request_parts)
+        # image_message = [types.Content(role="user", parts=request_parts)]
 
         self.chat_room[key].channel = interaction.channel
         self.chat_room[key].runtime = True
@@ -497,6 +499,7 @@ class Gemini(commands.Cog):
 
         # History
         if self.chat_room[key].history:
+            print(self.chat_room[key].history)
             remove_cnt, total_token = self.history_queue(interaction, key=key)
             user_message.extend(self.to_genai_content(self.chat_room[key].history))
 
@@ -505,7 +508,7 @@ class Gemini(commands.Cog):
         msg = await interaction.followup.send("네, 잠시만 기다려주세요...")
 
 
-        through_result = self.through_gemini(through_message)
+        through_result = await self.thinking_gemini(through_message)
         through_intent = through_result.get("intent")
         through_reason = through_result.get("reason")
         await msg.edit(content=f"네, 잠시만 기다려주세요...\n-# 마이나가 해당 요청을 {'질문' if through_intent == 'TEXT_ONLY' else '이미지 생성'}으로 처리했어요.\n-# {through_reason}")
@@ -526,6 +529,7 @@ class Gemini(commands.Cog):
                 self.chat_room[key].runtime = False
                 await msg.edit(content=f"죄송합니다, 처리 중에 오류가 발생했어요.\n{e}")
                 return
+
         elif through_intent == "IMAGE_GEN":
             is_usage = self.check_usage(key)
             user_usage = self.usage_list[key]
@@ -535,7 +539,7 @@ class Gemini(commands.Cog):
                 remain_usage = self.API_USER_LIMIT - user_usage["cnt"]
                 try:
                     res = await self.call_nanobanana(
-                        interaction=interaction, message=msg, record_message=message, system_message=system_message,
+                        interaction=interaction, message=msg, image_message=user_message, system_message=system_message,
                         deleted_record=remove_cnt, remain_usage=remain_usage)
                     if res is False:
                         self.chat_room[key].runtime = False
