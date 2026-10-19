@@ -29,6 +29,11 @@ class VoiceClient(commands.Cog, TTS, Music):
 
     def cog_unload(self):
         self.voice_client_processer.stop()
+        self.cleanup_all_tts()
+
+    def tts_should_wait(self, guild):
+        # 음악 대기열이 있으면 음악을 먼저 재생합니다.
+        return self.exist_playlist(guild)
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member: discord.Member, before: discord.VoiceState, after: discord.VoiceState):
@@ -61,7 +66,7 @@ class VoiceClient(commands.Cog, TTS, Music):
             if str(message.channel.type) != "voice": return False
             if vc.channel != message.channel: return False
 
-        self.message_queue[message.guild.id].append(message)
+        self.enqueue_tts(message)
 
     @tasks.loop(seconds=1)
     async def voice_client_processer(self):
@@ -93,14 +98,7 @@ class VoiceClient(commands.Cog, TTS, Music):
                 )
                 continue
 
-            # Music의 플레이리스트가 없을 때 메시지 읽기
-            if self.message_queue[guild.id]:
-                work_tasks.append(
-                    asyncio.create_task(
-                        self.read_message_coroutine(guild, voice_client)
-                    )
-                )
-                continue
+            # TTS 메시지는 길드별 워커(TTS.enqueue_tts)가 이벤트 기반으로 처리합니다.
 
         for guild_id in self.delete_state_list:
             try:
@@ -179,7 +177,8 @@ class VoiceClient(commands.Cog, TTS, Music):
         embed = discord.Embed(color=0xB22222, title="[ 관리자명령 ]", description=f"음성채팅 채널에서 {self.bot.user.display_name} 봇이 퇴장합니다.")
         embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.display_avatar)
         await ctx.reply(embed=embed, mention_author=False)
-        del self.server_voice_client_state[ctx.guild.id]
+        self.server_voice_client_state.pop(ctx.guild.id, None)
+        self.cleanup_tts(ctx.guild.id)
         await ctx.guild.voice_client.disconnect()
         await logs.send_log(bot=self.bot, log_text=f"{ctx.guild.name} 서버의 음성채팅에서 봇이 퇴장했습니다.")
 
