@@ -3,3 +3,4 @@
 Dockerfile
 db/*.db
 core/
+secrets/

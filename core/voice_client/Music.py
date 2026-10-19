@@ -27,11 +27,17 @@ ytdl_format_options = {
     'source_address': '0.0.0.0'  # bind to ipv4 since ipv6 addresses cause issues sometimes
 }
 
+# 서버 IP가 봇으로 판정될 때(Sign in to confirm you're not a bot) 사용할 쿠키 파일.
+# 파일이 실제로 존재할 때만 적용하므로, 설정하지 않아도 기존처럼 동작한다.
+_cookie_path = os.getenv('YTDL_COOKIE_FILE', 'secrets/cookies.txt')
+if os.path.isfile(_cookie_path):
+    ytdl_format_options['cookiefile'] = _cookie_path
+
 ffmpeg_options = {
     'options': '-vn',
 }
 
-ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
+ytdl =youtube_dl.YoutubeDL(ytdl_format_options)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
