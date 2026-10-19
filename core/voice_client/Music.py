@@ -36,29 +36,30 @@ ffmpeg_options = {
     'options': '-vn',
 }
 
-ytdl =youtube_dl.YoutubeDL(ytdl_format_options)
+def make_ytdl(**overrides):
+    # YoutubeDL은 스레드 안전이 보장되지 않으므로 호출마다 새 인스턴스를 만듭니다.
+    return youtube_dl.YoutubeDL({**ytdl_format_options, **overrides})
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.3):
+    def __init__(self, source, *, data, filename, volume=0.3):
         super().__init__(source, volume)
 
         self.data = data
+        self.filename = filename
 
         self.title = data.get('title')
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
+    async def from_url(cls, url, *, guild_id, loop=None):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        # 같은 곡을 여러 서버에서 재생해도 파일이 겹치지 않도록 길드 ID를 파일명에 붙입니다.
+        ydl = make_ytdl(outtmpl=f'data/temp/{guild_id}-%(extractor)s-%(id)s-%(title)s.%(ext)s')
+        data = await loop.run_in_executor(None, lambda: ydl.extract_info(url, download=True))
 
-        # if 'entries' in data:
-        #     # take first item from a playlist
-        #     data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        filename = ydl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data, filename=filename)
 
 
 class Video:
@@ -108,8 +109,8 @@ class Music:
                 self.music_loading.add(guild_id)
                 player = None
                 try:
-                    player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
-                    filename = ytdl.prepare_filename(player.data)
+                    player = await YTDLSource.from_url(music['url'], guild_id=guild_id, loop=self.bot.loop)
+                    filename = player.filename
 
                     # TTS가 읽는 중이면 끝날 때까지 기다립니다.
                     while voice_client.is_playing():
@@ -121,6 +122,8 @@ class Music:
                     self.current[guild_id] = music
                 except Exception as e:
                     print(f"play_music에서 오류 발생 : {e}")
+                    if player is not None and os.path.exists(player.filename):
+                        os.remove(player.filename)
                     await voice_client.channel.send(f'`{music["title"]}` 곡을 재생하지 못해 건너뛸게요.')
                     continue
                 finally:
@@ -146,24 +149,27 @@ class Music:
 
     @staticmethod
     def parse_youtube_url(url):
+        """URL(또는 검색어)을 해석해 (urls, videos)를 반환합니다. 실패하거나 결과가 없으면 ([], [])."""
         try:
-            data = ytdl.extract_info(url, download=False)
-            if 'entries' in data:
-                data = data['entries']
-            else:
-                data = [data]
-            print(f"music num : {len(data)}")
-            urls = []
-            videos = []
-            for _data in data:
-                title = _data.get("title")
-                urls.append(_data.get("original_url"))
-                videos.append(Video(title))
-                print(f"title : {title}")
-            return urls, videos
+            # 재생목록은 곡마다 상세 정보를 받지 않고 목록만 빠르게 가져옵니다. (실제 다운로드 시 다시 조회)
+            data = make_ytdl(extract_flat='in_playlist').extract_info(url, download=False)
         except Exception as e:
             print(e)
-            return -1, -1
+            return [], []
+
+        entries = data.get('entries') if 'entries' in data else [data]
+        urls = []
+        videos = []
+        for entry in entries or []:
+            if not entry:
+                continue  # 비공개/삭제된 영상
+            entry_url = entry.get("webpage_url") or entry.get("original_url") or entry.get("url")
+            if not entry_url:
+                continue
+            urls.append(entry_url)
+            videos.append(Video(entry.get("title")))
+        print(f"music num : {len(urls)}")
+        return urls, videos
 
     async def add_music(self, ctx, url, video):
         """Music URL"""
@@ -188,17 +194,17 @@ class Music:
         async with ctx.typing():
             # url을 통해 비디오 데이터를 획득합니다.
             # yt-dlp 조회는 네트워크 I/O라 이벤트 루프를 막지 않도록 스레드에서 실행합니다.
-            url, video = await asyncio.to_thread(self.parse_youtube_url, url)
-            if url == video == -1:
+            urls, videos = await asyncio.to_thread(self.parse_youtube_url, url)
+            if not urls:
                 return await ctx.send(f'잘못된 URL 주소입니다!\n다른 주소로 다시 시도해주세요.')
 
-            # 플레이리스트인 경우
-            if type(video) is list:
-                await self.add_playlist(ctx, url, video)
+            # 곡이 하나인 경우
+            if len(urls) == 1:
+                await self.add_music(ctx, urls[0], videos[0])
 
-            # 아닌 경우
+            # 플레이리스트인 경우
             else:
-                await self.add_music(ctx, url, video)
+                await self.add_playlist(ctx, urls, videos)
         await logs.send_log(bot=self.bot,
                             log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 재생 명령어를 실행했습니다.")
 
