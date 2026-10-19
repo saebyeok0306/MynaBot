@@ -35,3 +35,6 @@ data/ffmpeg
 
 # yt-dlp 정크파일 예외
 *.webm
+
+# yt-dlp 쿠키 등 민감정보 (secrets/cookies.txt)
+secrets/
