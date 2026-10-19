@@ -67,7 +67,8 @@ python main.py --test # test mode
 
 서버에서 `Sign in to confirm you're not a bot` 오류가 나면, 봇 전용 구글 계정의 youtube.com 쿠키를
 Netscape 형식으로 내보내 프로젝트 루트의 `secrets/cookies.txt`에 둡니다. (로컬·서버 동일)<br>
-서버에서는 배포 워크플로우가 `secrets/` 폴더를 컨테이너의 `/secrets`에 읽기 전용으로 마운트합니다.
+서버에서는 배포 워크플로우가 `secrets/` 폴더를 컨테이너의 `/secrets`에 마운트합니다.
+yt-dlp는 실행을 마칠 때 쿠키를 이 파일에 다시 저장하므로 읽기 전용(`:ro`)으로 마운트하지 않으며, 처음 내보낸 쿠키는 따로 백업해 두는 것을 권장합니다.
 (레포·이미지에는 포함되지 않으며, 쿠키가 만료되면 파일만 교체한 뒤 봇을 재시작하면 됩니다.)
 
 다른 경로를 쓰려면 `.env`에 `YTDL_COOKIE_FILE=경로`를 지정합니다.
