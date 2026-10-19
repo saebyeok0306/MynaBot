@@ -37,6 +37,7 @@ class Youtube(commands.Cog):
         if ctx.author.voice and ctx.guild.voice_client and ctx.message.channel == ctx.guild.voice_client.channel:
             music_cog = self.bot.cogs["VoiceClient"]
             music_cog.playlist[ctx.guild.id].append({"title": video_info, "url": video_url, "author": ctx.author})
+            music_cog.start_music(ctx.guild.id)
             await ctx.reply(f"### [ 🔮유튜브 검색완료 ]\n\n**{keyword} 의 검색 결과입니다.**\n`플레이리스트에 해당 곡이 추가되었습니다!`\n{video_info}\n{video_url}",
                             mention_author=False)
         else:

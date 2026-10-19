@@ -4,7 +4,6 @@ import asyncio
 import discord
 import os
 import yt_dlp as youtube_dl
-from discord import ClientException
 from discord.ext import commands
 
 import utils.Logs as logs
@@ -37,29 +36,30 @@ ffmpeg_options = {
     'options': '-vn',
 }
 
-ytdl =youtube_dl.YoutubeDL(ytdl_format_options)
+def make_ytdl(**overrides):
+    # YoutubeDL은 스레드 안전이 보장되지 않으므로 호출마다 새 인스턴스를 만듭니다.
+    return youtube_dl.YoutubeDL({**ytdl_format_options, **overrides})
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
-    def __init__(self, source, *, data, volume=0.3):
+    def __init__(self, source, *, data, filename, volume=0.3):
         super().__init__(source, volume)
 
         self.data = data
+        self.filename = filename
 
         self.title = data.get('title')
         self.url = data.get('url')
 
     @classmethod
-    async def from_url(cls, url, *, loop=None, stream=False):
+    async def from_url(cls, url, *, guild_id, loop=None):
         loop = loop or asyncio.get_event_loop()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
+        # 같은 곡을 여러 서버에서 재생해도 파일이 겹치지 않도록 길드 ID를 파일명에 붙입니다.
+        ydl = make_ytdl(outtmpl=f'data/temp/{guild_id}-%(extractor)s-%(id)s-%(title)s.%(ext)s')
+        data = await loop.run_in_executor(None, lambda: ydl.extract_info(url, download=True))
 
-        # if 'entries' in data:
-        #     # take first item from a playlist
-        #     data = data['entries'][0]
-
-        filename = data['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        filename = ydl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data, filename=filename)
 
 
 class Video:
@@ -74,6 +74,10 @@ class Music:
         self.file_path = "./data/temp"
         self.playlist = defaultdict(list)
         self.current = {}
+        # 곡을 내려받는 중인 길드 (TTS가 끼어들지 않도록 표시)
+        self.music_loading = set()
+        self._music_locks = defaultdict(asyncio.Lock)
+        self._music_tasks = set()
 
     def exist_playlist(self, guild):
         if self.playlist[guild.id]:
@@ -82,78 +86,103 @@ class Music:
             return False
 
     def cleanup_msuic(self, guild_id):
-        if self.current.get(guild_id):
-            del self.current[guild_id]
-        if self.playlist.get(guild_id):
-            del self.playlist[guild_id]
+        self.current.pop(guild_id, None)
+        self.playlist.pop(guild_id, None)
+        self.music_loading.discard(guild_id)
 
-    async def play_music(self, guild, voice_client: discord.VoiceClient):
-        if self.playlist[guild.id] and voice_client.is_playing() is False:
-            music = self.playlist[guild.id].pop(0)
-            player = await YTDLSource.from_url(music['url'], loop=self.bot.loop, stream=False)
-            try:
-                voice_client.play(
-                    player,
-                    after=lambda error: self.play_after(error, guild.id, ytdl.prepare_filename(player.data))
-                )
-                self.current[guild.id] = music
+    def start_music(self, guild_id):
+        """대기열의 다음 곡 재생을 예약합니다. 이미 재생/준비 중이면 아무 일도 하지 않습니다."""
+        task = asyncio.create_task(self.play_next_music(guild_id))
+        self._music_tasks.add(task)
+        task.add_done_callback(self._music_tasks.discard)
+
+    async def play_next_music(self, guild_id):
+        # 곡 추가와 곡 종료가 동시에 일어나도 한 번만 재생되도록 길드별로 직렬화합니다.
+        async with self._music_locks[guild_id]:
+            while self.playlist.get(guild_id) and not self.current.get(guild_id):
+                guild = self.bot.get_guild(guild_id)
+                voice_client = guild.voice_client if guild else None
+                if voice_client is None or not voice_client.is_connected():
+                    return
+
+                music = self.playlist[guild_id].pop(0)
+                self.music_loading.add(guild_id)
+                player = None
+                try:
+                    player = await YTDLSource.from_url(music['url'], guild_id=guild_id, loop=self.bot.loop)
+                    filename = player.filename
+
+                    # TTS가 읽는 중이면 끝날 때까지 기다립니다.
+                    while voice_client.is_playing():
+                        await asyncio.sleep(0.5)
+                    if not voice_client.is_connected():
+                        return
+
+                    voice_client.play(player, after=lambda error: self.play_after(error, guild_id, filename))
+                    self.current[guild_id] = music
+                except Exception as e:
+                    print(f"play_music에서 오류 발생 : {e}")
+                    if player is not None and os.path.exists(player.filename):
+                        os.remove(player.filename)
+                    await voice_client.channel.send(f'`{music["title"]}` 곡을 재생하지 못해 건너뛸게요.')
+                    continue
+                finally:
+                    self.music_loading.discard(guild_id)
 
                 await voice_client.channel.send(f'**Now playing** ~🎶: `{player.title}`')
                 # await voice_client.channel.edit(status=f"Playing ~ {player.title} ~") # 2.4.x 이후 추가될 예정
-                return True
-            except ClientException:
-                self.playlist[guild.id].insert(0, music)
-                return False
-            except Exception as e:
-                print(f"play_music에서 오류 발생 : {e}")
-                return False
-
-        else:
-            return False
+                return
 
     def play_after(self, e, guild_id, filename):
+        # 오디오 스레드에서 호출됩니다.
         if e:
-            return print(f'Player error: {e}')
+            print(f'Player error: {e}')
 
+        self.current.pop(guild_id, None)
         try:
             os.remove(f"{filename}")
-            if self.current.get(guild_id):
-                del self.current[guild_id]
         except Exception as e:
             print(f"파일 삭제 실패 : {e}")
 
+        # 곡이 끝나면(정지 포함) 바로 다음 곡을 재생합니다.
+        self.bot.loop.call_soon_threadsafe(self.start_music, guild_id)
+
     @staticmethod
     def parse_youtube_url(url):
+        """URL(또는 검색어)을 해석해 (urls, videos)를 반환합니다. 실패하거나 결과가 없으면 ([], [])."""
         try:
-            data = ytdl.extract_info(url, download=False)
-            if 'entries' in data:
-                data = data['entries']
-            else:
-                data = [data]
-            print(f"music num : {len(data)}")
-            urls = []
-            videos = []
-            for _data in data:
-                title = _data.get("title")
-                urls.append(_data.get("original_url"))
-                videos.append(Video(title))
-                print(f"title : {title}")
-            return urls, videos
+            # 재생목록은 곡마다 상세 정보를 받지 않고 목록만 빠르게 가져옵니다. (실제 다운로드 시 다시 조회)
+            data = make_ytdl(extract_flat='in_playlist').extract_info(url, download=False)
         except Exception as e:
             print(e)
-            return -1, -1
+            return [], []
+
+        entries = data.get('entries') if 'entries' in data else [data]
+        urls = []
+        videos = []
+        for entry in entries or []:
+            if not entry:
+                continue  # 비공개/삭제된 영상
+            entry_url = entry.get("webpage_url") or entry.get("original_url") or entry.get("url")
+            if not entry_url:
+                continue
+            urls.append(entry_url)
+            videos.append(Video(entry.get("title")))
+        print(f"music num : {len(urls)}")
+        return urls, videos
 
     async def add_music(self, ctx, url, video):
         """Music URL"""
         self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
         await ctx.send(f'플레이리스트에 추가되었어요!\n{video.title}')
-        
+        self.start_music(ctx.guild.id)
 
     async def add_playlist(self, ctx, urls, videos):
         """Playlist URL"""
         for url, video in zip(urls, videos):
             self.playlist[ctx.guild.id].append({"title": video.title, "url": url, "author": ctx.author})
         await ctx.send(f'플레이리스트에 추가되었어요!\n{videos[0].title} 외 {len(urls) - 1}곡')
+        self.start_music(ctx.guild.id)
 
     @commands.command(name="재생", aliases=["play"])
     async def 재생(self, ctx, *, url):
@@ -164,17 +193,18 @@ class Music:
 
         async with ctx.typing():
             # url을 통해 비디오 데이터를 획득합니다.
-            url, video = self.parse_youtube_url(url)
-            if url == video == -1:
+            # yt-dlp 조회는 네트워크 I/O라 이벤트 루프를 막지 않도록 스레드에서 실행합니다.
+            urls, videos = await asyncio.to_thread(self.parse_youtube_url, url)
+            if not urls:
                 return await ctx.send(f'잘못된 URL 주소입니다!\n다른 주소로 다시 시도해주세요.')
 
-            # 플레이리스트인 경우
-            if type(video) is list:
-                await self.add_playlist(ctx, url, video)
+            # 곡이 하나인 경우
+            if len(urls) == 1:
+                await self.add_music(ctx, urls[0], videos[0])
 
-            # 아닌 경우
+            # 플레이리스트인 경우
             else:
-                await self.add_music(ctx, url, video)
+                await self.add_playlist(ctx, urls, videos)
         await logs.send_log(bot=self.bot,
                             log_text=f"{ctx.guild.name}의 {ctx.author.display_name}님이 재생 명령어를 실행했습니다.")
 
@@ -204,8 +234,9 @@ class Music:
             return await ctx.reply(embed=embed)
 
         await ctx.reply(f"### [ 음악 정지 ]\n\n**재생 중인 음악을 정지했어요.**", mention_author=False)
+        # stop()이 after 콜백을 호출해 다음 곡이 이어서 재생됩니다.
         ctx.voice_client.stop()
-        del self.current[guild_id]
+        self.current.pop(guild_id, None)
 
 
     @commands.command(name="곡랜덤", aliases=["곡셔플"])
