@@ -83,6 +83,7 @@ class VoiceClient(commands.Cog, TTS, Music):
         if message.content.startswith("!"): return False
         if message.content.startswith("http://"): return False
         if message.content.startswith("https://"): return False
+        if self.has_other_tts_bot(vc.channel): return False
         if message.channel.id not in util.get_bot_channel(self.bot, message):
             if str(message.channel.type) != "voice": return False
             if vc.channel != message.channel: return False

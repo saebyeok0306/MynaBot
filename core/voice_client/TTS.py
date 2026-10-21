@@ -35,6 +35,8 @@ TEXT_SPEED = [(10, 1.1), (20, 1.2), (40, 1.4)]
 DEFAULT_SPEED = 1.5
 
 DISCORD_EMOJI_PATTERN = re.compile(r'<(.*?)>')
+# 같은 음성채널에 이름에 이 키워드가 들어간 봇이 있으면 TTS를 비활성화합니다. (TTS가 겹쳐서 두 번 읽히는 것을 방지)
+OTHER_TTS_BOT_KEYWORD = "tts"
 
 
 class TTSError(Exception):
@@ -89,6 +91,16 @@ class TTS:
         for guild_id in list(self.tts_workers):
             self.cleanup_tts(guild_id)
 
+    def has_other_tts_bot(self, channel):
+        """음성채널에 이름에 TTS가 들어간 다른 봇이 있으면 True."""
+        for member in channel.members:
+            if not member.bot or member.id == self.bot.user.id:
+                continue
+            names = (member.name, member.display_name)
+            if any(OTHER_TTS_BOT_KEYWORD in name.lower() for name in names if name):
+                return True
+        return False
+
     def tts_should_wait(self, guild):
         """TTS보다 우선하는 작업(ex. 음악 대기열)이 있으면 True. 필요한 쪽에서 오버라이드합니다."""
         return False
@@ -113,6 +125,9 @@ class TTS:
         while True:
             voice_client = guild.voice_client
             if voice_client is None or not voice_client.is_connected():
+                return
+            # 기다리는 동안 다른 TTS 봇이 들어왔다면 밀린 메시지는 읽지 않습니다.
+            if self.has_other_tts_bot(voice_client.channel):
                 return
             if not voice_client.is_playing() and not self.tts_should_wait(guild):
                 break
